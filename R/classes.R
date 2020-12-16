@@ -1,0 +1,2191 @@
+
+# Generics ###############################################################################
+
+## cpc
+setGeneric("hasPeakTable", function(x) standardGeneric("hasPeakTable"))
+setGeneric("hasCharacterizedPeakTable", 
+           function(x) standardGeneric("hasCharacterizedPeakTable"))
+
+setGeneric("xdObj", function(x) standardGeneric("xdObj"))
+setGeneric("xdObj<-", function(x, value) standardGeneric("xdObj<-"))
+
+setGeneric("getPeaklist", function(x) standardGeneric("getPeaklist"))
+setGeneric("setPeaklist<-", function(x, value) standardGeneric("setPeaklist<-"))
+
+setGeneric("getProcData", function(x, value = NULL) standardGeneric("getProcData"))
+setGeneric("setProcData<-", function(x, value) standardGeneric("setProcData<-"))
+setGeneric("addProcData<-", function(x, value) standardGeneric("addProcData<-"))
+
+setGeneric("filePaths", function(x) standardGeneric("filePaths"))
+
+setGeneric("getProcParams", function(x, value = NULL) standardGeneric("getProcParams"))
+setGeneric("setProcParams<-", function(x, value) standardGeneric("setProcParams<-"))
+setGeneric("addProcParams<-", function(x, value) standardGeneric("addProcParams<-"))
+
+setGeneric("cpt", function(x) standardGeneric("cpt"))
+setGeneric("cpt<-", function(x, value) standardGeneric("cpt<-"))
+
+setGeneric("parsePeaklist", function(x) standardGeneric("parsePeaklist"))
+setGeneric("parseFeatures", function(x) standardGeneric("parseFeatures"))
+
+setGeneric("processPeaks", function(x) standardGeneric("processPeaks"))
+
+setGeneric("filterPeaks", function(x) standardGeneric("filterPeaks"))
+
+setGeneric("peaksToKeep", function(x, returnBoolean = FALSE) standardGeneric("peaksToKeep"))
+
+setGeneric("getChromatogram", function(x, id) standardGeneric("getChromatogram"))
+
+setGeneric("show", function(x) standardGeneric("show"))
+setGeneric("summary", function(x) standardGeneric("summary"))
+
+## cpc_raw
+setGeneric("getXIC", function(x, mzrange, scanrange = NULL, method = 1) standardGeneric("getXIC"))
+
+setGeneric("parseMz", function(x) standardGeneric("parseMz"))
+
+setGeneric("scantime", function(x) standardGeneric("scantime"))
+
+## cpc_chrom
+setGeneric("getResults", function(x) standardGeneric("getResults"))
+setGeneric("setResults<-", function(x, value) standardGeneric("setResults<-"))
+
+setGeneric("getMzRange", function(x) standardGeneric("getMzRange"))
+
+setGeneric("setXIC<-", function(x, value) standardGeneric("setXIC<-"))
+
+setGeneric("processChromatogram", function(x) standardGeneric("processChromatogram"))
+
+setGeneric("calculatePeakCharacteristics", function(x) standardGeneric("calculatePeakCharacteristics"))
+
+setGeneric("plotPeak", function(x) standardGeneric("plotPeak"))
+
+setGeneric("smoothChromatogram", function(x) standardGeneric("smoothChromatogram"))
+
+setGeneric("fitEMG", function(x) standardGeneric("fitEMG"))
+
+
+# cpc_chrom class ########################################################################
+
+#' @title Class used to process an XIC and calculate peak characteristics
+#' 
+#' @description
+#' 
+#' Class used to process the peaks found by XCMS. All smoothing and processing 
+#' of a chromatogram is performed using this class.
+#' 
+#' @slot id \code{integer} value indicating which peak in the peak table is being processed.
+#' @slot xic Raw XIC trace
+#' @slot d0 Smoothed XIC trace
+#' @slot d2 Smoothed second derivative of the XIC trace
+#' @slot procParams \code{list} containing processing parameters.
+#' @slot procData \code{list} containing processing data.
+#' @slot procResults \code{list} containing the processing results for peak \code{id}.
+#' @slot rawProcResults \code{list} containing the raw processing results returned by \code{process_chromatogram}.
+#' @slot results \code{list} containing calculated peak characteristics for peak \code{id}.
+#' 
+#' @name cpc_chrom-class
+#' 
+#' @rdname cpc_chrom-class
+#' 
+#' @export
+setClass("cpc_chrom",
+         representation(
+             id = "integer",
+             xic = "numeric",
+             d0 = "numeric",
+             d2 = "numeric",
+             procParams = "list",
+             procData = "list",
+             procResults = "list",
+             rawProcResults = "list",
+             results = "list"
+         ),
+         
+         prototype(
+             id = NA_integer_,
+             xic = NA_real_,
+             d0 = NA_real_,
+             d2 = NA_real_,
+             procParams = list(mz = -1,
+                               p = -1,
+                               s = -1,
+                               mz_range = c(-1,-1),
+                               minpts = 3,
+                               scanrange = NULL),
+             procData = list(mz = -1,
+                             p = -1,
+                             s = -1,
+                             mz_range = c(-1,-1)),
+             rawProcResults = list(),
+             procResults = list(),
+             results = list(apex = -1,
+                            bl_front_bound = -1,
+                            bl_tail_bound = -1,
+                            front_bound = -1,
+                            tail_bound = -1,
+                            h1_front_bound = -1,
+                            h1_tail_bound = -1,
+                            h5_front_bound = -1,
+                            h5_tail_bound = -1,
+                            h50_front_bound = -1,
+                            h50_tail_bound = -1,
+                            fwhm = -1,
+                            wb = -1,
+                            a = -1,
+                            b = -1,
+                            tf = -1,
+                            height = -1,
+                            area = -1,
+                            sn = -1,
+                            code = "",
+                            note = "",
+                            exectime = -1,
+                            file = -1)
+         ))
+
+#' Setter method for the procParams slot in cpc_chrom-class
+#' 
+#' @param x
+#' @param value
+#' 
+#' @return cpc_chrom object with updated procParams
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_chrom-methods
+#' 
+#' @example
+setMethod("setProcParams<-", signature("cpc_chrom"), function(x, value)
+{
+    if (class(value) != "list") stop("Process params must be a named list.")
+    
+    parNames <- names(x@procParams)
+    valNames <- names(value)
+    
+    if (length(valNames) < 1) stop("Process params must be a named list.")
+    
+    matchedNames <- which(!is.na(match(valNames, parNames)))
+    
+    x@procParams[valNames[matchedNames]] <- value[matchedNames]
+    x
+})
+
+#' Add method for the procParams slot in cpc_chrom-class (deprecated! setProcParams<- has the same functionality.)
+#' 
+#' @param x
+#' @param value
+#' 
+#' @return cpc_chrom object with updated procParams
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_chrom-methods
+#' 
+#' @example
+setMethod("addProcParams<-", signature("cpc_chrom"), function(x, value)
+{
+    if (class(value) != "list") stop("Process params must be a named list.")
+    
+    parNames <- names(x@procParams)
+    valNames <- names(value)
+    
+    if (length(valNames) < 1) stop("Process params must be a named list.")
+    
+    matchedNames <- which(!is.na(match(valNames, parNames)))
+    newNames <- which(is.na(match(valNames, parNames)))
+    
+    if (length(matchedNames) > 0)
+    {
+        x@procParams[valNames[matchedNames]] <- value[matchedNames]
+    }
+    
+    if (length(newNames) > 0)
+    {
+        x@procParams[valNames[newNames]] <- value[newNames]
+    }
+    
+    x
+})
+
+#' Getter method for the procParams slot in cpc_chrom-class
+#' 
+#' @param x
+#' @param value
+#' 
+#' @return Specified procParam value
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_chrom-methods
+#' 
+#' @example
+setMethod("getProcParams", signature("cpc_chrom"), function(x, value = NULL)
+{
+    if (!is.null(value) & is.character(value))
+    {
+        unlist(x@procParams[value])
+    } else
+    {
+        x@procParams
+    }
+})
+
+#' Add method for the procData slot in cpc_chrom-class
+#' 
+#' @param x
+#' @param value
+#' 
+#' @return cpc_chrom-class with updated procData
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_chrom-methods
+#' 
+#' @example
+setMethod("addProcData<-", signature("cpc_chrom"), function(x, value)
+{
+    if (class(value) != "list") stop("Process data must be a named list.")
+    
+    datNames <- names(x@procData)
+    valNames <- names(value)
+    
+    if (length(valNames) < 1) stop("Process data must be a named list.")
+    
+    matchedNames <- which(!is.na(match(valNames, datNames)))
+    newNames <- which(is.na(match(valNames, datNames)))
+    
+    if (length(matchedNames) > 0)
+    {
+        x@procData[valNames[matchedNames]] <- value[matchedNames]
+    }
+    
+    if (length(newNames) > 0)
+    {
+        x@procData[valNames[newNames]] <- value[newNames]
+    }
+    
+    x
+})
+
+#' Getter method for the procData slot in cpc_chrom-class
+#' 
+#' @param x
+#' @param value
+#' 
+#' @return Specified procData value
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_chrom-methods
+#' 
+#' @example
+setMethod("getProcData", signature("cpc_chrom"), function(x, value = NULL)
+{
+    if (!is.null(value) & is.character(value))
+    {
+        unlist(x@procData[value])
+    } else
+    {
+        x@procData
+    }
+})
+
+#' Getter method for the procParams$mz_range slot in cpc_chrom-class
+#' 
+#' @param x
+#' 
+#' @return Specified procParam value
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_chrom-methods
+#' 
+#' @example
+setMethod("getMzRange", signature("cpc_chrom"), function(x) x@procParams$mz_range)
+
+#' Getter method for the results slot in cpc_chrom-class
+#' 
+#' @param x
+#' 
+#' @return Value of results slot in object (data.frame).
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_chrom-methods
+#' 
+#' @example
+setMethod("getResults", signature("cpc_chrom"), function(x) x@results)
+
+#' Setter method for the results slot in cpc_chrom-class
+#' 
+#' @param x
+#' 
+#' @return cpc_chrom object with updated results slot.
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_chrom-methods
+#' 
+#' @example
+setMethod("setResults<-", signature("cpc_chrom"), function(x, value)
+{
+    if (class(value) != "list") stop("Result vals must be a named list.")
+    
+    resNames <- names(x@results)
+    valNames <- names(value)
+    
+    if (length(valNames) < 1) stop("Result vals must be a named list.")
+    
+    matchedNames <- which(!is.na(match(valNames, resNames)))
+    
+    x@results[valNames[matchedNames]] <- value[matchedNames]
+    x
+})
+
+#' Setter method for the XIC slot in cpc_chrom-class
+#' 
+#' @param x
+#' @param value
+#' 
+#' @return Specified procParam value
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_chrom-methods
+#' 
+#' @example
+setMethod("setXIC<-", signature("cpc_chrom"), function(x, value)
+{
+    if (!is.numeric(value)) stop("XIC must be a numeric vector.")
+    
+    x@xic <- value
+    x
+})
+
+#' Plot method that plots a panel with results of the peak characterization of the VIP.
+#' 
+#' @param x
+#' 
+#' @return None.
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_chrom-methods
+#' 
+#' @example
+setMethod("plotPeak", signature("cpc_chrom"), function(x)
+{
+    if (x@results$apex > 0)
+    {
+        results = TRUE
+    } else
+    {
+        results = FALSE
+    }
+    
+    if (results)
+    {
+        ylim = c(0, max(x@xic[x@results$bl_front_bound:x@results$bl_tail_bound]))
+    } else
+    {
+        ylim = c(0, max(x@xic[x@procData$plotrange[1]:x@procData$plotrange[2]]))
+    }
+    
+    layout(mat = matrix(c(1,2), nrow = 2, ncol = 1, byrow = T))
+    par_bk <- par()
+    
+    
+    # d0 main plot 
+    par(mar = c(1,4.1,1,1))
+    plot(x@d0, type = "l", 
+         xlim = x@procData$plotrange,
+         ylim = ylim,
+         ylab = "XIC",
+         xlab = "",
+         xaxt = "n")
+    abline(v = x@procParams$p, col = "red", lty = "dashed")
+    
+    ## d0 points
+    points(x@d0, pch = 20, cex = 0.9)
+    lines(x@xic, col = "#00000075", lty = "dashed")
+    
+    ## d0 apex point
+    if (results)
+        points(x = x@results$apex, y = x@d0[x@results$apex], col = "red", pch = 20)
+    
+    ## d0 current vars
+    char_ann <- paste0("id ", x@id, "\n",
+                      "note ", x@results$note, "\n")
+    
+    ## results textbox
+    if (results)
+        char_ann <- paste0(char_ann,
+                          "bl_bound ", paste(c(x@results$bl_front_bound,
+                                               x@results$bl_tail_bound), collapse = "->"), "\n",
+                          "peak_bound ", paste(c(x@results$front_bound,
+                                                 x@results$tail_bound), collapse = "->"), "\n",
+                          "code ", x@results$code, "\n",
+                          "SN ", round(x@results$sn, 3), "\n",
+                          "fwhm ", round(x@results$fwhm, 3), "\n",
+                          "wb ", round(x@results$wb, 3), "\n",
+                          "TF ", round(x@results$tf, 3), "\n")
+    
+    text(x = x@procData$plotrange[1], y = 0.95*ylim[2], 
+         labels = char_ann, adj = c(0,1), cex = 0.75)
+    
+    ## metadata textbox
+    text(x = x@procData$plotrange[2], y = 0.95*ylim[2],
+         labels = paste0("m/z ", round(x@procParams$mz_range[1], 3), " : ", 
+                         round(x@procParams$mz_range[2], 3)), adj = c(1,1), cex = 0.75)
+    
+    ## d0 emg fit
+    # if (!is.null(cpc_xic$emg))
+    # {
+    #     lines(x = cpc_xic$res$bl_front_bound:cpc_xic$res$bl_tail_bound,
+    #           y = cpc_xic$emg$area *
+    #               c_demg2(x = cpc_xic$res$bl_front_bound:cpc_xic$res$bl_tail_bound,
+    #                       mu = cpc_xic$emg$mu,
+    #                       sigma = cpc_xic$emg$sigma,
+    #                       lambda = cpc_xic$emg$lambda),
+    #           col = "red", pch = 20, type = "o")
+    # }
+    
+    
+    ## d0 peak box
+    
+    if (results)
+    {
+        # d0 baseline
+        points(x = c(x@results$bl_front_bound,
+                     x@results$bl_tail_bound),
+               y = x@d0[c(x@results$bl_front_bound,
+                          x@results$bl_tail_bound)],
+               col = "red", pch = 20, cex = 1.1)
+        lines(x = c(x@results$bl_front_bound,
+                    x@results$bl_tail_bound),
+              y = x@d0[c(x@results$bl_front_bound,
+                         x@results$bl_tail_bound)],
+              col = "red", lty = "dashed")
+        
+        ## bottom
+        tmp_x <- unlist(x@results[c("front_bound", "tail_bound")])
+        tmp_y <- c(interpolate_y(x = unlist(x@results[c("bl_front_bound", "bl_tail_bound")]),
+                                 y = x@d0[unlist(x@results[c("bl_front_bound", "bl_tail_bound")])],
+                                 xval = unlist(x@results$front_bound)),
+                   interpolate_y(x = unlist(x@results[c("bl_front_bound", "bl_tail_bound")]),
+                                 y = x@d0[unlist(x@results[c("bl_front_bound", "bl_tail_bound")])],
+                                 xval = unlist(x@results$tail_bound)))
+        
+        lines(x = tmp_x, y = tmp_y, col = "red")
+        
+        ## left
+        tmp_x <- rep(x@results$front_bound, 2)
+        tmp_y <- c(interpolate_y(x = unlist(x@results[c("bl_front_bound", "bl_tail_bound")]),
+                                 y = x@d0[unlist(x@results[c("bl_front_bound", "bl_tail_bound")])],
+                                 xval = unlist(x@results$front_bound)),
+                   max(x@d0[floor(x@results$front_bound):floor(x@results$tail_bound)]))
+        
+        lines(x = tmp_x, y = tmp_y, col = "red")
+        
+        ## top
+        tmp_x <- unlist(x@results[c("front_bound", "tail_bound")])
+        tmp_y <- rep(max(x@d0[floor(x@results$front_bound):floor(x@results$tail_bound)]), 2)
+        
+        lines(x = tmp_x, y = tmp_y, col = "red")
+        
+        ## right
+        tmp_x <- rep(x@results$tail_bound, 2)
+        tmp_y <- c(interpolate_y(x = unlist(x@results[c("bl_front_bound", "bl_tail_bound")]),
+                                 y = x@d0[unlist(x@results[c("bl_front_bound", "bl_tail_bound")])],
+                                 xval = unlist(x@results$tail_bound)),
+                   max(x@d0[floor(x@results$front_bound):floor(x@results$tail_bound)]))
+        
+        lines(x = tmp_x, y = tmp_y, col = "red")
+    }
+    
+    # d2 main plot
+    par(mar = c(5.1,4.1,0,1))
+    plot(x@d2, type = "l", col = "#000000", 
+         xlim = x@procData$plotrange,
+         ylim = c(min(x@d2[x@procData$plotrange[1]:x@procData$plotrange[2]]),
+                  max(x@d2[x@procData$plotrange[1]:x@procData$plotrange[2]])),
+         ylab = "2nd derivative",
+         xlab = "scan")
+    points(x@d2, pch = 20, cex = 0.9)
+    # d2 peak bounds
+    if (results)
+        points(x = unlist(x@results[c("front_bound", "tail_bound")]), 
+               y = x@d2[unlist(x@results[c("front_bound", "tail_bound")])],
+           col = "red", pch = 20)
+    # d2 0 line
+    abline(h = 0, col = "red")
+    
+    layout(mat = matrix(c(1), nrow = 1, ncol = 1))
+    par(mar = par_bk$mar)
+})
+
+#' Method for calculating the peak characteristics based on the results from the peak characterization.
+#' 
+#' @param x
+#' 
+#' @return cpc_chrom object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_chrom-methods
+#' 
+#' @example
+setMethod("calculatePeakCharacteristics", signature("cpc_chrom"), function(x)
+{
+    getResults(x)
+    # peak apex
+    setResults(x) <- list(apex = x@procResults$adj_apex)
+    
+    # baseline bounds
+    setResults(x) <- list(bl_front_bound = x@procResults$bl_bounds[1],
+                          bl_tail_bound = x@procResults$bl_bounds[2])
+    
+    # peak bounds
+    setResults(x) <- list(front_bound = x@procResults$peak_bounds[1],
+                          tail_bound = x@procResults$peak_bounds[2])
+    
+    # peak height
+    setResults(x) <- list(height = x@d0[x@results$apex] - 
+                              interpolate_y(x = x@procResults$bl_bounds, 
+                                            y = x@d0[x@procResults$bl_bounds], 
+                                            xval = x@results$apex))
+    
+    # height bounds
+    ## 1% peak height
+    tmp <- find_height_bounds(y = x@d0, apex = x@results$apex,
+                              bl_bounds = x@procResults$bl_bounds,
+                              peak_bounds = x@procResults$peak_bounds,
+                              frac = 0.01, id = x@id,
+                              debug = x@procParams$verbose_output, 
+                              plot = x@procParams$plot)
+    setResults(x) <- list(h1_front_bound = tmp[1],
+                          h1_tail_bound = tmp[2])
+    
+    ## 5% peak height
+    tmp <- find_height_bounds(y = x@d0, apex = x@results$apex,
+                              bl_bounds = x@procResults$bl_bounds,
+                              peak_bounds = x@procResults$peak_bounds,
+                              frac = 0.05, id = x@id,
+                              debug = x@procParams$verbose_output, 
+                              plot = x@procParams$plot)
+    setResults(x) <- list(h5_front_bound = tmp[1],
+                          h5_tail_bound = tmp[2])
+    
+    ## 50% peak height
+    tmp <- find_height_bounds(y = x@d0, apex = x@results$apex,
+                              bl_bounds = x@procResults$bl_bounds,
+                              peak_bounds = x@procResults$peak_bounds,
+                              frac = 0.5, id = x@id,
+                              debug = x@procParams$verbose_output, 
+                              plot = x@procParams$plot)
+    setResults(x) <- list(h50_front_bound = tmp[1],
+                          h50_tail_bound = tmp[2])
+    
+    # base width
+    setResults(x) <- list(wb = x@results$h5_tail_bound - x@results$h5_front_bound)
+    
+    # fwhm
+    setResults(x) <- list(fwhm = x@results$h50_tail_bound - x@results$h50_front_bound)
+    
+    # peak integral
+    integral_x <- floor(x@results$h1_front_bound):floor(x@results$h1_tail_bound)
+    integral_y <- x@d0[floor(x@results$h1_front_bound):floor(x@results$h1_tail_bound)]
+    
+    if (floor(x@results$h1_front_bound) < x@results$h1_front_bound)
+    {
+        integral_x <- c(x@results$h1_front_bound, integral_x)
+        integral_y <- c(interpolate_y(x = c(floor(x@results$h1_front_bound),
+                                            floor(x@results$h1_front_bound)+1),
+                                      y = x@d0[c(floor(x@results$h1_front_bound),
+                                                 floor(x@results$h1_front_bound)+1)],
+                                      xval = x@results$h1_front_bound),
+                        integral_y)
+    }
+    
+    if (floor(x@results$h1_tail_bound) < x@results$h1_tail_bound)
+    {
+        integral_x <- c(integral_x, x@results$h1_tail_bound)
+        integral_y <- c(integral_y,
+                        interpolate_y(x = c(floor(x@results$h1_tail_bound),
+                                            floor(x@results$h1_tail_bound)+1),
+                                      y = x@d0[c(floor(x@results$h1_tail_bound),
+                                                 floor(x@results$h1_tail_bound)+1)],
+                                      xval = x@results$h1_tail_bound))
+    }
+    
+    integral_bl <- ((integral_x - x@results$bl_front_bound) * x@procResults$bl_slope) + 
+        x@d0[x@results$bl_front_bound]
+    
+    setResults(x) <- list(area = peak_integral(x = integral_x, y = integral_y - integral_bl)) # ~5 µsecs for 25509
+    
+    # asymmetry
+    setResults(x) <- list(a = x@results$apex - x@results$h50_front_bound,
+                          b = x@results$h50_tail_bound - x@results$apex)
+    
+    setResults(x) <- list(tf = x@results$b / x@results$a)
+    
+    # signal-to-noise
+    setResults(x) <- list(sn = ifelse(x@procData$xic_noise > 0,
+                                      2*x@results$height / x@procData$xic_noise,
+                                      Inf))
+    
+    # boundary codes
+    setResults(x) <- list(code = paste(x@procResults$code, collapse = ""))
+    
+    # note
+    setResults(x) <- list(note = "detected")
+    
+    # return object
+    return(x)
+})
+
+#' Method for calculating smoothed XICs in a cpc_chrom object.
+#' 
+#' @param x
+#' 
+#' @return cpc_chrom object.
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_chrom-methods
+#' 
+#' @example
+setMethod("smoothChromatogram", signature("cpc_chrom"), function(x)
+{
+    if (length(x@xic) < 1)
+    {
+        stop("No XIC data in object.")
+    }
+    
+    # smooth times
+    if (x@procParams$smooth_method == "savgol")
+    {
+        if (!is.null(x@procParams$smooth_times))
+        {
+            if (x@procParams$smooth_times < 0)
+            {
+                warning(paste("smooth_times cannot be negative. ",
+                              "Using default: 2", 
+                              sep = ""))
+                
+                x@procParams$smooth_times <- 2
+            }
+        }
+        
+        if (x@procParams$smooth_times > 3) 
+            warning(paste("Excessive smoothing (", x@procParams$smooth_times,
+                          "). Consider using fewer smoothing steps.", 
+                          sep = ""))
+    } else
+    {
+        x@procParams$smooth_times <- 2
+    }
+    
+    # smooth window
+    if (is.null(x@procParams$smooth_win) || x@procParams$smooth_win == 0)
+    {
+        x@procParams$smooth_win <- ifelse(floor(2.354*x@procParams$s) %% 2 == 0, # If w is even
+                                          floor(2.354*x@procParams$s) + 1, # w + 1
+                                          floor(2.354*x@procParams$s)) # else w
+    }
+    
+    if (x@procParams$smooth_win < x@procParams$min_w)
+    {
+        x@procParams$smooth_win <- x@procParams$min_w
+    } else if (x@procParams$smooth_win > x@procParams$max_w)
+    {
+        x@procParams$smooth_win <- x@procParams$max_w
+    }
+    
+    # calculate smoothed vectors
+    if (x@procParams$smooth_method == "savgol") # use savitzky-golay filter
+    {
+        x@d0 <- x@xic
+        
+        if (x@procParams$smooth_times > 1)
+        {
+            for (i in 1:(x@procParams$smooth_times-1))
+            {
+                x@d0 <- pmax(0, signal::sgolayfilt(x = x@d0, p = 2, 
+                                                   n = x@procParams$smooth_win, 
+                                                   m = 0)) # ~780 µsecs for 25509
+            }
+        }
+        
+        x@d2 <- signal::sgolayfilt(x = x@d0, p = 2, 
+                                   n = x@procParams$smooth_win, 
+                                   m = 2) # ~789 µsecs for 25509
+        
+        x@d0 <- pmax(0, signal::sgolayfilt(x = x@d0, p = 2, 
+                                           n = x@procParams$smooth_win, 
+                                           m = 0)) # ~780 µsecs for 25509
+        
+    } else # use mean smoothing
+    {
+        x@d0 <- x@xic
+        
+        # calculate d1 using running linear regression on d0
+        d1 <- c_running_slope(1:x@procParams$nscan, x@d0, 
+                              floor(x@procParams$smooth_win/2))
+        
+        # calculate d2 using running linear regression on d1
+        x@d2 <- c_running_slope(1:x@procParams$nscan, d1, 
+                                floor(x@procParams$smooth_win/2))
+        
+    }
+    
+    return(x)
+})
+
+#' Method for fitting a series of EMG functions to a characterized XIC.
+#' 
+#' @param x
+#' 
+#' @return cpc_chrom object.
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_chrom-methods
+#' 
+#' @example
+setMethod("fitEMG", signature("cpc_chrom"), function(x)
+{
+    # select peaks to use in the fitting
+    # to test: just use the VIP and the closest peaks before and after
+    sel <- x@rawProcResults$current_peak+1
+    
+    if (x@rawProcResults$front_code[x@rawProcResults$current_peak+1] != 0)
+    {
+        sel <- c(x@rawProcResults$current_peak, sel)
+    }
+    
+    if (x@rawProcResults$tail_code[x@rawProcResults$current_peak+1] != 0)
+    {
+        sel <- c(sel, x@rawProcResults$current_peak+2)
+    }
+    
+    # calculate sigma for selected peaks
+    sel_sigma <- (x@rawProcResults$tail_inf[sel] - x@rawProcResults$front_inf[sel])/2
+    
+    # determine points to fit: front bound of first peak -> tail bound of last peak
+    sel_bound_full <- c(x@rawProcResults$front_peak_bound[sel[1]]+1,
+                        x@rawProcResults$tail_peak_bound[sel[length(sel)]]+1)
+    
+    sel_bound_vip <- c(x@rawProcResults$front_peak_bound[x@rawProcResults$current_peak+1]+1,
+                       x@rawProcResults$tail_peak_bound[x@rawProcResults$current_peak+1]+1)
+    
+    # use only front inf, 3p around apex and tail inf of each selected peak
+    sel1_idx <- sort(unique(c(x@rawProcResults$front_inf[sel]+1,
+                              x@rawProcResults$adj_apex[sel],
+                              x@rawProcResults$adj_apex[sel]+1,
+                              x@rawProcResults$adj_apex[sel]+2,
+                              x@rawProcResults$tail_inf[sel]+1)))
+    
+    # fit peaks
+    (bfgs_full_xic <- fitemgs_bfgs(signal = x@xic[sel_bound_full[1]:sel_bound_full[2]], 
+                                  scantime = sel_bound_full[1]:sel_bound_full[2], 
+                                  seed = list(mu = x@rawProcResults$adj_apex[sel],
+                                              sigma = sel_sigma,
+                                              lambda = rep(10, length(sel))),
+                                  upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
+                                               sigma = sel_sigma*.75,
+                                               lambda = rep(1, length(sel))*.9),
+                                  lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
+                                               sigma = sel_sigma*1.25,
+                                               lambda = rep(30, length(sel))*1.1),
+                                  plot.fit = T))
+    (bfgs_vip_xic <- fitemgs_bfgs(signal = x@xic[sel_bound_vip[1]:sel_bound_vip[2]], 
+                                 scantime = sel_bound_vip[1]:sel_bound_vip[2], 
+                                 seed = list(mu = x@rawProcResults$adj_apex[sel],
+                                             sigma = sel_sigma,
+                                             lambda = rep(10, length(sel))),
+                                 lower = list(mu = x@rawProcResults$adj_apex[sel]-5,
+                                              sigma = sel_sigma*.75,
+                                              lambda = rep(1, length(sel))*.9),
+                                 upper = list(mu = x@rawProcResults$adj_apex[sel]+5,
+                                              sigma = sel_sigma*1.25,
+                                              lambda = rep(30, length(sel))*1.1),
+                                 plot.fit = T))
+    (bfgs_sel1_xic <- fitemgs_bfgs(signal = x@xic[sel1_idx], 
+                                  scantime = sel1_idx, 
+                                  seed = list(mu = x@rawProcResults$adj_apex[sel],
+                                              sigma = sel_sigma,
+                                              lambda = rep(10, length(sel))),
+                                  upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
+                                               sigma = sel_sigma*.75,
+                                               lambda = rep(1, length(sel))*.9),
+                                  lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
+                                               sigma = sel_sigma*1.25,
+                                               lambda = rep(30, length(sel))*1.1),
+                                  plot.fit = T))
+    
+    (bfgs2_full_xic <- fitemgs_bfgs_2(signal = x@xic[sel_bound_full[1]:sel_bound_full[2]], 
+                                     scantime = sel_bound_full[1]:sel_bound_full[2], 
+                                     seed = list(mu = x@rawProcResults$adj_apex[sel],
+                                                 sigma = sel_sigma,
+                                                 lambda = rep(10, length(sel))),
+                                     plot.fit = T))
+    (bfgs2_vip_xic <- fitemgs_bfgs_2(signal = x@xic[sel_bound_vip[1]:sel_bound_vip[2]], 
+                                    scantime = sel_bound_vip[1]:sel_bound_vip[2], 
+                                    seed = list(mu = x@rawProcResults$adj_apex[sel],
+                                                sigma = sel_sigma,
+                                                lambda = rep(10, length(sel))),
+                                    plot.fit = T))
+    (bfgs2_sel1_xic <- fitemgs_bfgs_2(signal = x@xic[sel1_idx], 
+                                    scantime = sel1_idx, 
+                                    seed = list(mu = x@rawProcResults$adj_apex[sel],
+                                                sigma = sel_sigma,
+                                                lambda = rep(10, length(sel))),
+                                    plot.fit = T))
+    
+    (bfgs_full_d0 <- fitemgs_bfgs(signal = x@d0[sel_bound_full[1]:sel_bound_full[2]], 
+                                   scantime = sel_bound_full[1]:sel_bound_full[2], 
+                                   seed = list(mu = x@rawProcResults$adj_apex[sel],
+                                               sigma = sel_sigma,
+                                               lambda = rep(10, length(sel))),
+                                   upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
+                                                sigma = sel_sigma*.75,
+                                                lambda = rep(1, length(sel))*.9),
+                                   lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
+                                                sigma = sel_sigma*1.25,
+                                                lambda = rep(30, length(sel))*1.1),
+                                   plot.fit = T))
+    (bfgs_vip_d0 <- fitemgs_bfgs(signal = x@d0[sel_bound_vip[1]:sel_bound_vip[2]], 
+                                  scantime = sel_bound_vip[1]:sel_bound_vip[2], 
+                                  seed = list(mu = x@rawProcResults$adj_apex[sel],
+                                              sigma = sel_sigma,
+                                              lambda = rep(10, length(sel))),
+                                  upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
+                                               sigma = sel_sigma*.75,
+                                               lambda = rep(1, length(sel))*.9),
+                                  lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
+                                               sigma = sel_sigma*1.25,
+                                               lambda = rep(30, length(sel))*1.1),
+                                  plot.fit = T))
+    (bfgs_sel1_d0 <- fitemgs_bfgs(signal = x@d0[sel1_idx], 
+                                   scantime = sel1_idx, 
+                                   seed = list(mu = x@rawProcResults$adj_apex[sel],
+                                               sigma = sel_sigma,
+                                               lambda = rep(10, length(sel))),
+                                   upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
+                                                sigma = sel_sigma*.75,
+                                                lambda = rep(1, length(sel))*.9),
+                                   lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
+                                                sigma = sel_sigma*1.25,
+                                                lambda = rep(30, length(sel))*1.1),
+                                   plot.fit = T))
+    
+    (bfgs2_full_d0 <- fitemgs_bfgs_2(signal = x@d0[sel_bound_full[1]:sel_bound_full[2]], 
+                                      scantime = sel_bound_full[1]:sel_bound_full[2], 
+                                      seed = list(mu = x@rawProcResults$adj_apex[sel],
+                                                  sigma = sel_sigma,
+                                                  lambda = rep(10, length(sel))),
+                                      plot.fit = T))
+    (bfgs2_vip_d0 <- fitemgs_bfgs_2(signal = x@d0[sel_bound_vip[1]:sel_bound_vip[2]], 
+                                     scantime = sel_bound_vip[1]:sel_bound_vip[2], 
+                                     seed = list(mu = x@rawProcResults$adj_apex[sel],
+                                                 sigma = sel_sigma,
+                                                 lambda = rep(10, length(sel))),
+                                     plot.fit = T))
+    (bfgs2_sel1_d0 <- fitemgs_bfgs_2(signal = x@d0[sel1_idx], 
+                                     scantime = sel1_idx, 
+                                     seed = list(mu = x@rawProcResults$adj_apex[sel],
+                                                 sigma = sel_sigma,
+                                                 lambda = rep(10, length(sel))),
+                                     plot.fit = T))
+    
+    fitemgs(signal = x@xic[sel_bound_full[1]:sel_bound_full[2]], 
+            scantime = sel_bound_full[1]:sel_bound_full[2], 
+            seed = list(mu = x@rawProcResults$adj_apex[sel]+1,
+                        sigma = sel_sigma,
+                        lambda = rep(10, length(sel))),
+            upper = list(mu = x@rawProcResults$adj_apex[sel]+10,
+                         sigma = sel_sigma*2,
+                         lambda = rep(1, length(sel))),
+            lower = list(mu = x@rawProcResults$adj_apex[sel]-10,
+                         sigma = sel_sigma*0.25,
+                         lambda = rep(100, length(sel))),
+            plot.fit = T)
+    
+    fitemgs(signal = x@d0[sel_bound_full[1]:sel_bound_full[2]], 
+            scantime = sel_bound_full[1]:sel_bound_full[2], 
+            seed = list(mu = x@rawProcResults$adj_apex[sel]+1,
+                        sigma = sel_sigma,
+                        lambda = rep(10, length(sel))),
+            upper = list(mu = c(70, 90, 110),
+                         sigma = c(5, 7, 6),
+                         lambda = rep(1, length(sel))),
+            lower = list(mu = c(50, 70, 90),
+                         sigma = c(1.5, 4, 3),
+                         lambda = rep(100, length(sel))),
+            plot.fit = T)
+    
+    
+    
+    # return result
+})
+
+#' Main method for characterizing an XIC.
+#' 
+#' @param x
+#' 
+#' @return cpc_chrom object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_chrom-methods
+#' 
+#' @example
+setMethod("processChromatogram", signature("cpc_chrom"), function(x)
+{
+    # x <- chrom
+    if(!require(signal, quietly = T)) stop("Package: signal required...")
+    
+    if (is.null(x@xic) | length(x@xic) < 1)
+    {
+        stop("No XIC supplied to processChromatogram().")
+    } else
+    {
+        addProcData(x) <- list(nscan = length(x@xic))
+    }
+    
+    # setup and check procParams
+    ## smooth times
+    if (x@procParams$smooth_method == "savgol")
+    {
+        if (!is.null(x@procParams$smooth_times))
+        {
+            if (x@procParams$smooth_times < 0)
+            {
+                warning(paste("smooth_times cannot be negative. ",
+                              "Using default: 2", 
+                              sep = ""))
+                
+                x@procParams$smooth_times <- 2
+            }
+        }
+        
+        if (x@procParams$smooth_times > 3) 
+            warning(paste("Excessive smoothing (", x@procParams$smooth_times,
+                          "). Consider using fewer smoothing steps.", 
+                          sep = ""))
+    } else
+    {
+        x@procParams$smooth_times <- 2
+    }
+    
+    ## smooth window
+    if (is.null(x@procParams$smooth_win) || x@procParams$smooth_win == 0)
+    {
+        x@procParams$smooth_win <- ifelse(floor(2.354*x@procParams$s) %% 2 == 0, # If w is even
+                                          floor(2.354*x@procParams$s) + 1, # w + 1
+                                          floor(2.354*x@procParams$s)) # else w
+    }
+    
+    if (x@procParams$smooth_win < x@procParams$min_w)
+    {
+        x@procParams$smooth_win <- x@procParams$min_w
+    } else if (x@procParams$smooth_win > x@procParams$max_w)
+    {
+        x@procParams$smooth_win <- x@procParams$max_w
+    }
+    
+    ## check that XCMS data exist
+    if (is.null(x@procParams$p))
+    {
+        if (x@procParams$verbose_output) cat(paste("[debug] idx =", x@id, "missing xcms data.\n"))
+        
+        setResults(x) <- list(id = x@id,
+                              note = "xcms_missing")
+        
+        return(x)
+        
+    } else if (x@procParams$p < 1)
+    {
+        if (x@procParams$verbose_output) cat(paste("[debug] idx =", x@id, "missing xcms data.\n"))
+        
+        setResults(x) <- list(id = x@id,
+                              note = "xcms_missing")
+        
+        return(x)
+    }
+    
+    # determine plotrange
+    addProcData(x) <- 
+        list(plotrange = c(max(1, floor(x@procParams$p - 
+                                            20*x@procParams$s)),
+                           min(x@procData$nscan, floor(x@procParams$p + 
+                                                           20*x@procParams$s))))
+    
+    # calculate smoothed vectors
+    if (x@procParams$smooth_method == "savgol") # use savitzky-golay filter
+    {
+        x@d0 <- x@xic
+        
+        if (x@procParams$smooth_times > 1)
+        {
+            for (i in 1:(x@procParams$smooth_times-1))
+            {
+                x@d0 <- pmax(0, signal::sgolayfilt(x = x@d0, p = 2, 
+                                                   n = x@procParams$smooth_win, 
+                                                   m = 0)) # ~780 µsecs for 25509
+            }
+        }
+        
+        x@d2 <- signal::sgolayfilt(x = x@d0, p = 2, 
+                                   n = x@procParams$smooth_win, 
+                                   m = 2) # ~789 µsecs for 25509
+        
+        x@d0 <- pmax(0, signal::sgolayfilt(x = x@d0, p = 2, 
+                                           n = x@procParams$smooth_win, 
+                                           m = 0)) # ~780 µsecs for 25509
+        
+    } else # use mean smoothing
+    {
+        x@d0 <- x@xic
+        
+        # calculate d1 using running linear regression on d0
+        d1 <- c_running_slope(1:x@procParams$nscan, x@d0, 
+                              floor(x@procParams$smooth_win/2))
+        
+        # calculate d2 using running linear regression on d1
+        x@d2 <- c_running_slope(1:x@procParams$nscan, d1, 
+                                floor(x@procParams$smooth_win/2))
+        
+    }
+    
+    # calculate noise
+    addProcData(x) <- list(noise_sel = which(abs(x@d2) <= quantile(abs(x@d2), .95)))
+    
+    if (length(x@procData$noise_sel) < floor(x@procData$nscan/2)) 
+        x@procData$noise_sel <- 1:x@procData$nscan
+    
+    addProcData(x) <- list(xic_noise = c_peak_to_peak_noise(x = x@procData$noise_sel-1,
+                                                            y = x@xic, w = 1),
+                           d0_noise = c_peak_to_peak_noise(x = x@procData$noise_sel-1,
+                                                           y = x@d0, w = 1),
+                           d2_noise = c_peak_to_peak_noise(x = x@procData$noise_sel-1,
+                                                           y = x@d2, w = 1))
+    
+    # calculate detection threshold (if set)
+    if (!is.null(x@procParams$min_intensity))
+    {
+        # TODO: recalculate d0 minimum intensity to d2 minimum intensity using
+        #       second derivative of gaussian
+        x@procParams$min_intensity <- x@procData$d2_noise
+    } else
+    {
+        x@procParams$min_intensity <- x@procData$d2_noise
+    }
+    
+    # process chromatogram (C++ function)
+    # proc_res <- process_chromatogram(x@d0, 
+    #                                 c(0),
+    #                                 x@d2,
+    #                                 0,
+    #                                 floor(x@procParams$smooth_win/2),
+    #                                 x@procParams$p-1,
+    #                                 output = ifelse(x@procParams$verbose_output, 1, 0))
+    proc_res <- process_chromatogram(x@d0, 
+                                     c(0),
+                                     x@d2,
+                                     0,
+                                     floor(x@procParams$smooth_win/2),
+                                     x@procParams$p-1,
+                                     output = 0)
+    x@rawProcResults <- proc_res
+    
+    # check that the current peak was detected
+    if (proc_res$current_peak < 0)
+    {
+        setResults(x) <- list(note = "not_detected")
+        
+        if (x@procParams$plot) plotPeak(x)
+        
+        return(x)
+    }
+    
+    # record results from processing
+    x@procResults <- list(
+        adj_apex = proc_res$adj_apex[proc_res$current_peak+1]+1,
+        bl_bounds = c(proc_res$front_baseline_bound[proc_res$current_peak+1]+1,
+                      proc_res$tail_baseline_bound[proc_res$current_peak+1]+1),
+        bl_slope = (x@d0[(proc_res$tail_baseline_bound[proc_res$current_peak+1]+1)] - 
+                        x@d0[(proc_res$front_baseline_bound[proc_res$current_peak+1]+1)]) / 
+            ((proc_res$tail_baseline_bound[proc_res$current_peak+1]+1) - 
+                 (proc_res$front_baseline_bound[proc_res$current_peak+1]+1)),
+        peak_bounds = c(proc_res$front_peak_bound[proc_res$current_peak+1]+1,
+                        proc_res$tail_peak_bound[proc_res$current_peak+1]+1),
+        code = c(switch(proc_res$front_code[proc_res$current_peak+1]+1, 
+                        "B", "V", "S", "R"),
+                 switch(proc_res$tail_code[proc_res$current_peak+1]+1, 
+                        "B", "V", "S", "R")),
+        inf = c(proc_res$front_inf[proc_res$current_peak+1]+1,
+                proc_res$tail_inf[proc_res$current_peak+1]+1)
+    )
+    
+    # check peak bounds and apex
+    if (any(x@procResults$bl_bounds < 1) ||
+        any(x@procResults$peak_bounds < 1) ||
+        x@procResults$adj_apex < 1)
+    {
+        setResults(x) <- list(note = "not_detected")
+        
+        return(x)
+    }
+    
+    # check peak width
+    if (x@procResults$peak_bounds[2] - x@procResults$peak_bounds[1] < x@procParams$minpts)
+    {
+        setResults(x) <- list(note = "too_narrow")
+        
+        return(x)
+    }
+    
+    # calculate peak characteristics
+    x <- calculatePeakCharacteristics(x)
+    
+    # if emg_fit true -> perform EMG fit
+    if (x@procParams$fit_emg)
+    {
+        
+    }
+    
+    # if plot true -> plot result
+    if (x@procParams$plot) plotPeak(x)
+    
+    # return object
+    return(x)
+})
+
+
+# cpc_raw class ##########################################################################
+
+#' @title Class for handling the MS raw data backend
+#' 
+#' @description 
+#' 
+#' Class to manage the MS raw data backend using the mzR R-package to parse the
+#' raw data.
+#' 
+#' @slot file_path File path to the raw MS file
+#' @slot header Header of the raw MS file
+#' @slot runInfo Experiment information from the raw MS file
+#' @slot intensity \code{numeric} vector of the individual MS peak intensities
+#' @slot mz \code{numeric} vector of the individual MS peak m/z values
+#' @slot scanidx \code{integer} vector indicating last idx in \code{intensity} and \code{mz} for each scan
+#' @slot scanrate Scans per second
+#' @slot scantime Seconds per scan
+#' @slot nscan Number of scans
+#' 
+#' @name cpc_raw-class
+#' @rdname cpc_raw-class
+#' @export
+setClass("cpc_raw",
+         representation(
+             file_path = "character",
+             header = "data.frame",
+             runInfo = "list",
+             intensity = "numeric",
+             mz = "numeric",
+             scanidx = "integer",
+             scanrate = "numeric",
+             scantime = "numeric",
+             nscan = "integer"
+         ),
+         
+         prototype(
+             file_path = NA_character_,
+             header = data.frame(),
+             runInfo = list(),
+             intensity = NA_real_,
+             mz = NA_real_,
+             scanidx = NA_integer_,
+             scanrate = NA_real_,
+             scantime = NA_real_,
+             nscan = NA_integer_
+         ))
+
+# cpc_raw methods
+
+#' Getter that extracts an XIC from the raw MS data.
+#' 
+#' @param x A cpc_raw object with parsed MS data
+#' @param mzrange
+#' @param scanrage
+#' @param method
+#' 
+#' @return XIC trace
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_raw-methods
+#' 
+#' @example
+setMethod("getXIC", signature("cpc_raw"), function(x, mzrange, scanrange = NULL, method = 1)
+{
+    if (is.null(scanrange)) scanrange <- c(0, x@runInfo$scanCount-1)
+    
+    if (method == 1)
+    {
+        return(getEIC_Rcpp(mz = x@mz, 
+                           intensity = x@intensity,
+                           scan_idx = x@scanidx,
+                           mz_range = mzrange,
+                           scan_range = scanrange))
+    } else
+    {
+        # for some reason this is much slower, using std vectors as arguments instead
+        # of Rcpp-types... I'll just leave it like this until I can look into this.
+        return(getEIC_min(mz = x@mz, 
+                          intensity = x@intensity,
+                          scan_idx = x@scanidx,
+                          mz_range = mzrange,
+                          scan_range = scanrange))
+    }
+})
+
+#' Parsing method for the MS raw data contained in the specified file
+#' 
+#' @param x A cpc_raw object
+#' 
+#' @return cpc_raw object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_raw-methods
+#' 
+#' @example
+setMethod("parseMz", signature("cpc_raw"), function(x) 
+{
+    conn <- mzR::openMSfile(filename = x@file_path, backend = "netCDF")
+    peaks <- mzR::peaks(conn)
+    
+    x@scanidx <- cumsum(unlist(lapply(peaks, nrow)))
+    x@nscan <- length(x@scanidx)
+    
+    x@mz <- unlist(lapply(peaks, function(x) return(x[, 1])))
+    x@intensity <- unlist(lapply(peaks, function(x) return(x[, 2])))
+    
+    x@runInfo <- mzR::runInfo(conn)
+    
+    x@header <- as.data.frame(mzR::header(conn))
+    
+    return(x)
+})
+
+#' Getter method for the scantime vector in a cpc_raw object with parsed MS data
+#' 
+#' @param x A cpc_raw object
+#' 
+#' @return Scantime vector
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc_raw-methods
+#' 
+#' @example
+setMethod("scantime", signature("cpc_raw"), function(x)
+{
+    return(x@header$retentionTime)
+})
+
+
+
+# cpc class ##############################################################################
+
+#' cpc class
+#' 
+#' @slot xd Original \code{XCMSnExp} object.
+#' @slot xdFilt Filtered \code{XCMSnExp} object.
+#' @slot pt \code{data.frame} containing the original peak table from \code{xd}.
+#' @slot cpt \code{data.frame} containing the determined peak characteristics.
+#' @slot fdef Feature definitions (not used currently).
+#' @slot fpeaks Feature defining peaks (not used currently).
+#' @slot procData \code{list} containing processing data.
+#' @slot procParams \code{list} containing processing parameters.
+#' 
+#' @name cpc-class
+#' @rdname cpc-class
+#' @export
+setClass("cpc",
+         representation(
+             xd = "XCMSnExp",
+             xdFilt = "XCMSnExp",
+             pt = "data.frame",
+             cpt = "data.frame",
+             fdef = "data.frame",
+             fpeaks = "list",
+             procData = "list",
+             procParams = "list"
+         ),
+         
+         prototype(
+             xd = new("XCMSnExp"),
+             xdFilt = new("XCMSnExp"),
+             pt = data.frame(),
+             cpt = data.frame(),
+             fdef = data.frame(),
+             fpeaks = list(),
+             procData = list(),
+             procParams = list(ppm = 50, 
+                               min_pts = 7,
+                               min_inf_width = 3,
+                               min_sn = 10,
+                               min_frac = NULL,
+                               min_intensity = NULL,
+                               smooth_method = "savgol",
+                               smooth_times = 2,
+                               smooth_win = NULL,
+                               fit_emg = TRUE, 
+                               sel_peaks = NULL,
+                               sel_files = NULL,
+                               verbose_output = FALSE)
+         ))
+
+
+
+# cpc methods
+
+#' Method to check if a cpc object has a parsed peaktable from XCMS.
+#' 
+#' @param x A cpc object
+#' 
+#' @return Boolean
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("hasPeakTable", signature("cpc"), function(x)
+{
+    return(nrow(x@pt) > 0)
+})
+
+#' Method to check if a cpc object has a characterized peaktable.
+#' 
+#' @param x A cpc object
+#' 
+#' @return Boolean
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("hasCharacterizedPeakTable", signature("cpc"), function(x) 
+{
+    return(nrow(x@cpt) > 0 & nrow(x@cpt) == length(x@procParams$sel_peaks))
+})
+
+#' Getter method for the XCMS object contained in a cpc object
+#' 
+#' @param x A cpc object
+#' 
+#' @return \code{XCMSnExp} object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("xdObj", signature("cpc"), function(x) x@xdObj)
+
+#' Setter method for the XCMS object contained in a cpc object
+#' 
+#' @param x A cpc object
+#' 
+#' @return cpc object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("xdObj<-", signature("cpc"), function(x, value) 
+{
+    # data checks
+    if (class(value) != "XCMSnExp")
+        stop("xd had to be a class of type 'XCMSnExp'")
+    
+    x@xdObj <- value
+    return(x)
+})
+
+#' Method to generate an idx vector of peaks that pass the filter criteria after peak characterization.
+#' 
+#' @param x A cpc object
+#' @param returnBoolean
+#' 
+#' @return Vector of peak indices that pass the filter criteria after peak characterization
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("peaksToKeep", signature("cpc"), function(x, returnBoolean = FALSE)
+{
+    if(!hasCharacterizedPeakTable(x))
+    {
+        stop("Please run processPeaks() before filtering.")
+    }
+    
+    if (is.null(x@procParams$min_intensity))
+    {
+        min_intensity <- 0
+    } else
+    {
+        min_intensity <- x@procParams$min_intensity
+    }
+    
+    keep <- which(x@cpt$note == "detected")
+    
+    keep <- keep[which(x@cpt$sn[keep] >= x@procParams$min_sn)]
+    keep <- keep[which(x@cpt$wb[keep] >= x@procParams$min_pts)]
+    keep <- keep[which(x@cpt$area[keep] >= min_intensity)]
+    
+    if (returnBoolean)
+    {
+        return(1:nrow(x@cpt) %in% keep)
+    } else
+    {
+        return(keep)
+    }
+})
+
+#' Getter method for the parsed peak table from XCMS contained in a cpc object
+#' 
+#' @param x A cpc object
+#' 
+#' @return A data.frame of the peaktable
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("getPeaklist", signature("cpc"), function(x) x@pt)
+
+#' Method that extracts the peak table from an XCMSnExp object contained in a cpc object
+#' 
+#' @param x A cpc object
+#' @param value
+#' 
+#' @return A cpc object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("setPeaklist<-", signature("cpc"), function(x, value) 
+{
+    # data checks
+    
+    x@pt <- value
+    return(x)
+})
+
+#' Getter method for the characterized peak table in a cpc object
+#' 
+#' @param x A cpc object
+#' 
+#' @return A data.frame of the characterized peak table
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("cpt", signature("cpc"), function(x) x@cpt)
+
+#' Setter for the cpt slot in a cpc object
+#' 
+#' @param x A cpc object
+#' @param value
+#' 
+#' @return A cpc object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("cpt<-", signature("cpc"), function(x, value) 
+{
+    # data checks
+    
+    x@cpt <- value
+    return(x)
+})
+
+#' Getter for the procData slot in a cpc object
+#' 
+#' @param x A cpc object
+#' @param value Parameter name, if NULL it returns the entire slot (default = NULL)
+#' 
+#' @return Parameter values as a list()
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("getProcData", signature("cpc"), function(x, value = NULL)
+{
+    if (!is.null(value) & is.character(value))
+    {
+        unlist(x@procData[value])
+    } else
+    {
+        x@procData
+    }
+})
+
+#' Setter for the procData slot in a cpc object
+#' 
+#' @param x A cpc object
+#' @param value Named list of parameter values.
+#' 
+#' @return cpc object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("setProcData<-", signature("cpc"), function(x, value)
+{
+    x@procData <- value
+    return(x)
+    
+    if (class(value) != "list") stop("Process params must be a named list.")
+    
+    datNames <- names(x@procData)
+    valNames <- names(value)
+    
+    if (length(valNames) < 1) stop("Process params must be a named list.")
+    
+    matchedNames <- which(!is.na(match(valNames, datNames)))
+    
+    # parse sel_peaks and sel_files
+    
+    # parse ppm
+    # parse min_intensity
+    # parse min_sn
+    # parse smooth method, smooth_times, and smooth_win
+    
+    x@procData[valNames[matchedNames]] <- value[matchedNames]
+    return(x)
+})
+
+#' Adder for the procData slot in a cpc object
+#' 
+#' @param x A cpc object
+#' @param value Parameter name, if NULL it returns the entire slot (default = NULL)
+#' 
+#' @return cpc object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("addProcData<-", signature("cpc"), function(x, value)
+{
+    if (class(value) != "list") stop("Process params must be a named list.")
+    
+    datNames <- names(x@procData)
+    valNames <- names(value)
+    
+    if (length(valNames) < 1) stop("Process params must be a named list.")
+    
+    matchedNames <- which(!is.na(match(valNames, datNames)))
+    newNames <- which(is.na(match(valNames, datNames)))
+    
+    if (length(matchedNames) > 0)
+    {
+        x@procData[valNames[matchedNames]] <- value[matchedNames]
+    }
+    
+    if (length(newNames) > 0)
+    {
+        x@procData[valNames[newNames]] <- value[newNames]
+    }
+    
+    return(x)
+})
+
+#' Getter for the procParams slot in a cpc object
+#' 
+#' @param x A cpc object
+#' @param value Parameter name, if NULL it returns the entire slot (default = NULL)
+#' 
+#' @return Parameter values as a list()
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("getProcParams", signature("cpc"), function(x, value = NULL) 
+{
+    if (!is.null(value) & is.character(value))
+    {
+        unlist(x@procParams[value])
+    } else
+    {
+        x@procParams
+    }
+})
+
+#' Setter for the procParams slot in a cpc object
+#' 
+#' @param x A cpc object
+#' @param value Named list of parameter values.
+#' 
+#' @return cpc object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("setProcParams<-", signature("cpc"), function(x, value)
+{
+    if (class(value) != "list") stop("Process params must be a named list.")
+    
+    parNames <- names(x@procParams)
+    valNames <- names(value)
+    
+    if (length(valNames) < 1) stop("Process params must be a named list.")
+    
+    matchedNames <- which(!is.na(match(valNames, parNames)))
+    newNames <- which(is.na(match(valNames, parNames)))
+    
+    if (length(matchedNames) > 0)
+    {
+        x@procParams[valNames[matchedNames]] <- value[matchedNames]
+    }
+    
+    if (length(newNames) > 0)
+    {
+        x@procParams[valNames[newNames]] <- value[newNames]
+    }
+    
+    return(x)
+})
+
+#' Adder for the procParams slot in a cpc object
+#' 
+#' @param x A cpc object
+#' @param value Parameter name, if NULL it returns the entire slot (default = NULL)
+#' 
+#' @return cpc object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("addProcParams<-", signature("cpc"), function(x, value)
+{
+    if (class(value) != "list") stop("Process params must be a named list.")
+    
+    parNames <- names(x@procParams)
+    valNames <- names(value)
+    
+    if (length(valNames) < 1) stop("Process params must be a named list.")
+    
+    matchedNames <- which(!is.na(match(valNames, parNames)))
+    newNames <- which(is.na(match(valNames, parNames)))
+    
+    if (length(matchedNames) > 0)
+    {
+        x@procParams[valNames[matchedNames]] <- value[matchedNames]
+    }
+    
+    if (length(newNames) > 0)
+    {
+        x@procParams[valNames[newNames]] <- value[newNames]
+    }
+    
+    return(x)
+})
+
+#' Method for parsing the peak table from an XCMSnExp object contained in the cpc object
+#' 
+#' @param x A cpc object containing an XCMSnExp object
+#' 
+#' @return cpc object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("parsePeaklist", signature("cpc"), function(x)
+{
+    # check that xd contain peak information
+    if (nrow(chromPeaks(x@xd)) < 1) stop("'xd' does not contain any peak information.")
+    
+    # get the peaklist from the XCMS object
+    x@pt <- as.data.frame(xcms::chromPeaks(x@xd))
+    
+    # add id column to the peaklist
+    x@pt <- data.frame(id = 1:nrow(x@pt), x@pt)
+    
+    # parse sel_peaks and sel_files
+    if (!is.null(x@procParams$sel_peaks) & is.numeric(x@procParams$sel_peaks))
+    {
+        if (!is.null(x@procParams$sel_files)) warning("parameter sel_peaks overrides files...")
+        
+        if (any(x@procParams$sel_peaks < 1 & 
+                x@procParams$sel_peaks > nrow(x@pt))) 
+            stop("Selected peaks out of bounds.")
+        
+        x@procParams$sel_files <- sort(unique(x@pt$sample[x@procParams$sel_peaks]))
+        
+    } else
+    {
+        if (is.null(x@procParams$sel_files))
+        {
+            x@procParams$sel_peaks <- 1:nrow(x@pt)
+            x@procParams$sel_files <- sort(unique(x@pt$sample))
+        } else
+        {
+            # sel_peaks <- 1:nrow(ptab)
+            if (any(x@procParams$sel_files < 1 | 
+                    x@procParams$sel_files > length(x@procData$file_paths)))
+                stop("Invalid files selected")
+            
+            x@procParams$sel_peaks <- which(x@pt$sample %in% x@procParams$sel_files)
+        }
+    }
+    
+    # ensure that file_paths are added to procData
+    if (is.null(x@procData$file_paths))
+    {
+        # get file_paths from the XCMS object
+        x@procData$file_paths <- x@xd@processingData@files[x@procParams$sel_files]
+        
+        # check that all files can be opened
+        if (!all(file.exists(x@procData$file_paths))) 
+            stop("Raw data files missing or cannot be opened.")
+    }
+    
+    # set max_sigma for all files
+    addProcData(x) <- 
+        list(max_sigma = foreach(i = 1:length(x@procData$file_paths), .combine = "c") %do% {
+        as.numeric(quantile(x@pt$sigma[which(x@pt$sample == i &
+                                                 !is.na(x@pt$sigma) &
+                                                 x@pt$sigma > 0)],
+                            probs = 0.75))
+    })
+    
+    # return object
+    return(x)
+})
+
+#' @title Method for parsing the feature table from an \code{XCMSnExp} object contained in the cpc object
+#' 
+#' @description
+#' 
+#' This method will set the \code{sel_peaks} parameter in \code{procParams} to 
+#' include only peaks that make up a part of a feature.
+#' It will then set the pt slot to the subsetted peak table from the \code{XCMSnExp} object.
+#' 
+#' @param x A cpc object containing an XCMSnExp object
+#' 
+#' @return cpc object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("parseFeatures", signature("cpc"), function(x)
+{
+    # ensure that use_features is set in params (in case the method is run externally.)
+    setProcParams(x) <- list(use_features = TRUE)
+    
+    # check for feature information in xd (in case the method is run externally.)
+    ## check that correspondence has been run on the xcms object
+    if (!any(unlist(lapply(x@xd@.processHistory, 
+                           function(o) o@type)) == "Peak grouping"))
+    {
+        stop(paste("It does not appear that correspondence has been run on 'xd'. ",
+                   "Use XCMS to perform correspondence on 'xd' before using cpc to ",
+                   "process feature data.", sep = ""))
+    } else
+    {
+        corr_proc_idx <- which(unlist(lapply(x@xd@.processHistory, 
+                                             function(o) o@type)) == "Peak grouping")
+    }
+    
+    ## check that feature information is present in the xcms object
+    if (nrow(featureDefinitions(xd)) < 1)
+        stop(paste("'xd' does not contain any feature information. ",
+                   "Run peak picking and correspondence on the data before running ",
+                   "cpc.", sep = ""))
+    
+    # set min_frac argument
+    if (x@procParams$use_features & is.null(x@procParams$min_frac))
+    {
+        # get min_frac from the xcms object
+        setProcParams(x) <- 
+            list(min_frac = x@xd@.processHistory[[corr_proc_idx]]@param@minFraction)
+    }
+    
+    # get feature definitions from xcms object
+    fdef <- xcms::featureDefinitions(x@xd)
+    
+    x@fdef <- data.frame(fdef[, 1:(ncol(fdef)-1)])
+    x@fpeaks <- fdef$peakidx
+    
+    setProcParams(x) <- 
+        list(sel_peaks = sort(as.integer(unique(unlist(lapply(x@fpeaks, 
+                                                              function(k) return(k)))))))
+    
+    x <- parsePeaklist(x)
+    
+    return(x)
+})
+
+#' Getter for the procData$file_paths slot in a cpc object
+#' 
+#' @param x A cpc object containing an XCMSnExp object
+#' 
+#' @return cpc object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("filePaths", signature("cpc"), function(x) 
+{
+    x@procData$file_paths
+})
+
+#' Main method for processing the peak table in a cpc object.
+#' 
+#' Prior to running this method the peak table must be parsed using the \code{parsePeaklist()} method.
+#' 
+#' @param x A cpc object containing an XCMSnExp object
+#' 
+#' @return cpc object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("processPeaks", signature("cpc"), function(x)
+{
+    # initialize empty cpt data.frame
+    cpt(x) <- data.frame()
+    
+    # check to ensure that all data needed is present
+    if (nrow(x@pt) < 1)
+    {
+        x <- parsePeaklist(x)
+        
+        if (nrow(x@pt) < 1) stop("No peak information in object")
+    }
+    
+    # loop over files
+    # (i <- x@procParams$sel_files[1])
+    for (i in x@procParams$sel_files)
+    {
+        # start timer
+        full_timer <- Sys.time()
+
+        # calculate threshold for sigma as 75% quantile of pt$sigma in current file
+        addProcParams(x) <- list(max_sigma =
+            as.numeric(quantile(x@pt$sigma[which(x@pt$sample == i &
+                                                     !is.na(x@pt$sigma) &
+                                                     x@pt$sigma > 0)],
+                                probs = 0.75)))
+
+        i_idx <- x@procParams$sel_peaks[which(x@pt$sample[x@procParams$sel_peaks] == i)]
+        i_npeaks <- length(i_idx)
+
+        # output
+        cat(paste("File:", x@procData$file_paths[i], "\n"))
+        
+        # load raw data
+        raw <- new("cpc_raw", file_path = x@procData$file_paths[i])
+        raw <- parseMz(raw)
+        
+        # output
+        cat(paste("Found ", i_npeaks, " peak(s).\n", sep = ""))
+        
+        # output <- list(i_progress = 0,
+        #                i_lastprogress = 0,
+        #                i_counter = 1,
+        #                i_npeaks = i_npeaks)
+        i_counter = 1
+        
+        if (x@procParams$verbose_output)
+        {
+            cat(paste("[debug] starting peak processing...\n"))
+        } else
+        {
+            cat("% complete: ")
+            i_progress <- floor(floor(i_counter/i_npeaks*100)/10)*10
+            cat(paste(i_progress, " ", sep=""))
+            i_lastprogress <- i_progress
+        }
+        
+        # (pd <- x@pt[i_idx[1], ])
+        df <- do.call("rbind", apply(x@pt[i_idx, ], 1, FUN = function(pd)
+        {
+            # start timer
+            proc_timer <- Sys.time()
+            
+            # output
+            if (x@procParams$verbose_output) 
+            {
+                cat(paste("[debug] peak: ", pd["id"], "; ", sep = ""))
+            } else
+            {
+                i_progress <<- floor(floor(i_counter/i_npeaks*100)/10)*10
+                i_counter <<- i_counter + 1
+                
+                if (i_progress > i_lastprogress)
+                {
+                    cat(paste(i_progress, " ", sep=""))
+                    i_lastprogress <<- i_progress
+                }
+            }
+            
+            # create chrom object
+            chrom <- new("cpc_chrom",
+                         id = as.integer(pd["id"]),
+                         procParams = list(mz = as.numeric(pd["mz"]),
+                                           p = as.integer(pd["scpos"]),
+                                           s = ifelse(as.numeric(pd["sigma"]) >
+                                                          as.numeric(getProcData(x, "max_sigma")[i]),
+                                                      as.numeric(getProcData(x, "max_sigma")[i]),
+                                                      as.numeric(pd["sigma"])),
+                                           mz_range = c(as.numeric(pd["mz"]) -
+                                                            as.numeric(pd["mz"])/1e6*x@procParams$ppm,
+                                                        as.numeric(pd["mz"]) +
+                                                            as.numeric(pd["mz"])/1e6*x@procParams$ppm),
+                                           min_inf_width = x@procParams$min_inf_width,
+                                           minpts = x@procParams$min_pts,
+                                           min_w = 5,
+                                           max_w = 21))
+            
+            addProcParams(chrom) <- getProcParams(x)
+            
+            # check if xcms data is missing
+            if (any(c(pd["scpos"], pd["sigma"]) == -1) |
+                is.na(unlist(pd["sigma"])))
+            {
+                if (getProcParams(x, "verbose_output")) cat("missing xcms data")
+                
+                setResults(chrom) <- list(note = "xcms_missing",
+                                          file = i)
+            } else # if xcms data exist
+            {
+                setResults(chrom) <- list(file = i)
+                
+                # get XIC
+                setXIC(chrom) <- getXIC(raw, mzrange = chrom@procParams$mz_range)
+                
+                # process chromatogram
+                chrom <- processChromatogram(chrom)
+                
+            }
+            
+            setResults(chrom) <- list(exectime = as.numeric(difftime(Sys.time(), proc_timer,
+                                                                     units = "secs")))
+            
+            # end output line
+            if (x@procParams$verbose_output) cat("\n")
+            
+            return(data.frame(id = chrom@id, getResults(chrom)))
+        }))
+        
+        # end output
+        if (x@procParams$verbose_output)
+        {
+            cat("[debug] Done!\n\n")
+        } else
+        {
+            cat(paste("Done!\n", sep  = ""))
+        }
+        
+        cpt(x) <- rbind(cpt(x), df)
+        
+        # output timer
+        output_formatted_time(full_timer, Sys.time())
+    }
+    
+    # return object
+    return(x)
+})
+
+
+#' Method that creates a filtered XCMSnExp object based on filter criteria.
+#' 
+#' This method is run after \code{processPeaks} in order remove the peaks that 
+#' and creates a filtered XCMSnExp object in the xdFilt slot.
+#' 
+#' @param x A cpc object containing an XCMSnExp object
+#' 
+#' @return cpc object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("filterPeaks", signature("cpc"), function(x)
+{
+    # check that peak characterization has been performed on the object
+    # and that peak characteristics data exist in the object
+    if (!hasCharacterizedPeakTable(x))
+        stop(paste("Please run processPeaks() before trying to filter peaks."))
+    
+    # TODO: Invoke a refineChromPeaks() method that is available in the github but does
+    # not seem to be available in my current package version. For compatibility reasons
+    # I will implement my own version of this.
+    
+    # check that there are chromatographic peaks in the xcms object
+    if (!hasChromPeaks(x@xd)) {
+        stop("No chromatographic peaks present in XCMS object.")
+    }
+    
+    # copy the xcms object
+    x@xdFilt <- x@xd
+    
+    # drop feature definitions if present
+    if (hasFeatures(x@xdFilt)) {
+        message(paste("Removing existing feature definitions from XCMS object.",
+                      "Please run correspondence again..."))
+        x@xdFilt <- dropFeatureDefinitions(x@xdFilt)
+    }
+    
+    # create a vector of peaks to remove based on params
+    keep <- peaksToKeep(x)
+    
+    # remove peaks from xcms object
+    ncp <- chromPeaks(x@xdFilt)
+    chromPeaks(x@xdFilt) <- ncp[keep, ]
+    
+    # return cpc object
+    return(x)
+})
+
+#' External method to generate a \code{cpc_chrom} object from a peak table entry.
+#' 
+#' Prior to running this method the peak table must be parsed using the \code{parsePeaklist} method.
+#' 
+#' @param x A cpc object containing an \code{XCMSnExp} object
+#' 
+#' @return cpc_chrom object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("getChromatogram", signature("cpc"), function(x, id) 
+{
+    results <- list(apex = -1,
+                    bl_front_bound = -1,
+                    bl_tail_bound = -1,
+                    front_bound = -1,
+                    tail_bound = -1,
+                    h1_front_bound = -1,
+                    h1_tail_bound = -1,
+                    h5_front_bound = -1,
+                    h5_tail_bound = -1,
+                    h50_front_bound = -1,
+                    h50_tail_bound = -1,
+                    fwhm = -1,
+                    wb = -1,
+                    a = -1,
+                    b = -1,
+                    tf = -1,
+                    height = -1,
+                    area = -1,
+                    sn = -1,
+                    code = "",
+                    note = "",
+                    exectime = -1,
+                    file = -1)
+    
+    if (nrow(x@cpt) > 0)
+    {
+        results <- x@cpt[id, names(results)]
+    }
+    
+    chrom <- new("cpc_chrom",
+                 id = as.integer(id),
+                 procParams = list(mz = as.numeric(x@pt$mz[id]),
+                                   p = as.integer(x@pt$scpos[id]),
+                                   s = ifelse(as.numeric(x@pt$sigma[id]) >
+                                                  as.numeric(x@procData$max_sigma[x@pt$sample[id]]),
+                                              as.numeric(x@procData$max_sigma[x@pt$sample[id]]),
+                                              as.numeric(x@pt$sigma[id])),
+                                   mz_range = c(as.numeric(x@pt$mz[id]) -
+                                                    as.numeric(x@pt$mz[id])/1e6*x@procParams$ppm,
+                                                as.numeric(x@pt$mz[id]) +
+                                                    as.numeric(x@pt$mz[id])/1e6*x@procParams$ppm),
+                                   min_inf_width = x@procParams$min_inf_width,
+                                   minpts = x@procParams$min_pts,
+                                   min_w = 5,
+                                   max_w = 21),
+                 results = results)
+    
+    addProcParams(chrom) <- getProcParams(x)
+    
+    return(chrom)
+})
+
+#' Title
+#' 
+#' @param x A cpc object containing an \code{XCMSnExp} object
+#' 
+#' @return cpc object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("show", signature("cpc"), function(x)
+{
+    cat(paste("S4 object of type 'cpc'.\n"))
+    attributes(x)
+})
+
+#' Title
+#' 
+#' @param x A cpc object containing an \code{XCMSnExp} object
+#' 
+#' @return cpc object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+#' 
+#' @example
+setMethod("summary", signature("cpc"), function(x)
+{
+    cat(paste("S4 object of type 'cpc'.\n"))
+})
+
+

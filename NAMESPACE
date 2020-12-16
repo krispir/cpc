@@ -1,0 +1,4 @@
+useDynLib(cpc, .registration=TRUE)
+exportPattern("^[[:alpha:]]+")
+importFrom(Rcpp, evalCpp)
+importClassesFrom("xcms")

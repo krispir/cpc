@@ -1,0 +1,17 @@
+Encoding: UTF-8
+Package: cpc
+Type: Package
+Title: Comprehensive Peak Characterization of LC/GC-MS Data
+Version: 0.1
+Date: 2020-12-16
+Authors@R: person("Kristian", "Pirttilä", email = "kristian.pirttila@ilk.uu.se",
+                  role = c("aut", "cre"))
+Maintainer: Kristian Pirttilä <kristian.pirttila@ilk.uu.se>
+Description: Allows comprehensive peak characterization and filtering using 
+  analytical chemistry parameters of peaks detected using XCMS.
+License: GPL (>= 2)
+Imports: Rcpp (>= 1.0.5)
+Dependencies: xcms (>= 3.0.0)
+LinkingTo: Rcpp
+SystemRequirements: C++11
+RoxygenNote: 7.1.1
