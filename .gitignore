@@ -7,3 +7,5 @@ src/*.so
 src/*.dll
 *.o
 *.so
+_dev/
+local_data/
