@@ -13,10 +13,8 @@
 \alias{cpt<-,cpc-method}
 \alias{getProcData,cpc-method}
 \alias{setProcData<-,cpc-method}
-\alias{addProcData<-,cpc-method}
 \alias{getProcParams,cpc-method}
 \alias{setProcParams<-,cpc-method}
-\alias{addProcParams<-,cpc-method}
 \alias{parsePeaklist,cpc-method}
 \alias{parseFeatures,cpc-method}
 \alias{filePaths,cpc-method}
@@ -25,7 +23,7 @@
 \alias{getChromatogram,cpc-method}
 \alias{show,cpc-method}
 \alias{summary,cpc-method}
-\title{Method to check if a cpc object has a parsed peaktable from XCMS.}
+\title{Method to check if a \code{cpc} object has a parsed peaktable}
 \usage{
 \S4method{hasPeakTable}{cpc}(x)
 
@@ -49,13 +47,11 @@
 
 \S4method{setProcData}{cpc}(x) <- value
 
-\S4method{addProcData}{cpc}(x) <- value
+\S4method{setProcData}{cpc}(x) <- value
 
 \S4method{getProcParams}{cpc}(x, value = NULL)
 
 \S4method{setProcParams}{cpc}(x) <- value
-
-\S4method{addProcParams}{cpc}(x) <- value
 
 \S4method{parsePeaklist}{cpc}(x)
 
@@ -74,68 +70,80 @@
 \S4method{summary}{cpc}(x)
 }
 \arguments{
-\item{x}{A cpc object containing an \code{XCMSnExp} object}
+\item{x}{A \code{cpc} object}
 
-\item{value}{Parameter name, if NULL it returns the entire slot (default = NULL)}
+\item{value}{A named \code{list} of parameters.}
 
-\item{returnBoolean}{}
+\item{returnBoolean}{\code{boolean} indicating if ...}
 }
 \value{
-Boolean
+A \link{boolean}
 
-Boolean
+A \link{boolean}
 
-\code{XCMSnExp} object
+A \code{XCMSnExp} object
 
-cpc object
+A \code{cpc} object
 
-Vector of peak indices that pass the filter criteria after peak characterization
+An \code{integer} vector of peak idx that pass the criteria
 
-A data.frame of the peaktable
+A \code{data.frame} of the peak table
 
-A cpc object
+A \code{cpc} object
 
-A data.frame of the characterized peak table
+A \code{data.frame} of the characterized peak table
 
-A cpc object
+A \code{cpc} object
 
-Parameter values as a list()
+Named \code{list} holding the parameter values
 
-cpc object
+A \code{cpc} object
 
-cpc object
+A \code{cpc} object
 
-Parameter values as a list()
+A named \code{list} of process parameters.
 
-cpc object
+A \code{cpc} object.
 
-cpc object
+A \code{cpc} object
 
-cpc object
+A \code{cpc} object
 
-cpc object
+A \code{character} vector with file paths
 
-cpc object
+A \code{cpc} object
 
-cpc object
+A \code{cpc} object
 
-cpc object
-
-cpc_chrom object
-
-cpc object
-
-cpc object
+A \code{cpc_chrom} object
 }
 \description{
+Takes a named \code{list} of parameters as argument. If a parameter name 
+already exists, it is updated with the new value and if it does not already
+exist, it is added.
+
+Parses the peak table contained in the \code{XCMSnExp} object and stores it in the \code{pt} slot.
+
 This method will set the \code{sel_peaks} parameter in \code{procParams} to 
 include only peaks that make up a part of a feature.
-It will then set the pt slot to the subsetted peak table from the \code{XCMSnExp} object.
+It will call parsePeaklist with the new peak subset.
 
-Prior to running this method the peak table must be parsed using the \code{parsePeaklist()} method.
-
-This method is run after \code{processPeaks} in order remove the peaks that 
-and creates a filtered XCMSnExp object in the xdFilt slot.
-
+This is the main method run on a \code{cpc} object to characterize the peaks detected by XCMS.
 Prior to running this method the peak table must be parsed using the \code{parsePeaklist} method.
+
+This method is run after \code{processPeaks} in order to remove the peaks 
+that do not fulfill the criteria and creates a filtered \code{XCMSnExp} 
+object and stores it in the \code{xdFilt} slot.
+
+Prior to running this method the peak table must be parsed using the 
+\code{parsePeaklist} or \code{parseFeatures} methods.
+}
+\seealso{
+\list{parsePeaklist}
+
+\link{parsePeaklist}, \link{parseFeatures}
+
+\link{processPeaks}
+
+\link{parsePeaklist}, \link{parseFeatures}, \link{cpc_chrom-class}
 }

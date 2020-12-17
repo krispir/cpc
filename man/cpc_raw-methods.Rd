@@ -5,7 +5,7 @@
 \alias{getXIC,cpc_raw-method}
 \alias{parseMz,cpc_raw-method}
 \alias{scantime,cpc_raw-method}
-\title{Getter that extracts an XIC from the raw MS data.}
+\title{Method to generate an XIC from a \code{cpc_raw} object}
 \usage{
 \S4method{getXIC}{cpc_raw}(x, mzrange, scanrange = NULL, method = 1)
 
@@ -14,19 +14,23 @@
 \S4method{scantime}{cpc_raw}(x)
 }
 \arguments{
-\item{x}{A cpc_raw object}
+\item{x}{A \code{cpc_raw} object}
 
-\item{method}{}
+\item{mzrange}{A \code{numeric} vector of length 2.}
+
+\item{method}{A single \code{integer} indicating which method to use.}
+
+\item{scanrage}{An \code{integer} vector of length 2.}
 }
 \value{
-XIC trace
+A \code{numeric} vector.
 
-cpc_raw object
+A \code{cpc_raw} object
 
-Scantime vector
+A \code{numeric} vector with scantimes
 }
 \description{
-Getter that extracts an XIC from the raw MS data.
+Method to generate an XIC from a \code{cpc_raw} object
 
 Parsing method for the MS raw data contained in the specified file
 
