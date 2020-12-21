@@ -1,4 +1,3 @@
-# Top level wrapper for filtering peaks
 
 #' @title Wrapper function for filter the peaks detected by XCMS
 #' 
@@ -21,8 +20,6 @@
 #' @seealso \link{characterize_xcms_peaklist}
 #' 
 #' @export
-#'
-#' @examples
 filter_xcms_peaklist <- function(xd, verbose_output = FALSE,
                                  return_type = c("xcms", "cpc"),
                                  plot = FALSE, ...)

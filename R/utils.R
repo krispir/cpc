@@ -1,13 +1,4 @@
-#' Title
-#'
-#' @param m 
-#' @param block.size 
-#' @param nb 
-#'
-#' @return
-#' @export
-#'
-#' @examples
+
 cut_by_size <- function (m, block.size, nb = ceiling(m/block.size))
 {
     if (nb > m)
@@ -19,15 +10,6 @@ cut_by_size <- function (m, block.size, nb = ceiling(m/block.size))
     cbind(lower, upper, size)
 }
 
-#' Title
-#'
-#' @param start 
-#' @param end 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 output_formatted_time <- function(start, end)
 {
     elapsed_time <- as.numeric(difftime(end, start, units = "secs"))
@@ -52,22 +34,6 @@ output_formatted_time <- function(start, end)
         ".\n", sep = "")
 }
 
-#' Title
-#'
-#' @param y 
-#' @param apex 
-#' @param bl_bounds 
-#' @param peak_bounds 
-#' @param frac 
-#' @param exact 
-#' @param id 
-#' @param debug 
-#' @param plot 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 find_height_bounds <- function(y = NULL, apex = NULL, 
                                bl_bounds = NULL, peak_bounds = NULL, 
                                frac = NULL, exact = TRUE, id = NULL,
@@ -174,17 +140,6 @@ find_height_bounds <- function(y = NULL, apex = NULL,
     return(output)
 }
 
-#' Title
-#'
-#' @param x 
-#' @param y 
-#' @param a 
-#' @param b 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 peak_integral <- function(x = NULL, y = NULL, a = NULL, b = NULL)
 {
     if (is.null(x)) x <- 1:ny
@@ -225,48 +180,16 @@ peak_integral <- function(x = NULL, y = NULL, a = NULL, b = NULL)
     c_integrate_vector(x = x, y = y, a = a-1, b = b-1)
 }
 
-#' Intepolate x value between two points given a y value
-#'
-#' @param x Vector of length 2 giving the x values
-#' @param y Vector of length 2 giving the y values
-#' @param yval y value
-#'
-#' @return
-#' @export
-#'
-#' @examples
 interpolate_x <- function(x = NULL, y = NULL, yval = NULL)
 {
     ((yval - y[1]) / (y[2]-y[1])) + x[1]
 }
 
-#' Intepolate y value between two points given an x value
-#'
-#' @param x Vector of length 2 giving the x values
-#' @param y Vector of length 2 giving the y values
-#' @param xval x value
-#'
-#' @return
-#' @export
-#'
-#' @examples
 interpolate_y <- function(x = NULL, y = NULL, xval = NULL)
 {
     ((y[2]-y[1])/(x[2]-x[1])) * (xval-x[1]) + y[1]
 }
 
-
-#' Title
-#'
-#' @param x 
-#' @param y 
-#' @param k 
-#' @param yval 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 interpolate_2p_x <- function(x = NULL, y = NULL, k = NULL, yval = NULL)
 {
     ((yval - y[1]) / k) + x[1]

@@ -34,5 +34,5 @@ Method to generate an XIC from a \code{cpc_raw} object
 
 Parsing method for the MS raw data contained in the specified file
 
-Getter method for the scantime vector in a cpc_raw object with parsed MS data
+Getter method for the scantime vector in a \code{cpc_raw} object
 }

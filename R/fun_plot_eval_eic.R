@@ -1,16 +1,3 @@
-#' Title
-#'
-#' @param xd 
-#' @param pks 
-#' @param cpt 
-#' @param out_path 
-#' @param prefix 
-#' @param ... 
-#'
-#' @return
-#' @export
-#'
-#' @examples
 plot_eval_eic <- function(xd = NULL, pks = NULL, cpt = NULL,
                           out_path = NULL, prefix = NULL, ...)
 {
@@ -295,9 +282,31 @@ plot_eval_eic <- function(xd = NULL, pks = NULL, cpt = NULL,
 # * dppm
 # * dmz (ignored in dmz set)
 # * drt
+
+
+#' @title Plot chromatogram(s) with process results
+#' 
+#' @description 
+#' 
+#' This function is used to plot an evaluation panel with results from peak 
+#' processing using the cpc-package.
+#'
+#' @param cpc A \code{cpc} object
+#' @param sel_peaks An \code{integer} vector with peaks indices to be plotted
+#' @param out_path Path to save plots. (Default: NULL)
+#' @param out_prefix Prefix for filenames. (Default: NULL)
+#' @param dppm ppm-value for generating XICs.
+#' @param dmz m/z range for generating XICs (ignored in dppm is set)
+#' @param drt Retention time range for generated XICs (if NULL entire chromatogram is presented)
+#' @param device Graphics device to be used (Default: \code{png})
+#' @param ... Further arguments passed to graphics device
+#'
+#' @return
+#' @export
 plot_chromatograms <- function(cpc, sel_peaks = NULL, 
                                out_path = NULL, out_prefix = NULL,
-                               dppm = 50, dmz = NULL, drt = NULL, ...)
+                               dppm = 50, dmz = NULL, drt = NULL, device = "png",
+                               ...)
 {
     require(mzR)
     require(MSnbase)
@@ -426,15 +435,29 @@ plot_chromatograms <- function(cpc, sel_peaks = NULL,
             # if out_path is defined -> open device
             if (!is.null(out_path))
             {
-                png(filename = paste(out_path, 
-                                     paste(ifelse(!is.null(out_prefix), 
-                                                  paste0(out_prefix, "_"), paste0("")), 
-                                           strsplit(basename(file_paths[f]), "[.]")[[1]][1],
-                                           "_",
-                                           p, 
-                                           ".png",
-                                           sep = ""), 
-                                     sep = "/"), ...)
+                if (device == "png")
+                {
+                    png(filename = paste(out_path, 
+                                         paste(ifelse(!is.null(out_prefix), 
+                                                      paste0(out_prefix, "_"), paste0("")), 
+                                               strsplit(basename(file_paths[f]), "[.]")[[1]][1],
+                                               "_",
+                                               p, 
+                                               ".png",
+                                               sep = ""), 
+                                         sep = "/"), ...)
+                } else
+                {
+                    png(filename = paste(out_path, 
+                                         paste(ifelse(!is.null(out_prefix), 
+                                                      paste0(out_prefix, "_"), paste0("")), 
+                                               strsplit(basename(file_paths[f]), "[.]")[[1]][1],
+                                               "_",
+                                               p, 
+                                               ".png",
+                                               sep = ""), 
+                                         sep = "/"), ...)
+                }
             }
             
             # create plot
@@ -452,150 +475,3 @@ plot_chromatograms <- function(cpc, sel_peaks = NULL,
         rm(raw)
     }
 }
-
-# plot_cpc_xic <- function(cpc_xic = NULL)
-# {
-#     ylim = c(0, max(cpc_xic$xic[cpc_xic$res$bl_front_bound:cpc_xic$res$bl_tail_bound]))
-#     
-#     layout(mat = matrix(c(1,1,2,3), nrow = 2, ncol = 2, byrow = T))
-#     par_bk <- par()
-#     
-#     ###################
-#     # d0 main plot
-#     ###################
-#     
-#     par(mar = c(4.1,4.1,1,1))
-#     plot(cpc_xic$xic_d0, type = "l", 
-#          xlim = cpc_xic$plotrange,
-#          ylim = ylim,
-#          ylab = "XIC",
-#          xlab = "scan")
-#     abline(v = cpc_xic$p, col = "red", lty = "dashed")
-#     # d0 points
-#     points(cpc_xic$xic_d0, pch = 20, cex = 0.9)
-#     lines(cpc_xic$xic, col = "#00000075", lty = "dashed")
-#     
-#     # d0 apex point
-#     points(x = cpc_xic$adj_p, y = cpc_xic$xic_d0[cpc_xic$adj_p], col = "red", pch = 20)
-#     
-#     # d0 current vars
-#     char_ann <- paste("id ", cpc_xic$id, "\n",
-#                       "bl_bound ", paste(cpc_xic$exp$bl_bounds, collapse = "->"), "\n",
-#                       "peak_bound ", paste(cpc_xic$exp$peak_bounds, collapse = "->"), "\n",
-#                       "code ", paste(cpc_xic$exp$code, collapse = ""), "\n",
-#                       "SN ", round(cpc_xic$res$sn, 3), "\n",
-#                       "fwhm ", round(cpc_xic$res$fwhm, 3), "\n",
-#                       "wb ", round(cpc_xic$res$wb, 3), "\n",
-#                       "TF ", round(cpc_xic$res$tf, 3), "\n",
-#                       sep = "")
-#     
-#     text(x = cpc_xic$plotrange[1], y = 0.95*ylim[2], 
-#          labels = char_ann, adj = c(0,1), cex = 0.75)
-#     
-#     # d0 emg fit
-#     if (!is.null(cpc_xic$emg))
-#     {
-#         lines(x = cpc_xic$res$bl_front_bound:cpc_xic$res$bl_tail_bound,
-#               y = cpc_xic$emg$area *
-#                   demg(x = cpc_xic$res$bl_front_bound:cpc_xic$res$bl_tail_bound,
-#                        mu = cpc_xic$emg$mu,
-#                        sigma = cpc_xic$emg$sigma,
-#                        lambda = cpc_xic$emg$lambda),
-#               col = "red", pch = 20, type = "o")
-#     }
-# 
-#     
-#     # d0 peak box
-#     
-#     # d0 baseline
-#     points(x = c(cpc_xic$res$bl_front_bound,
-#                  cpc_xic$res$bl_tail_bound),
-#            y = cpc_xic$xic_d0[c(cpc_xic$res$bl_front_bound,
-#                                 cpc_xic$res$bl_tail_bound)],
-#            col = "red", pch = 20, cex = 1.1)
-#     lines(x = c(cpc_xic$res$bl_front_bound,
-#                 cpc_xic$res$bl_tail_bound),
-#           y = cpc_xic$xic_d0[c(cpc_xic$res$bl_front_bound,
-#                                cpc_xic$res$bl_tail_bound)],
-#           col = "red", lty = "dashed")
-#     
-#     ## bottom
-#     tmp_x <- cpc_xic$exp$peak_bounds
-#     tmp_y <- c(interpolate_y(x = cpc_xic$exp$bl_bounds,
-#                              y = cpc_xic$xic_d0[cpc_xic$exp$bl_bounds],
-#                              xval = cpc_xic$exp$peak_bounds[1]),
-#                interpolate_y(x = cpc_xic$exp$bl_bounds,
-#                              y = cpc_xic$xic_d0[cpc_xic$exp$bl_bounds],
-#                              xval = cpc_xic$exp$peak_bounds[2]))
-#     
-#     lines(x = tmp_x, y = tmp_y, col = "red")
-#     
-#     ## left
-#     tmp_x <- rep(cpc_xic$exp$peak_bounds[1], 2)
-#     tmp_y <- c(interpolate_y(x = cpc_xic$exp$bl_bounds,
-#                              y = cpc_xic$xic_d0[cpc_xic$exp$bl_bounds],
-#                              xval = cpc_xic$exp$peak_bounds[1]),
-#                max(cpc_xic$xic_d0[floor(cpc_xic$exp$peak_bounds[1]):floor(cpc_xic$exp$peak_bounds[2])]))
-#     
-#     lines(x = tmp_x, y = tmp_y, col = "red")
-#     
-#     ## top
-#     tmp_x <- cpc_xic$exp$peak_bounds
-#     tmp_y <- rep(max(cpc_xic$xic_d0[floor(cpc_xic$exp$peak_bounds[1]):floor(cpc_xic$exp$peak_bounds[2])]), 2)
-#     
-#     lines(x = tmp_x, y = tmp_y, col = "red")
-#     
-#     ## right
-#     tmp_x <- rep(cpc_xic$exp$peak_bounds[2], 2)
-#     tmp_y <- c(interpolate_y(x = cpc_xic$exp$bl_bounds,
-#                              y = cpc_xic$xic_d0[cpc_xic$exp$bl_bounds],
-#                              xval = cpc_xic$exp$peak_bounds[2]),
-#                max(cpc_xic$xic_d0[floor(cpc_xic$exp$peak_bounds[1]):floor(cpc_xic$exp$peak_bounds[2])]))
-#     
-#     lines(x = tmp_x, y = tmp_y, col = "red")
-#     
-#     ###################
-#     # d1 main plot
-#     ###################
-#     
-#     par(mar = c(5.1,4.1,1,1))
-#     plot(cpc_xic$xic_d1, type = "l", col = "#000000", 
-#          xlim = cpc_xic$plotrange,
-#          ylim = c(min(cpc_xic$xic_d1[cpc_xic$plotrange[1]:cpc_xic$plotrange[2]]),
-#                   max(cpc_xic$xic_d1[cpc_xic$plotrange[1]:cpc_xic$plotrange[2]])),
-#          ylab = "1st derivative",
-#          xlab = "scan")
-#     # d1 peak bounds
-#     points(x = cpc_xic$exp$peak_bounds, y = cpc_xic$xic_d1[cpc_xic$exp$peak_bounds],
-#            col = "red", pch = 20)
-#     # d1 0 line
-#     abline(h = 0, col = "red")
-#     # d1 final peak bounds
-#     abline(v = cpc_xic$exp$peak_bounds, col = "red")
-#     # d1 final bl bounds
-#     abline(v = cpc_xic$exp$bl_bounds, col = "blue")
-#     
-#     ###################
-#     # d2 main plot
-#     ###################
-#     
-#     par(mar = c(5.1,4.1,1,1))
-#     plot(cpc_xic$xic_d2, type = "l", col = "#000000", 
-#          xlim = cpc_xic$plotrange,
-#          ylim = c(min(cpc_xic$xic_d2[cpc_xic$plotrange[1]:cpc_xic$plotrange[2]]),
-#                   max(cpc_xic$xic_d2[cpc_xic$plotrange[1]:cpc_xic$plotrange[2]])),
-#          ylab = "2nd derivative",
-#          xlab = "scan")
-#     # d2 peak bounds
-#     points(x = cpc_xic$exp$peak_bounds, y = cpc_xic$xic_d2[cpc_xic$exp$peak_bounds],
-#            col = "red", pch = 20)
-#     # d2 0 line
-#     abline(h = 0, col = "red")
-#     # d1 final peak bounds
-#     abline(v = cpc_xic$exp$peak_bounds, col = "red")
-#     # d1 final bl bounds
-#     abline(v = cpc_xic$exp$bl_bounds, col = "blue")
-#     
-#     layout(mat = matrix(c(1), nrow = 1, ncol = 1))
-#     par(mar = par_bk$mar)
-# }

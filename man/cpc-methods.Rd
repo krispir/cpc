@@ -122,11 +122,12 @@ Takes a named \code{list} of parameters as argument. If a parameter name
 already exists, it is updated with the new value and if it does not already
 exist, it is added.
 
-Parses the peak table contained in the \code{XCMSnExp} object and stores it in the \code{pt} slot.
+Parses the peak table contained in the \code{XCMSnExp} object and stores it 
+in the \code{pt} slot.
 
 This method will set the \code{sel_peaks} parameter in \code{procParams} to 
-include only peaks that make up a part of a feature.
-It will call parsePeaklist with the new peak subset.
+include only peaks that make up a part of a feature. It will call 
+\code{parsePeaklist} with the new peak subset.
 
 This is the main method run on a \code{cpc} object to characterize the peaks detected by XCMS.
 Prior to running this method the peak table must be parsed using the \code{parsePeaklist} method.
@@ -139,7 +140,7 @@ Prior to running this method the peak table must be parsed using the
 \code{parsePeaklist} or \code{parseFeatures} methods.
 }
 \seealso{
-\list{parsePeaklist}
+\link{parsePeaklist}
 
 \link{parsePeaklist}, \link{parseFeatures}
 

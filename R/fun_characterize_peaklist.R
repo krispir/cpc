@@ -29,8 +29,6 @@
 #' @seealso \link{filter_xcms_peaklist}, \link{cpc-class}
 #' 
 #' @export
-#'
-#' @examples
 characterize_xcms_peaklist <- function(xd, ppm = 50, 
                                        min_pts = 7, # not used here 
                                        min_inf_width = 3, # not used here
