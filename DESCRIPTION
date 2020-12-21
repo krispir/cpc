@@ -22,5 +22,6 @@ Collate:
   "fun_filter_xcms_peaklist.R"
   "fun_emg_fit.R"
   "fun_plot_eval_eic.R"
+  "fun_param.R"
   "utils.R"
   "RcppExports.R"

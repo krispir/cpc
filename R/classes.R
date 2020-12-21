@@ -1,5 +1,158 @@
 
-# cpc_chrom class ########################################################################
+# type unions ##################################################################
+
+setClassUnion("numericOrNULL", members=c("numeric", "NULL"))
+setClassUnion("integerOrNULL", members=c("integer", "NULL"))
+
+# cpcProcParam class ###########################################################
+
+setClass("cpcProcParam",
+         representation(ppm = "numeric", 
+                        min_pts = "integer",
+                        min_inf_width = "numeric",
+                        min_sn = "numeric",
+                        min_frac = "numeric",
+                        min_intensity = "numeric",
+                        smooth_method = "character",
+                        smooth_times = "integer",
+                        smooth_win = "integerOrNULL",
+                        max_sigma = "numericOrNULL",
+                        fit_emg = "logical", 
+                        sel_peaks = "integerOrNULL",
+                        sel_files = "integerOrNULL",
+                        verbose_output = "logical",
+                        plot = "logical"),
+         prototype(ppm = 50.0, 
+                   min_pts = 7L,
+                   min_inf_width = 3.0,
+                   min_sn = 10.0,
+                   min_frac = 0.5,
+                   min_intensity = 1000L,
+                   smooth_method = "savgol",
+                   smooth_times = 2L,
+                   smooth_win = NULL,
+                   max_sigma = NULL,
+                   fit_emg = FALSE, 
+                   sel_peaks = NULL,
+                   sel_files = NULL,
+                   verbose_output = FALSE,
+                   plot = FALSE))
+
+setClass("cpcChromParam",
+         representation(mz = "numericOrNULL",
+                        p = "integerOrNULL",
+                        s = "numericOrNULL",
+                        mz_range = "numericOrNULL"),
+         prototype(mz = NULL,
+                   p = NULL,
+                   s = NULL,
+                   mz_range = NULL),
+         contains = "cpcProcParam")
+
+setClassUnion("cpcParam",
+              members = c("cpcProcParam", "cpcChromParam"))
+
+setMethod("setParam<-", signature("cpcParam"), function(x, value) 
+{
+    if (class(value) == "list")
+    {
+        namesInArgument <- names(value)
+        valueType <- "list"
+        
+        # check that the list is named
+        if (length(namesInArgument) < 1) stop("Process params must be a named list.")
+        
+    } else if (extends(class(value), "cpcParam"))
+    {
+        namesInArgument <- slotNames(value)
+        valueType <- "cpcParam"
+    } else
+    {
+        stop(paste0("Process params must be a named list 
+                    or a cpcParam object."))
+    }
+    
+    # get the slot names from the object
+    namesToMatch <- slotNames(x)
+    
+    # determine matching names and missing names
+    matchedNames <- which(!is.na(match(namesInArgument, namesToMatch)))
+    missingNames <- which(is.na(match(namesInArgument, namesToMatch)))
+    
+    # to avoid errors, output a message with the missing names
+    if (length(missingNames) > 0)
+    {
+        message(paste0("Unknown slot(s): ", paste0(namesInArgument[missingNames], 
+                                                   collapse=", ")))
+    }
+    
+    # update the slots with matching names
+    if (length(matchedNames) > 0)
+    {
+        for (i in 1:length(matchedNames))
+        {
+            if (valueType == "list")
+            {
+                slot(x, namesInArgument[i]) <- value[[i]]
+            } else
+            {
+                slot(x, namesInArgument[i]) <- slot(value, namesInArgument[i])
+            }
+        }
+    }
+    
+    x
+})
+
+# setMethod("getProcParam", signature("cpcParam"), function(x, param)
+# {
+#     # find which params exist
+#     matchedNames <- which(!is.na(match(param, slotNames(x))))
+#     
+#     # check if there are unmatched params and give a message
+#     if (length(matchedNames) < length(param))
+#     {
+#         message(paste0("Missing slots in object: ", 
+#                        paste0(param[-matchedNames], collapse = ", ")))
+#     }
+#     
+#     # if length > 1 -> return matched params as a list
+#     paramList <- vector(mode = "list", length = length(matchedNames))
+#     names(paramList) <- param[matchedNames]
+#     
+#     for (i in 1:length(matchedNames))
+#     {
+#         paramList[param[matchedNames[i]]] <- slot(x, param[matchedNames[i]])
+#     }
+#     
+#     
+# })
+
+setMethod("getParam", signature("cpcParam"), function(x, param)
+{
+    # check the param argument
+    if (!is.character(param) | length(param) != 1)
+    {
+        message("Argument `param` should be a single length character specifying
+                the name of the parameter...")
+        
+        return(NULL)
+    }
+    
+    # check that the param is a slot in the object
+    if (param[1] %in% slotNames(x))
+    {
+        return(slot(x, param[1]))
+    } else
+    {
+        message(paste0("Missing slots in object: ", 
+                       paste0(param, collapse = ", ")))
+        
+        return(NULL)
+    }
+})
+
+# cpc_chrom class ##############################################################
 
 #' @title Class used to process an XIC and calculate peak characteristics
 #' 
@@ -1086,7 +1239,7 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
 })
 
 
-# cpc_raw class ##########################################################################
+# cpc_raw class ################################################################
 
 #' @title Class for handling the MS raw data backend
 #' 
@@ -1213,7 +1366,7 @@ setMethod("scantime", signature("cpc_raw"), function(x)
 
 
 
-# cpc class ##############################################################################
+# cpc class ####################################################################
 
 #' cpc class
 #' 
@@ -1669,7 +1822,7 @@ setMethod("parsePeaklist", signature("cpc"), function(x)
 #' 
 #' @return A \code{cpc} object
 #' 
-#' @seealso \list{parsePeaklist}
+#' @seealso \link{parsePeaklist}
 #' 
 #' @export
 #' @docType methods
