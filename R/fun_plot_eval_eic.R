@@ -1,3 +1,77 @@
+#' @title Plotting of characterized peaks
+#' 
+#' @description 
+#' 
+#' Allows visualization of the characterization results. Plots the chromatogram and the second derivative with peak boundaries illustrated.
+#' 
+#' @param cpc A \code{cpc} object
+#' @param peakIdx \code{numeric} vector of peak indices to be plotted
+#' @param outPath (optional) Path to save plots to
+#' @param prefix (optional) Filename prefix, if NULL the filename of the raw data is used
+#' @param device Graphics device to be used for saving plots (default: "png")
+#' @param ... Additional parameters to be sent to the graphics device
+#'
+#' @return \code{NULL}
+#' @export
+plotPeaks <- function(cpc, peakIdx, outPath = NULL, prefix = NULL, device = "png", ...)
+{
+    # determine which files the peaks are from
+    selectedFiles <- sort(unique(cpc@pt$sample[peakIdx]))
+    
+    # loop over files
+    # (curFile <- selectedFiles[1])
+    for (curFile in selectedFiles)
+    {
+        # determine which of the selected peaks are from curFile
+        peaksFromCurFile <- peakIdx[which(cpc@pt$sample[peakIdx] == curFile)]
+        
+        # fetch raw data
+        raw <- new("cpc_raw", file_path = MSnbase::fileNames(cpc@xd)[curFile])
+        raw <- parseMz(raw)
+        
+        # loop over peaks
+        for (curPeak in peaksFromCurFile)
+        {
+            # open device (optional)
+            if (!is.null(outPath) || !is.null(prefix))
+            {
+                if (is.null(outPath))
+                {
+                    outPath <- getwd()
+                } else
+                {
+                    # check path
+                    if (!file.exists(outPath))
+                    {
+                        dir.create(path = outPath, recursive = T)
+                    }
+                }
+                
+                outFileName <- paste0(outPath, "/", 
+                                      ifelse(is.null(prefix),
+                                             basename(sub(".CDF", "", 
+                                                          MSnbase::fileNames(cpc@xd)[curFile])),
+                                             prefix),
+                                      "_", curPeak, ".", device)
+                
+                do.call(device, list(filename = outFileName, ...))
+            }
+            
+            # create a chromatogram object
+            chrom <- cpc::getChromatogram(cpc, id = curPeak)
+            
+            # plot peak
+            cpc::plotPeak(chrom)
+            
+            # close device(optional)
+            if (!is.null(outPath) || !is.null(prefix))
+            {
+                dev.off()
+            }
+        }
+    }
+}
+
 plot_eval_eic <- function(xd = NULL, pks = NULL, cpt = NULL,
                           out_path = NULL, prefix = NULL, ...)
 {
