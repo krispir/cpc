@@ -15,6 +15,8 @@ cpcChromParam(
   min_sn = 10,
   min_frac = 0.5,
   min_intensity = 1000L,
+  min_w = 5L,
+  max_w = 21L,
   smooth_method = "savgol",
   smooth_times = 2L,
   smooth_win = NULL,
