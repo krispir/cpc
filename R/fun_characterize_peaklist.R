@@ -35,7 +35,7 @@ characterize_xcms_peaklist <- function(xd, ppm = 50,
                                        min_sn = 10, # not used here
                                        min_frac = NULL, # not used here (or at all)
                                        min_intensity = NULL,
-                                       smooth_method = c("savgol", "mean"),
+                                       smooth_method = c("savgol", "mean"), # smooth_method = "savgol"
                                        smooth_times = 2,
                                        smooth_win = NULL,
                                        fit_emg = TRUE,
@@ -79,23 +79,38 @@ characterize_xcms_peaklist <- function(xd, ppm = 50,
     if (class(xd) != "XCMSnExp") stop("'xd' must be an XCMS object of type 'XCMSnExp'.")
     
     # create cpc object
-    cpc <- new("cpc", xd = xd)
+    cpc <- new("cpc", 
+               xd = xd,
+               param = cpcProcParam(ppm = ppm, 
+                                    min_pts = min_pts,
+                                    min_inf_width = min_inf_width,
+                                    min_sn = min_sn,
+                                    min_frac = min_frac,
+                                    min_intensity = min_intensity,
+                                    smooth_method = smooth_method,
+                                    smooth_times = smooth_times,
+                                    smooth_win = smooth_win,
+                                    fit_emg = fit_emg, 
+                                    sel_peaks = sel_peaks,
+                                    sel_files = sel_files,
+                                    verbose_output = verbose_output,
+                                    plot = plot))
     
-    # set params in object
-    setProcParams(cpc) <- list(ppm = ppm, 
-                               min_pts = min_pts,
-                               min_inf_width = min_inf_width,
-                               min_sn = min_sn,
-                               min_frac = min_frac,
-                               min_intensity = min_intensity,
-                               smooth_method = smooth_method,
-                               smooth_times = smooth_times,
-                               smooth_win = smooth_win,
-                               fit_emg = fit_emg, 
-                               sel_peaks = sel_peaks,
-                               sel_files = sel_files,
-                               verbose_output = verbose_output,
-                               plot = plot)
+    # new param methodology with a cpcParam object
+    # setParam(cpc$param) <- list(ppm = ppm, 
+    #                             min_pts = min_pts,
+    #                             min_inf_width = min_inf_width,
+    #                             min_sn = min_sn,
+    #                             min_frac = min_frac,
+    #                             min_intensity = min_intensity,
+    #                             smooth_method = smooth_method,
+    #                             smooth_times = smooth_times,
+    #                             smooth_win = smooth_win,
+    #                             fit_emg = fit_emg, 
+    #                             sel_peaks = sel_peaks,
+    #                             sel_files = sel_files,
+    #                             verbose_output = verbose_output,
+    #                             plot = plot)
     
     # parse peaklist from XCMS object
     cpc <- parsePeaklist(cpc)
