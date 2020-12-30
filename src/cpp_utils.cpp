@@ -1,5 +1,6 @@
 // [[Rcpp::plugins(cpp11)]]
 
+#include <RcppArmadillo.h>
 #include <Rcpp.h>
 #include <vector>
 #include <algorithm>
@@ -13,10 +14,10 @@ using vec_d = std::vector<double>;
 using vec_i = std::vector<int>;
 
 
-double emg(int x, double u, double s, double l)
-{
-    return (l/2)*exp((l/2)*((2*u)+(l*s*s)-(2*x)))*erfc((u+(l*s*s)-x)/(pow(2,0.5)*s));
-}
+// double emg(int x, double u, double s, double l)
+// {
+//     return (l/2)*exp((l/2)*((2*u)+(l*s*s)-(2*x)))*erfc((u+(l*s*s)-x)/(pow(2,0.5)*s));
+// }
 
 
 // Davids R-code
@@ -27,65 +28,63 @@ double emg(int x, double u, double s, double l)
 //             pnorm((mu+lambda*sigma^2-x)/sigma, lower = FALSE, log.p = T)
 //     )
 // }
-double emg_2(double x, double u, double s, double l)
-{
-    return exp(log(l)+l*(u+((l*s*s)/2)-x)+R::pnorm((u+l*s*s-x)/s, 0.0, 1.0, false, true));
-}
-
-// [[Rcpp::export]]
-vec_d c_demg(int xf, int xl, double u, double s, double l)
-{
-    // data checks
-    
-    if (xf > xl) // if xf > xl -> swap
-    {
-        double xtmp = xf;
-        xf = xl;
-        xl = xtmp;
-    }
-    
-    // check for large lambda
-    
-    // initialize output vector
-    vec_d out(xl-xf+1);
-    
-    // fill the output vector
-    for (int i = 0; i < xl-xf+1; i++)
-    {
-        // calculate emg val for x[i]
-        out.at(i) = emg((int) xf+i, u, s, l);
-    }
-    
-    return out;
-}
-
-// [[Rcpp::export]]
-vec_d c_demg_2(vec_d x, double u, double s, double l)
-{
-    // data checks
-    int nx = x.size();
-    
-    // if (xf > xl) // if xf > xl -> swap
-    // {
-    //     double xtmp = xf;
-    //     xf = xl;
-    //     xl = xtmp;
-    // }
-    
-    // check for large lambda
-    
-    // initialize output vector
-    vec_d out(nx);
-    
-    // fill the output vector
-    for (int i = 0; i < nx; i++)
-    {
-        // calculate emg val for x[i]
-        out.at(i) = emg_2(x.at(i), u, s, l);
-    }
-    
-    return out;
-}
+// double emg_2(double x, double u, double s, double l)
+// {
+//     return exp(log(l)+l*(u+((l*s*s)/2)-x)+R::pnorm((u+l*s*s-x)/s, 0.0, 1.0, false, true));
+// }
+// 
+// vec_d c_demg(int xf, int xl, double u, double s, double l)
+// {
+//     // data checks
+//     
+//     if (xf > xl) // if xf > xl -> swap
+//     {
+//         double xtmp = xf;
+//         xf = xl;
+//         xl = xtmp;
+//     }
+//     
+//     // check for large lambda
+//     
+//     // initialize output vector
+//     vec_d out(xl-xf+1);
+//     
+//     // fill the output vector
+//     for (int i = 0; i < xl-xf+1; i++)
+//     {
+//         // calculate emg val for x[i]
+//         out.at(i) = emg((int) xf+i, u, s, l);
+//     }
+//     
+//     return out;
+// }
+// 
+// vec_d c_demg_2(vec_d x, double u, double s, double l)
+// {
+//     // data checks
+//     int nx = x.size();
+//     
+//     // if (xf > xl) // if xf > xl -> swap
+//     // {
+//     //     double xtmp = xf;
+//     //     xf = xl;
+//     //     xl = xtmp;
+//     // }
+//     
+//     // check for large lambda
+//     
+//     // initialize output vector
+//     vec_d out(nx);
+//     
+//     // fill the output vector
+//     for (int i = 0; i < nx; i++)
+//     {
+//         // calculate emg val for x[i]
+//         out.at(i) = emg_2(x.at(i), u, s, l);
+//     }
+//     
+//     return out;
+// }
 
 // Davids R-code
 // cemgsmat <- function(pars.m, .x)
@@ -94,28 +93,27 @@ vec_d c_demg_2(vec_d x, double u, double s, double l)
 //         p[4] * demg(x = .x, mu = p[1], sigma = p[2], lambda = p[3])
 //     }, .x = .x)
 // }
-
-// [[Rcpp::export]]
-NumericMatrix c_cemgsmat(NumericMatrix parsm, vec_d x)
-{
-    int npar = parsm.nrow();
-    int nx = x.size();
-    
-    vec_d emg(nx);
-    NumericMatrix emgmat(x.size(), parsm.nrow());
-    
-    for (int i = 0; i < npar; i++)
-    {
-        emg = c_demg_2(x, parsm(i, 0), parsm(i, 1), parsm(i, 2));
-
-        for (int j = 0; j < nx; j++)
-        {
-            emgmat(j, i) = parsm(i, 3) * emg[j];
-        }
-    }
-    
-    return emgmat;
-}
+// 
+// NumericMatrix c_cemgsmat(NumericMatrix parsm, vec_d x)
+// {
+//     int npar = parsm.nrow();
+//     int nx = x.size();
+//     
+//     vec_d emg(nx);
+//     NumericMatrix emgmat(x.size(), parsm.nrow());
+//     
+//     for (int i = 0; i < npar; i++)
+//     {
+//         emg = c_demg_2(x, parsm(i, 0), parsm(i, 1), parsm(i, 2));
+// 
+//         for (int j = 0; j < nx; j++)
+//         {
+//             emgmat(j, i) = parsm(i, 3) * emg[j];
+//         }
+//     }
+//     
+//     return emgmat;
+// }
 
 // Davids R-code
 // minfunc <- function(pars, .x, .y, .w, .n)
@@ -125,95 +123,93 @@ NumericMatrix c_cemgsmat(NumericMatrix parsm, vec_d x)
 //     pred <- cemgsmat(pars.m, .x)
 //     sum(.w*(.y-rowSums(pred))^2)
 // }
-
-// [[Rcpp::export]]
-double c_minfunc(vec_d pars, vec_d x, vec_d y, vec_d w, int n)
-{
-    if ((int) pars.size() % n != 0)
-    {
-        return -1.0;
-    }
-    
-    int nx = x.size();
-    int npars = pars.size()/n;
-    
-    /* create pars matrix */
-    NumericMatrix parsm(n, npars);
-    
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < npars; j++)
-        {
-            parsm(i, j) = pars.at((j*n)+i);
-        }
-    }
-    
-    /* calculate exponential of pars 1:3 */
-    for (int i = 1; i < npars; i++)
-    {
-        for (int j = 0; j < n; j++)
-        {
-            parsm(j, i) = exp(parsm(j, i));
-        }
-    }
-    
-    /* calculate emgmat */
-    NumericMatrix emgmat = c_cemgsmat(parsm, x);
-    // mat_d emgmat = c_cemgsmat(parsm, x);
-    
-    vec_d emg(nx);
-    
-    /* calculate sum of squares */ 
-    double SS = 0.0;
-    double rowsum = 0.0;
-    
-    for (int i = 0; i < nx; i++)
-    {
-        rowsum = 0.0;
-
-        for (int j = 0; j < n; j++)
-        {
-            rowsum = rowsum + emgmat(i, j);
-        }
-        
-        Rcout << rowsum << " ";
-
-        SS = SS + w.at(i) * pow(y.at(i) - rowsum, 2);
-    }
-    
-    return SS;
-}
-
-// [[Rcpp::export]]
-double c_minfunc_2(vec_d pars, vec_d x, vec_d y, vec_d w, int n)
-{
-    if ((int) pars.size() % n != 0)
-    {
-        return -1.0;
-    }
-    
-    int nx = x.size();
-    
-    vec_d emg(nx);
-    
-    /* calculate sum of squares */ 
-    double SS = 0.0;
-    double rowsum = 0.0;
-    
-    for (int i = 0; i < nx; i++)
-    {
-        rowsum = 0.0;
-        
-        for (int j = 0; j < n; j++)
-        {
-            rowsum += exp(pars.at(j+(3*n))) * emg_2(x[i], pars.at(j), exp(pars.at(j+n)), exp(pars.at(j+(2*n))));
-        }
-        
-        SS = SS + w.at(i) * pow(y.at(i) - rowsum, 2);
-    }
-    
-    return SS;
-}
+// 
+// double c_minfunc(vec_d pars, vec_d x, vec_d y, vec_d w, int n)
+// {
+//     if ((int) pars.size() % n != 0)
+//     {
+//         return -1.0;
+//     }
+//     
+//     int nx = x.size();
+//     int npars = pars.size()/n;
+//     
+//     /* create pars matrix */
+//     NumericMatrix parsm(n, npars);
+//     
+//     for (int i = 0; i < n; i++)
+//     {
+//         for (int j = 0; j < npars; j++)
+//         {
+//             parsm(i, j) = pars.at((j*n)+i);
+//         }
+//     }
+//     
+//     /* calculate exponential of pars 1:3 */
+//     for (int i = 1; i < npars; i++)
+//     {
+//         for (int j = 0; j < n; j++)
+//         {
+//             parsm(j, i) = exp(parsm(j, i));
+//         }
+//     }
+//     
+//     /* calculate emgmat */
+//     NumericMatrix emgmat = c_cemgsmat(parsm, x);
+//     // mat_d emgmat = c_cemgsmat(parsm, x);
+//     
+//     vec_d emg(nx);
+//     
+//     /* calculate sum of squares */ 
+//     double SS = 0.0;
+//     double rowsum = 0.0;
+//     
+//     for (int i = 0; i < nx; i++)
+//     {
+//         rowsum = 0.0;
+// 
+//         for (int j = 0; j < n; j++)
+//         {
+//             rowsum = rowsum + emgmat(i, j);
+//         }
+//         
+//         Rcout << rowsum << " ";
+// 
+//         SS = SS + w.at(i) * pow(y.at(i) - rowsum, 2);
+//     }
+//     
+//     return SS;
+// }
+// 
+// double c_minfunc_2(vec_d pars, vec_d x, vec_d y, vec_d w, int n)
+// {
+//     if ((int) pars.size() % n != 0)
+//     {
+//         return -1.0;
+//     }
+//     
+//     int nx = x.size();
+//     
+//     vec_d emg(nx);
+//     
+//     /* calculate sum of squares */ 
+//     double SS = 0.0;
+//     double rowsum = 0.0;
+//     
+//     for (int i = 0; i < nx; i++)
+//     {
+//         rowsum = 0.0;
+//         
+//         for (int j = 0; j < n; j++)
+//         {
+//             rowsum += exp(pars.at(j+(3*n))) * emg_2(x[i], pars.at(j), exp(pars.at(j+n)), exp(pars.at(j+(2*n))));
+//         }
+//         
+//         SS = SS + w.at(i) * pow(y.at(i) - rowsum, 2);
+//     }
+//     
+//     return SS;
+// }
 
 // Gradient function R-code
 // mingrad <- function(pars, x, y, w, n, h = 10e-6) {
@@ -233,29 +229,28 @@ double c_minfunc_2(vec_d pars, vec_d x, vec_d y, vec_d w, int n)
 //     
 //     gradout
 // }
-
-// [[Rcpp::export]]
-vec_d c_mingrad(vec_d pars, vec_d x, vec_d y, vec_d w, int n, double h = 10e-6)
-{
-    unsigned int nvals = pars.size();
-    
-    vec_d gradout(nvals);
-    vec_d pars_plus_h(nvals);
-    vec_d pars_minus_h(nvals);
-    
-    for (unsigned int i = 0; i < nvals; i++)
-    {
-        pars_plus_h = pars;
-        pars_minus_h = pars;
-        
-        pars_plus_h[i] = pars[i] + h;
-        pars_minus_h[i] = pars[i] - h;
-        
-        gradout[i] = (c_minfunc_2(pars_plus_h, x, y, w, n) - c_minfunc_2(pars_minus_h, x, y, w, n))/(2*h);
-    }
-    
-    return gradout;
-}
+// 
+// vec_d c_mingrad(vec_d pars, vec_d x, vec_d y, vec_d w, int n, double h = 10e-6)
+// {
+//     unsigned int nvals = pars.size();
+//     
+//     vec_d gradout(nvals);
+//     vec_d pars_plus_h(nvals);
+//     vec_d pars_minus_h(nvals);
+//     
+//     for (unsigned int i = 0; i < nvals; i++)
+//     {
+//         pars_plus_h = pars;
+//         pars_minus_h = pars;
+//         
+//         pars_plus_h[i] = pars[i] + h;
+//         pars_minus_h[i] = pars[i] - h;
+//         
+//         gradout[i] = (c_minfunc_2(pars_plus_h, x, y, w, n) - c_minfunc_2(pars_minus_h, x, y, w, n))/(2*h);
+//     }
+//     
+//     return gradout;
+// }
 
 // [[Rcpp::export]]
 vec_i fast_match(vec_i &v1, vec_i &v2)
