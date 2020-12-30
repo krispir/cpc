@@ -1,8 +1,14 @@
 // [[Rcpp::plugins(cpp11)]]
 
+#include <RcppArmadillo.h>
+// [[Rcpp::depends(RcppArmadillo)]]
+
 #include <Rcpp.h>
 #include <bits/stdc++.h>
 #include <deque>
+
+#include <roptim.h>
+// [[Rcpp::depends(roptim)]]
 
 using namespace Rcpp;
 using namespace std;
@@ -180,6 +186,40 @@ int which_max(vec_i &v, int a, int b)
         return max;
 }
 
+// [[Rcpp::export]]
+Roptim<EMGFit> c_emgfit(arma::vec &si, arma::vec &st, arma::vec &wt, arma::vec seed, 
+                   arma::vec lower, arma::vec upper, 
+                   int np, bool hess = false, int trace = 0, 
+                   double h = 1e-5, const std::string method = "Nelder-Mead")
+{
+    EMGFit fit(si, st, wt, seed, np, h);
+    Roptim<EMGFit> opt(method);
+    
+    if (method == "L-BFGS-B" && 
+        (lower.size() != seed.size() || upper.size() != seed.size()))
+    {
+        Rcpp::stop("L-BFGS-B require bounds");
+    } else if (method == "L-BFGS-B")
+    {
+        opt.set_lower(lower);
+        opt.set_upper(upper);
+    }
+    
+    opt.control.trace = trace;
+    
+    opt.set_hessian(hess);
+    
+    opt.minimize(fit, seed);
+    
+    if (trace)
+    {
+        Rcpp::Rcout << "-------------------------" << std::endl;
+        opt.print();
+    }
+    
+    return opt;
+}
+
 /*******************
  * data structures *
  *******************/
@@ -197,6 +237,11 @@ struct PeakTable
     vec_i fpkb, tpkb;   // peak bounds
     vec_i ftyp, ttyp;   // peak bound types
     
+    vec_d emg_mu;       // EMG fitted mu
+    vec_d emg_sigma;    // EMG fitted sigma
+    vec_d emg_lambda;   // EMG fitted lambda
+    vec_d emg_area;     // EMG fitted area
+    
     vec_i remove_these_later;
     
     int npeaks;
@@ -211,6 +256,111 @@ struct PeakTable
     bool check_boundary_overlap(int first, int next);
     
     deque< vec_i > clust;
+    deque< vec_i > final_clust;
+};
+
+struct ChromatogramOptions
+{
+    double apex_tresh = 0.0;
+    double liftoff = 0.0;
+    double touchdown = 0.5;
+    int w = 5;
+    int p = -1;
+    int output = 0;
+    int fit_emg = 1;
+    int fit_only_vip = 1;
+};
+
+/***************************
+ * EMGFit class definition *
+ ***************************/
+class EMGFit : public Functor {
+private:
+    arma::vec si;
+    arma::vec st;
+    arma::vec wt;
+    arma::vec seed;
+    arma::vec pars_plus_h;
+    arma::vec pars_minus_h;
+
+    unsigned int npeaks;
+    unsigned int npars;
+    unsigned int nvals;
+    unsigned int nx;
+    double h = 1e-5;
+
+public:
+    EMGFit(arma::vec &_si,
+           arma::vec &_st,
+           arma::vec &_wt,
+           arma::vec &_seed,
+           unsigned int _npeaks,
+           double _h = 1e-5)
+    {
+        si = _si;
+        st = _st;
+        wt = _wt;
+        seed = _seed;
+        npeaks = _npeaks;
+        npars = _seed.size()/_npeaks;
+        nx = _si.size();
+        nvals = _seed.size();
+        h = _h;
+
+        pars_plus_h = arma::vec(this->nvals);
+        pars_minus_h = arma::vec(this->nvals);
+    }
+
+    double operator()(const arma::vec &pars) override {
+        /* calculate sum of squares */
+        double SS = 0.0;
+        double sum = 0.0;
+
+        for (unsigned int i = 0; i < this->nx; i++)
+        {
+            sum = 0.0;
+
+            // A * emg[x_i]
+            for (unsigned int j = 0; j < this->npeaks; j++)
+            {
+                sum += exp(pars.at(3+j*this->npars)) * // A
+                    this->emg(this->st.at(i),
+                              pars.at(j*this->npars),
+                              exp(pars.at(1+j*this->npars)),
+                              exp(pars.at(2+j*this->npars))); // emg[x_i]
+            }
+
+            SS += this->wt.at(i) * std::pow(this->si.at(i) - sum, 2);
+        }
+
+        return SS;
+    }
+
+    void Gradient(const arma::vec &pars, arma::vec &gr) override {
+        if (gr.size() != this->nvals)
+        {
+            gr = arma::zeros<arma::vec>(this->nvals);
+        }
+
+        for (unsigned int i = 0; i < this->nvals; i++)
+        {
+            this->pars_plus_h = pars;
+            this->pars_minus_h = pars;
+
+            // pars_plus_h.at(i) = pars.at(i) + this->h;
+            // pars_minus_h.at(i) = pars.at(i) - this->h;
+            this->pars_plus_h.at(i) = pars.at(i) + this->h*pars.at(i);
+            this->pars_minus_h.at(i) = pars.at(i) - this->h*pars.at(i);
+
+            gr.at(i) = ((*this)(this->pars_plus_h)-(*this)(this->pars_minus_h))/(2*this->h*pars.at(i));
+        }
+    }
+
+    double emg(double x, double u, double s, double l)
+    {
+        return exp(log(l)+l*(u+((l*s*s)/2)-x) +
+                   R::pnorm((u+l*s*s-x)/s, 0.0, 1.0, false, true));
+    }
 };
 
 /*********************************
@@ -251,6 +401,7 @@ private:
     void expand_all_peaks();
     void expand_all_clusters();
     void adjust_apices();
+    void fit_emg(int only_vip); // deconvolution with emg
     
     vec_i expand_to_baseline(int fexp, int texp, double fthr, double tthr);
     
@@ -1026,7 +1177,7 @@ void Chromatogram::detect_clusters()
      * loop over all peaks and create clusters *
      *******************************************/
     i = 0;
-    cur_clust[0] = 0;
+    cur_clust.at(0) = 0;
 
     // set first front peak bound type to 0
     pt.ftyp.at(0) = 0;
@@ -1038,7 +1189,7 @@ void Chromatogram::detect_clusters()
     while(i < pt.npeaks)
     {
         // add current peak to current cluster
-        cur_clust[1] = i;
+        cur_clust.at(1) = i;
 
         // Rcout << "Peak: " << i << "; ";
 
@@ -1089,7 +1240,7 @@ void Chromatogram::detect_clusters()
             // Rcout << "last peak in chromatogram.; ";
             
             // set first peak in cluster front code to 0 (baseline)
-            pt.ftyp.at(cur_clust[0]) = 0;
+            pt.ftyp.at(cur_clust.at(0)) = 0;
             
             // set last peak in cluster tail code to 1 (baseline)
             pt.ttyp.at(i) = 0;
@@ -1103,13 +1254,13 @@ void Chromatogram::detect_clusters()
             // push current cluster onto stack
             pt.clust.push_back(cur_clust);
 
-        } else if (!pt.check_boundary_overlap(cur_clust[0], i+1)) // next peak doesnt
+        } else if (!pt.check_boundary_overlap(cur_clust.at(0), i+1)) // next peak doesnt
                                                                   // belong in cluster
         {
             // Rcout << "last peak in cluster.; ";
             
             // set first peak in cluster front code to 0 (baseline)
-            pt.ftyp.at(cur_clust[0]) = 0;
+            pt.ftyp.at(cur_clust.at(0)) = 0;
             
             // set last peak in cluster tail code to 0 (baseline)
             pt.ttyp.at(i) = 0;
@@ -1121,7 +1272,7 @@ void Chromatogram::detect_clusters()
             pt.clust.push_back(cur_clust);
 
             // start a new cluster from next peak
-            cur_clust[0] = i + 1;
+            cur_clust.at(0) = i + 1;
             
             // Rcout << "ttyp[i] = " << pt.ttyp.at(i) << "; ";
             // Rcout << "ftyp[i] = " << pt.ftyp.at(i) << "; ";
@@ -1381,7 +1532,8 @@ void Chromatogram::adjust_cluster_baseline(vec_i &clust)
         clust = new_clust.back();
         new_clust.pop_back();
         
-        if (output) Rcout << "Adjust baseline " << clust[0] << "->" << clust[1] << "; ";
+        if (output) Rcout << "Adjust baseline " << clust[0] << "->" 
+                          << clust[1] << "; ";
         
         if (get_vip() > 0 && (clust[1] < get_vip() || clust[0] > get_vip()))
         {
@@ -1389,10 +1541,11 @@ void Chromatogram::adjust_cluster_baseline(vec_i &clust)
             
             continue; // skip the current cluster
         }
-            
+        
         
         // calculate d0 baseline residual between baseline bounds
-        calculate_baseline_residual(pt.fblb.at(clust[0]), pt.tblb.at(clust[1]));
+        calculate_baseline_residual(pt.fblb.at(clust[0]), 
+                                    pt.tblb.at(clust[1]));
         
         // loop over the entire baseline range
         lowest_point = pt.fblb.at(clust[0]);
@@ -1710,6 +1863,11 @@ void Chromatogram::adjust_apices()
     }
 }
 
+void Chromatogram::fit_emg(int only_vip = 1)
+{
+    
+}
+
 void Chromatogram::process_chromatogram(int min_inf_pts = 2)
 {
     if (output) Rcout << "Detecting peaks...\n";
@@ -1795,8 +1953,8 @@ void Chromatogram::process_chromatogram(int min_inf_pts = 2)
 //' cpc::process_chromatogram(d0 = smvec, d1 = 1.0, d2 = ddsmvec, apex_thresh = 10)
 // [[Rcpp::export]]
 Rcpp::List process_chromatogram(vec_d &d0, vec_d &d1, vec_d &d2,
-                          double apex_thresh = 0, int w = 5, int p = -1,
-                          double liftoff = 0, double touchdown = 0.5, int output = 0)
+                          double apex_thresh = 0.0, int w = 5, int p = -1,
+                          double liftoff = 0.0, double touchdown = 0.5, int output = 0)
 {
     // initialize Chromatogram class
     Chromatogram chrom(d0, d1, d2, apex_thresh, w, p, liftoff, touchdown, output);
