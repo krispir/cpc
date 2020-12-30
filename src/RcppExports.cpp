@@ -2,6 +2,7 @@
 // Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #include "cpc_types.hpp"
+#include <RcppArmadillo.h>
 #include <Rcpp.h>
 
 using namespace Rcpp;
@@ -22,6 +23,52 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type touchdown(touchdownSEXP);
     Rcpp::traits::input_parameter< int >::type output(outputSEXP);
     rcpp_result_gen = Rcpp::wrap(process_chromatogram(d0, d1, d2, apex_thresh, w, p, liftoff, touchdown, output));
+    return rcpp_result_gen;
+END_RCPP
+}
+// c_emg_eval
+double c_emg_eval(vec_d& pars, vec_d& x, vec_d& y, vec_d& w, int n);
+RcppExport SEXP _cpc_c_emg_eval(SEXP parsSEXP, SEXP xSEXP, SEXP ySEXP, SEXP wSEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< vec_d& >::type pars(parsSEXP);
+    Rcpp::traits::input_parameter< vec_d& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< vec_d& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< vec_d& >::type w(wSEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_emg_eval(pars, x, y, w, n));
+    return rcpp_result_gen;
+END_RCPP
+}
+// c_emg_eval2
+double c_emg_eval2(vec_d& pars, vec_d& x, vec_d& y, vec_d& w, int n);
+RcppExport SEXP _cpc_c_emg_eval2(SEXP parsSEXP, SEXP xSEXP, SEXP ySEXP, SEXP wSEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< vec_d& >::type pars(parsSEXP);
+    Rcpp::traits::input_parameter< vec_d& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< vec_d& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< vec_d& >::type w(wSEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_emg_eval2(pars, x, y, w, n));
+    return rcpp_result_gen;
+END_RCPP
+}
+// c_emg_grad
+vec_d c_emg_grad(vec_d& pars, vec_d& x, vec_d& y, vec_d& w, int n, double h);
+RcppExport SEXP _cpc_c_emg_grad(SEXP parsSEXP, SEXP xSEXP, SEXP ySEXP, SEXP wSEXP, SEXP nSEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< vec_d& >::type pars(parsSEXP);
+    Rcpp::traits::input_parameter< vec_d& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< vec_d& >::type y(ySEXP);
+    Rcpp::traits::input_parameter< vec_d& >::type w(wSEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_emg_grad(pars, x, y, w, n, h));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -52,93 +99,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector& >::type mz_range(mz_rangeSEXP);
     Rcpp::traits::input_parameter< IntegerVector& >::type scan_range(scan_rangeSEXP);
     rcpp_result_gen = Rcpp::wrap(getEIC_Rcpp(mz, intensity, scan_idx, mz_range, scan_range));
-    return rcpp_result_gen;
-END_RCPP
-}
-// c_demg
-vec_d c_demg(int xf, int xl, double u, double s, double l);
-RcppExport SEXP _cpc_c_demg(SEXP xfSEXP, SEXP xlSEXP, SEXP uSEXP, SEXP sSEXP, SEXP lSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type xf(xfSEXP);
-    Rcpp::traits::input_parameter< int >::type xl(xlSEXP);
-    Rcpp::traits::input_parameter< double >::type u(uSEXP);
-    Rcpp::traits::input_parameter< double >::type s(sSEXP);
-    Rcpp::traits::input_parameter< double >::type l(lSEXP);
-    rcpp_result_gen = Rcpp::wrap(c_demg(xf, xl, u, s, l));
-    return rcpp_result_gen;
-END_RCPP
-}
-// c_demg_2
-vec_d c_demg_2(vec_d x, double u, double s, double l);
-RcppExport SEXP _cpc_c_demg_2(SEXP xSEXP, SEXP uSEXP, SEXP sSEXP, SEXP lSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< vec_d >::type x(xSEXP);
-    Rcpp::traits::input_parameter< double >::type u(uSEXP);
-    Rcpp::traits::input_parameter< double >::type s(sSEXP);
-    Rcpp::traits::input_parameter< double >::type l(lSEXP);
-    rcpp_result_gen = Rcpp::wrap(c_demg_2(x, u, s, l));
-    return rcpp_result_gen;
-END_RCPP
-}
-// c_cemgsmat
-NumericMatrix c_cemgsmat(NumericMatrix parsm, vec_d x);
-RcppExport SEXP _cpc_c_cemgsmat(SEXP parsmSEXP, SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type parsm(parsmSEXP);
-    Rcpp::traits::input_parameter< vec_d >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(c_cemgsmat(parsm, x));
-    return rcpp_result_gen;
-END_RCPP
-}
-// c_minfunc
-double c_minfunc(vec_d pars, vec_d x, vec_d y, vec_d w, int n);
-RcppExport SEXP _cpc_c_minfunc(SEXP parsSEXP, SEXP xSEXP, SEXP ySEXP, SEXP wSEXP, SEXP nSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< vec_d >::type pars(parsSEXP);
-    Rcpp::traits::input_parameter< vec_d >::type x(xSEXP);
-    Rcpp::traits::input_parameter< vec_d >::type y(ySEXP);
-    Rcpp::traits::input_parameter< vec_d >::type w(wSEXP);
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    rcpp_result_gen = Rcpp::wrap(c_minfunc(pars, x, y, w, n));
-    return rcpp_result_gen;
-END_RCPP
-}
-// c_minfunc_2
-double c_minfunc_2(vec_d pars, vec_d x, vec_d y, vec_d w, int n);
-RcppExport SEXP _cpc_c_minfunc_2(SEXP parsSEXP, SEXP xSEXP, SEXP ySEXP, SEXP wSEXP, SEXP nSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< vec_d >::type pars(parsSEXP);
-    Rcpp::traits::input_parameter< vec_d >::type x(xSEXP);
-    Rcpp::traits::input_parameter< vec_d >::type y(ySEXP);
-    Rcpp::traits::input_parameter< vec_d >::type w(wSEXP);
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    rcpp_result_gen = Rcpp::wrap(c_minfunc_2(pars, x, y, w, n));
-    return rcpp_result_gen;
-END_RCPP
-}
-// c_mingrad
-vec_d c_mingrad(vec_d pars, vec_d x, vec_d y, vec_d w, int n, double h);
-RcppExport SEXP _cpc_c_mingrad(SEXP parsSEXP, SEXP xSEXP, SEXP ySEXP, SEXP wSEXP, SEXP nSEXP, SEXP hSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< vec_d >::type pars(parsSEXP);
-    Rcpp::traits::input_parameter< vec_d >::type x(xSEXP);
-    Rcpp::traits::input_parameter< vec_d >::type y(ySEXP);
-    Rcpp::traits::input_parameter< vec_d >::type w(wSEXP);
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    Rcpp::traits::input_parameter< double >::type h(hSEXP);
-    rcpp_result_gen = Rcpp::wrap(c_mingrad(pars, x, y, w, n, h));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -346,17 +306,140 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// emgfun
+vec_d emgfun(vec_d& x, vec_d& pars, unsigned int npeaks);
+RcppExport SEXP _cpc_emgfun(SEXP xSEXP, SEXP parsSEXP, SEXP npeaksSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< vec_d& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< vec_d& >::type pars(parsSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type npeaks(npeaksSEXP);
+    rcpp_result_gen = Rcpp::wrap(emgfun(x, pars, npeaks));
+    return rcpp_result_gen;
+END_RCPP
+}
+// c_emgfit_bfgs
+arma::vec c_emgfit_bfgs(arma::vec& si, arma::vec& st, arma::vec& wt, arma::vec seed, int np, bool hess, int trace, double h);
+RcppExport SEXP _cpc_c_emgfit_bfgs(SEXP siSEXP, SEXP stSEXP, SEXP wtSEXP, SEXP seedSEXP, SEXP npSEXP, SEXP hessSEXP, SEXP traceSEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type si(siSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type st(stSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type wt(wtSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type seed(seedSEXP);
+    Rcpp::traits::input_parameter< int >::type np(npSEXP);
+    Rcpp::traits::input_parameter< bool >::type hess(hessSEXP);
+    Rcpp::traits::input_parameter< int >::type trace(traceSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_emgfit_bfgs(si, st, wt, seed, np, hess, trace, h));
+    return rcpp_result_gen;
+END_RCPP
+}
+// c_emgfit_lbfgsb
+arma::vec c_emgfit_lbfgsb(arma::vec& si, arma::vec& st, arma::vec& wt, arma::vec seed, arma::vec lower, arma::vec upper, int np, bool hess, int trace, double h);
+RcppExport SEXP _cpc_c_emgfit_lbfgsb(SEXP siSEXP, SEXP stSEXP, SEXP wtSEXP, SEXP seedSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP npSEXP, SEXP hessSEXP, SEXP traceSEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type si(siSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type st(stSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type wt(wtSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type seed(seedSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type upper(upperSEXP);
+    Rcpp::traits::input_parameter< int >::type np(npSEXP);
+    Rcpp::traits::input_parameter< bool >::type hess(hessSEXP);
+    Rcpp::traits::input_parameter< int >::type trace(traceSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_emgfit_lbfgsb(si, st, wt, seed, lower, upper, np, hess, trace, h));
+    return rcpp_result_gen;
+END_RCPP
+}
+// c_emgfit_nmead
+arma::vec c_emgfit_nmead(arma::vec& si, arma::vec& st, arma::vec& wt, arma::vec seed, int np, bool hess, int trace, double h);
+RcppExport SEXP _cpc_c_emgfit_nmead(SEXP siSEXP, SEXP stSEXP, SEXP wtSEXP, SEXP seedSEXP, SEXP npSEXP, SEXP hessSEXP, SEXP traceSEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type si(siSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type st(stSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type wt(wtSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type seed(seedSEXP);
+    Rcpp::traits::input_parameter< int >::type np(npSEXP);
+    Rcpp::traits::input_parameter< bool >::type hess(hessSEXP);
+    Rcpp::traits::input_parameter< int >::type trace(traceSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_emgfit_nmead(si, st, wt, seed, np, hess, trace, h));
+    return rcpp_result_gen;
+END_RCPP
+}
+// c_emgfit_sann
+arma::vec c_emgfit_sann(arma::vec& si, arma::vec& st, arma::vec& wt, arma::vec seed, int np, bool hess, int trace, double h);
+RcppExport SEXP _cpc_c_emgfit_sann(SEXP siSEXP, SEXP stSEXP, SEXP wtSEXP, SEXP seedSEXP, SEXP npSEXP, SEXP hessSEXP, SEXP traceSEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type si(siSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type st(stSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type wt(wtSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type seed(seedSEXP);
+    Rcpp::traits::input_parameter< int >::type np(npSEXP);
+    Rcpp::traits::input_parameter< bool >::type hess(hessSEXP);
+    Rcpp::traits::input_parameter< int >::type trace(traceSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_emgfit_sann(si, st, wt, seed, np, hess, trace, h));
+    return rcpp_result_gen;
+END_RCPP
+}
+// c_emgfit_cg
+arma::vec c_emgfit_cg(arma::vec& si, arma::vec& st, arma::vec& wt, arma::vec seed, int np, bool hess, int trace, double h);
+RcppExport SEXP _cpc_c_emgfit_cg(SEXP siSEXP, SEXP stSEXP, SEXP wtSEXP, SEXP seedSEXP, SEXP npSEXP, SEXP hessSEXP, SEXP traceSEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type si(siSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type st(stSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type wt(wtSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type seed(seedSEXP);
+    Rcpp::traits::input_parameter< int >::type np(npSEXP);
+    Rcpp::traits::input_parameter< bool >::type hess(hessSEXP);
+    Rcpp::traits::input_parameter< int >::type trace(traceSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_emgfit_cg(si, st, wt, seed, np, hess, trace, h));
+    return rcpp_result_gen;
+END_RCPP
+}
+// c_emgfit
+arma::vec c_emgfit(arma::vec& si, arma::vec& st, arma::vec& wt, arma::vec seed, arma::vec lower, arma::vec upper, int np, bool hess, int trace, double h, const std::string method);
+RcppExport SEXP _cpc_c_emgfit(SEXP siSEXP, SEXP stSEXP, SEXP wtSEXP, SEXP seedSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP npSEXP, SEXP hessSEXP, SEXP traceSEXP, SEXP hSEXP, SEXP methodSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type si(siSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type st(stSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type wt(wtSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type seed(seedSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type upper(upperSEXP);
+    Rcpp::traits::input_parameter< int >::type np(npSEXP);
+    Rcpp::traits::input_parameter< bool >::type hess(hessSEXP);
+    Rcpp::traits::input_parameter< int >::type trace(traceSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    Rcpp::traits::input_parameter< const std::string >::type method(methodSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_emgfit(si, st, wt, seed, lower, upper, np, hess, trace, h, method));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_cpc_process_chromatogram", (DL_FUNC) &_cpc_process_chromatogram, 9},
+    {"_cpc_c_emg_eval", (DL_FUNC) &_cpc_c_emg_eval, 5},
+    {"_cpc_c_emg_eval2", (DL_FUNC) &_cpc_c_emg_eval2, 5},
+    {"_cpc_c_emg_grad", (DL_FUNC) &_cpc_c_emg_grad, 6},
     {"_cpc_getEIC_min", (DL_FUNC) &_cpc_getEIC_min, 5},
     {"_cpc_getEIC_Rcpp", (DL_FUNC) &_cpc_getEIC_Rcpp, 5},
-    {"_cpc_c_demg", (DL_FUNC) &_cpc_c_demg, 5},
-    {"_cpc_c_demg_2", (DL_FUNC) &_cpc_c_demg_2, 4},
-    {"_cpc_c_cemgsmat", (DL_FUNC) &_cpc_c_cemgsmat, 2},
-    {"_cpc_c_minfunc", (DL_FUNC) &_cpc_c_minfunc, 5},
-    {"_cpc_c_minfunc_2", (DL_FUNC) &_cpc_c_minfunc_2, 5},
-    {"_cpc_c_mingrad", (DL_FUNC) &_cpc_c_mingrad, 6},
     {"_cpc_fast_match", (DL_FUNC) &_cpc_fast_match, 2},
     {"_cpc_match_to_range", (DL_FUNC) &_cpc_match_to_range, 3},
     {"_cpc_skim_to_val", (DL_FUNC) &_cpc_skim_to_val, 5},
@@ -373,6 +456,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cpc_c_local_min", (DL_FUNC) &_cpc_c_local_min, 2},
     {"_cpc_c_get_inflection_points", (DL_FUNC) &_cpc_c_get_inflection_points, 2},
     {"_cpc_c_get_directional_inflection_points", (DL_FUNC) &_cpc_c_get_directional_inflection_points, 2},
+    {"_cpc_emgfun", (DL_FUNC) &_cpc_emgfun, 3},
+    {"_cpc_c_emgfit_bfgs", (DL_FUNC) &_cpc_c_emgfit_bfgs, 8},
+    {"_cpc_c_emgfit_lbfgsb", (DL_FUNC) &_cpc_c_emgfit_lbfgsb, 10},
+    {"_cpc_c_emgfit_nmead", (DL_FUNC) &_cpc_c_emgfit_nmead, 8},
+    {"_cpc_c_emgfit_sann", (DL_FUNC) &_cpc_c_emgfit_sann, 8},
+    {"_cpc_c_emgfit_cg", (DL_FUNC) &_cpc_c_emgfit_cg, 8},
+    {"_cpc_c_emgfit", (DL_FUNC) &_cpc_c_emgfit, 11},
     {NULL, NULL, 0}
 };
 
