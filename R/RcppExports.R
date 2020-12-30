@@ -37,36 +37,24 @@ process_chromatogram <- function(d0, d1, d2, apex_thresh = 0, w = 5L, p = -1L, l
     .Call(`_cpc_process_chromatogram`, d0, d1, d2, apex_thresh, w, p, liftoff, touchdown, output)
 }
 
+c_emg_eval <- function(pars, x, y, w, n) {
+    .Call(`_cpc_c_emg_eval`, pars, x, y, w, n)
+}
+
+c_emg_eval2 <- function(pars, x, y, w, n) {
+    .Call(`_cpc_c_emg_eval2`, pars, x, y, w, n)
+}
+
+c_emg_grad <- function(pars, x, y, w, n, h = 10e-6) {
+    .Call(`_cpc_c_emg_grad`, pars, x, y, w, n, h)
+}
+
 getEIC_min <- function(mz, intensity, scan_idx, mz_range, scan_range) {
     .Call(`_cpc_getEIC_min`, mz, intensity, scan_idx, mz_range, scan_range)
 }
 
 getEIC_Rcpp <- function(mz, intensity, scan_idx, mz_range, scan_range) {
     .Call(`_cpc_getEIC_Rcpp`, mz, intensity, scan_idx, mz_range, scan_range)
-}
-
-c_demg <- function(xf, xl, u, s, l) {
-    .Call(`_cpc_c_demg`, xf, xl, u, s, l)
-}
-
-c_demg_2 <- function(x, u, s, l) {
-    .Call(`_cpc_c_demg_2`, x, u, s, l)
-}
-
-c_cemgsmat <- function(parsm, x) {
-    .Call(`_cpc_c_cemgsmat`, parsm, x)
-}
-
-c_minfunc <- function(pars, x, y, w, n) {
-    .Call(`_cpc_c_minfunc`, pars, x, y, w, n)
-}
-
-c_minfunc_2 <- function(pars, x, y, w, n) {
-    .Call(`_cpc_c_minfunc_2`, pars, x, y, w, n)
-}
-
-c_mingrad <- function(pars, x, y, w, n, h = 10e-6) {
-    .Call(`_cpc_c_mingrad`, pars, x, y, w, n, h)
 }
 
 fast_match <- function(v1, v2) {
@@ -131,5 +119,33 @@ c_get_inflection_points <- function(x, b = 0L) {
 
 c_get_directional_inflection_points <- function(x, b = 0L) {
     .Call(`_cpc_c_get_directional_inflection_points`, x, b)
+}
+
+emgfun <- function(x, pars, npeaks) {
+    .Call(`_cpc_emgfun`, x, pars, npeaks)
+}
+
+c_emgfit_bfgs <- function(si, st, wt, seed, np, hess = FALSE, trace = 0L, h = 1e-5) {
+    .Call(`_cpc_c_emgfit_bfgs`, si, st, wt, seed, np, hess, trace, h)
+}
+
+c_emgfit_lbfgsb <- function(si, st, wt, seed, lower, upper, np, hess = FALSE, trace = 0L, h = 1e-5) {
+    .Call(`_cpc_c_emgfit_lbfgsb`, si, st, wt, seed, lower, upper, np, hess, trace, h)
+}
+
+c_emgfit_nmead <- function(si, st, wt, seed, np, hess = FALSE, trace = 0L, h = 1e-5) {
+    .Call(`_cpc_c_emgfit_nmead`, si, st, wt, seed, np, hess, trace, h)
+}
+
+c_emgfit_sann <- function(si, st, wt, seed, np, hess = FALSE, trace = 0L, h = 1e-5) {
+    .Call(`_cpc_c_emgfit_sann`, si, st, wt, seed, np, hess, trace, h)
+}
+
+c_emgfit_cg <- function(si, st, wt, seed, np, hess = FALSE, trace = 0L, h = 1e-5) {
+    .Call(`_cpc_c_emgfit_cg`, si, st, wt, seed, np, hess, trace, h)
+}
+
+c_emgfit <- function(si, st, wt, seed, lower, upper, np, hess = FALSE, trace = 0L, h = 1e-5, method = "Nelder-Mead") {
+    .Call(`_cpc_c_emgfit`, si, st, wt, seed, lower, upper, np, hess, trace, h, method)
 }
 
