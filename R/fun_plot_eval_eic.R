@@ -25,6 +25,9 @@ plotPeaks <- function(cpc, peakIdx, outPath = NULL, prefix = NULL, device = "png
         # determine which of the selected peaks are from curFile
         peaksFromCurFile <- peakIdx[which(cpc@pt$sample[peakIdx] == curFile)]
         
+        # output
+        cat(paste("Opening file:", x@procData$file_paths[curFile], "\n"))
+        
         # fetch raw data
         raw <- new("cpc_raw", file_path = MSnbase::fileNames(cpc@xd)[curFile])
         raw <- parseMz(raw)
