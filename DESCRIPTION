@@ -11,8 +11,8 @@ Description: Allows comprehensive peak characterization and filtering using
   analytical chemistry parameters of peaks detected using XCMS.
 License: GPL (>= 2)
 Imports: Rcpp (>= 1.0.5)
-Dependencies: xcms (>= 3.0.0), mzR (>= 2.24.1), MSnbase (>= 2.15.7)
-LinkingTo: Rcpp
+Dependencies: xcms (>= 3.0.0), mzR (>= 2.24.1), MSnbase (>= 2.15.7), roptim (>= 0.1.5)
+LinkingTo: Rcpp, RcppArmadillo, roptim
 SystemRequirements: C++11
 RoxygenNote: 7.1.1
 Collate:
