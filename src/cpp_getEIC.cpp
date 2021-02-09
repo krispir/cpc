@@ -60,7 +60,7 @@ int lowerBound(NumericVector &x, double val, int first, int length) {
     mid += half;
     if (x[mid] < val){
       first = mid;
-      first ++;
+      first++;
       length = length - half -1;
     }
     else length = half;
@@ -81,13 +81,92 @@ int upperBound(NumericVector &x, double val, int first, int length) {
     }
     else {
       first = mid;
-      first ++;
+      first++;
       length = length - half -1;
     }
   }
   return first;
 }
 
+
+int binary_search_leftmost(NumericVector &A, int n, double val, int L = -1, int R = -1)
+{ // function binary_search_leftmost(A, n, val):
+  
+  // L := 0
+  if (L < 0) int L = 0;
+  
+  // R := n
+  if (R < 0) int R = n;
+  
+  int m; // midpoint
+  
+  // while L < R:
+  while(L < R)
+  {
+    // m := floor((L + R) / 2)
+    m = floor((L+R)/2);
+    
+    // if A[m] < val:
+    if (A.at(m) < val)
+    {
+      // L := m + 1
+      L = m + 1;
+    } else
+    {
+      // R := m
+      R = m;
+    }
+  }
+  
+  // return L
+  return L;
+}
+
+
+int binary_search_rightmost(NumericVector &A, int n, double val, int L = -1, int R = -1)
+{ // function binary_search_rightmost(A, n, val):
+  
+  // L := 0
+  if (L < 0) int L = 0;
+  
+  // R := n
+  if (R < 0) int R = n;
+  
+  int m; // midpoint
+  
+  // while L < R:
+  while(L < R)
+  {
+    // m := floor((L + R) / 2)
+    m = floor((L+R)/2);
+    
+    // if A[m] > val:
+    if (A.at(m) > val)
+    {
+      // R := m
+      R = m;
+    } else
+    {
+      // L := m + 1
+      L = m + 1;
+    }
+  }
+  
+  // return R - 1
+  return R - 1;
+}
+
+
+// int test_binary_search(vec_d &A, int n, double val, int leftmost = 1)
+// {
+//   if (leftmost)
+//   {
+//     return binary_search_leftmost<double>(A, n, val);
+//   } else
+//   {
+//     return binary_search_rightmost<double>(A, n, val);
+//   }
+// }
 
 // [[Rcpp::export]]
 vec_d getEIC_min(vec_d &mz, 
@@ -189,14 +268,23 @@ NumericVector getEIC_Rcpp(NumericVector &mz,
     
     if (i == 0)
     {
-      i_first = lowerBound(mz, mz_range.at(0), 0, scan_idx.at(i));
-      i_last = upperBound(mz, mz_range.at(1), 0, scan_idx.at(i));
+      // i_first = lowerBound(mz, mz_range.at(0), 0, scan_idx.at(i));
+      // i_last = upperBound(mz, mz_range.at(1), 0, scan_idx.at(i));
+      
+      // int binary_search_leftmost(vector<T> &A, int n, T val, int L = -1, int R = -1)
+      // int binary_search_rightmost(vector<T> &A, int n, T val, int L = -1, int R = -1)
+      
+      i_first = binary_search_leftmost(mz, 0, mz_range.at(0), 0, scan_idx.at(i));
+      i_last = binary_search_rightmost(mz, 0, mz_range.at(1), 0, scan_idx.at(i));
     } else
     {
-      i_first = lowerBound(mz, mz_range.at(0), scan_idx.at(i-1)+1, 
-                           scan_idx.at(i)-scan_idx.at(i-1));
-      i_last = upperBound(mz, mz_range.at(1), scan_idx.at(i-1)+1, 
-                          scan_idx.at(i)-scan_idx.at(i-1));
+      // i_first = lowerBound(mz, mz_range.at(0), scan_idx.at(i-1)+1, 
+      //                      scan_idx.at(i) - scan_idx.at(i-1));
+      // i_last = upperBound(mz, mz_range.at(1), scan_idx.at(i-1)+1, 
+      //                     scan_idx.at(i)-scan_idx.at(i-1));
+      
+      i_first = binary_search_leftmost(mz, 0, mz_range.at(0), scan_idx.at(i-1) + 1, scan_idx.at(i));
+      i_last = binary_search_rightmost(mz, 0, mz_range.at(1), scan_idx.at(i-1) + 1, scan_idx.at(i));
     }
     
     for (j = i_first; j <= i_last; j++)
