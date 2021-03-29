@@ -46,7 +46,7 @@ setGeneric("parsePeaklist", function(x) standardGeneric("parsePeaklist"))
 setGeneric("parseFeatures", function(x) standardGeneric("parseFeatures"))
 setGeneric("parseMz", function(x) standardGeneric("parseMz"))
 setGeneric("peaksToKeep", function(x, returnBoolean = FALSE) standardGeneric("peaksToKeep"))
-setGeneric("plotPeak", function(x) standardGeneric("plotPeak"))
+setGeneric("plotPeak", function(x, plotEMG = F, plotXCMS = T, annotation = character(1)) standardGeneric("plotPeak"))
 setGeneric("processChromatogram", function(x) standardGeneric("processChromatogram"))
 setGeneric("processPeaks", function(x) standardGeneric("processPeaks"))
 
