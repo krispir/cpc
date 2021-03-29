@@ -42,6 +42,32 @@ cpcProcParam <- function(ppm = 50.0,
                          verbose_output = FALSE,
                          plot = FALSE)
 {
+  # check params
+  
+  ## check if any params that need to be set are implicitly set to NULL
+  if (is.null(min_pts)) min_pts <- match.arg(min_pts)
+  if (is.null(min_inf_width)) min_inf_width <- match.arg(min_inf_width)
+  if (is.null(min_sn)) min_sn <- match.arg(min_sn)
+  if (is.null(smooth_times)) smooth_times <- match.arg(smooth_times)
+  smooth_method <- match.arg(smooth_method)
+  
+  if(!is.logical(verbose_output))
+  {
+    message(paste("Argument 'verbose_output' has to be TRUE/FALSE.",
+                  "Using verbose_output = FALSE."))
+    verbose_output = FALSE
+  }
+  
+  ## check values of params
+  if (!is.numeric(min_pts)) stop("'min_pts' has to be an integer value.")
+  if (!is.numeric(min_inf_width)) stop("'min_inf_width' has to be an integer value.")
+  if (!is.numeric(min_sn)) stop("'min_sn' has to be an integer value.")
+  if (!is.null(min_intensity) && !is.numeric(min_intensity))
+    stop("'min_intensity' has to be a numeric value.")
+  if (!is.numeric(smooth_times)) stop("'smooth_times' has to be an integer value.")
+  if (!is.null(smooth_win) && !is.numeric(smooth_win))
+    stop("'smooth_win' has to be an integer value.")
+  
   new("cpcProcParam", ppm = ppm, min_pts = min_pts, 
       min_inf_width = min_inf_width, min_sn = min_sn,
       min_frac = min_frac,
