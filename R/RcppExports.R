@@ -5,6 +5,10 @@ LinearSpacedArray <- function(a, b, N) {
     .Call(`_cpc_LinearSpacedArray`, a, b, N)
 }
 
+c_emgfun <- function(x, pars, npeaks) {
+    .Call(`_cpc_c_emgfun`, x, pars, npeaks)
+}
+
 #' @encoding UTF-8
 #' @title Rcpp wrapper that calls the C++ chromatogram processing framework
 #' 
@@ -120,13 +124,5 @@ c_get_inflection_points <- function(x, b = 0L) {
 
 c_get_directional_inflection_points <- function(x, b = 0L) {
     .Call(`_cpc_c_get_directional_inflection_points`, x, b)
-}
-
-c_emgfit <- function(si, st, wt, seed, lower, upper, np, hess = FALSE, trace = 0L, h = 1e-5, method = "Nelder-Mead", range_scaled = FALSE) {
-    .Call(`_cpc_c_emgfit`, si, st, wt, seed, lower, upper, np, hess, trace, h, method, range_scaled)
-}
-
-emgfun <- function(x, pars, npeaks) {
-    .Call(`_cpc_emgfun`, x, pars, npeaks)
 }
 

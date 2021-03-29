@@ -13,8 +13,51 @@
 #'
 #' @return \code{NULL}
 #' @export
-plotPeaks <- function(cpc, peakIdx, outPath = NULL, prefix = NULL, device = "png", ...)
+plotPeaks <- function(cpc, peakIdx, 
+                      outPath = NULL, prefix = NULL, device = "png", 
+                      plotEMG = F, plotXCMS = T, noPrompt = F, annotation = character(1), ...)
 {
+    # check that there are selected peaks, otherwise plot all with query for 
+    # the user (if noPrompt is FALSE)
+    if (missing(peakIdx))
+    {
+        peakIdx <- 1:nrow(cpc@pt)
+        
+        if (!noPrompt)
+        {
+            response <- ""
+            
+            while(!(response %in% c("y", "n", "yes", "no")))
+            {
+                response <- readline(prompt = paste0("No peaks were selected, will ",
+                                                     "plot all peaks. ", length(peakIdx), 
+                                                     " peak(s) will be plotted. Do ",
+                                                     "you want to continue? (y/n) \n"))
+            }
+            
+            if (response %in% c("n", "no"))
+            {
+                stop("No peaks selected.")
+            }
+        }
+    }
+    
+    # check if supplied annotation vector length match the number of peaks
+    # or is 1
+    if (length(annotation) > 1 && length(annotation) != length(peakIdx))
+    {
+        warning(paste0("annotation should be a single string or a vector of ",
+                       "strings with length equal to the length of peakIdx. ",
+                       "using annotation[1]...\n"))
+        annotation <- annotation[1]
+    }
+    
+    # check that all peakIdx selected are within range
+    if (any(peakIdx < 1 || peakIdx > nrow(cpc@pt)))
+    {
+        stop("One or more peaks selected are out of bounds.")
+    }
+    
     # determine which files the peaks are from
     selectedFiles <- sort(unique(cpc@pt$sample[peakIdx]))
     
@@ -26,15 +69,19 @@ plotPeaks <- function(cpc, peakIdx, outPath = NULL, prefix = NULL, device = "png
         peaksFromCurFile <- peakIdx[which(cpc@pt$sample[peakIdx] == curFile)]
         
         # output
-        cat(paste("Opening file:", x@procData$file_paths[curFile], "\n"))
+        cat(paste("Opening file:", cpc@procData$file_paths[curFile], "\n"))
         
         # fetch raw data
         raw <- new("cpc_raw", file_path = MSnbase::fileNames(cpc@xd)[curFile])
         raw <- parseMz(raw)
         
         # loop over peaks
-        for (curPeak in peaksFromCurFile)
+        for (curPeak in 1:length(peaksFromCurFile))
         {
+            curAnnotation <- ifelse(length(annotation) > 1,
+                                     annotation[curPeak],
+                                     annotation[1])
+            
             # open device (optional)
             if (!is.null(outPath) || !is.null(prefix))
             {
@@ -55,16 +102,17 @@ plotPeaks <- function(cpc, peakIdx, outPath = NULL, prefix = NULL, device = "png
                                              basename(sub(".CDF", "", 
                                                           MSnbase::fileNames(cpc@xd)[curFile])),
                                              prefix),
-                                      "_", curPeak, ".", device)
+                                      "_", peaksFromCurFile[curPeak], ".", device)
                 
                 do.call(device, list(filename = outFileName, ...))
             }
             
             # create a chromatogram object
-            chrom <- cpc::getChromatogram(cpc, id = curPeak)
+            chrom <- cpc::getChromatogram(cpc, id = peaksFromCurFile[curPeak])
             
             # plot peak
-            cpc::plotPeak(chrom)
+            cpc::plotPeak(chrom, plotEMG = plotEMG, plotXCMS = plotXCMS, 
+                          annotation = curAnnotation)
             
             # close device(optional)
             if (!is.null(outPath) || !is.null(prefix))

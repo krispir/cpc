@@ -227,29 +227,61 @@ setClass("cpc_chrom",
                              mz_range = c(-1,-1)),
              rawProcResults = list(),
              procResults = list(),
-             results = list(apex = -1,
-                            bl_front_bound = -1,
-                            bl_tail_bound = -1,
-                            front_bound = -1,
-                            tail_bound = -1,
-                            h1_front_bound = -1,
-                            h1_tail_bound = -1,
-                            h5_front_bound = -1,
-                            h5_tail_bound = -1,
-                            h50_front_bound = -1,
-                            h50_tail_bound = -1,
-                            fwhm = -1,
-                            wb = -1,
-                            a = -1,
-                            b = -1,
-                            tf = -1,
-                            height = -1,
-                            area = -1,
-                            sn = -1,
-                            code = "",
+             results = list(apex = -1L,
+                            finf = -1.0,
+                            tinf = -1.0,
+                            fblb = -1L,
+                            tblb = -1L,
+                            fpkb = -1L,
+                            tpkb = -1L,
+                            fcode = -1L,
+                            tcode = -1L,
+                            blslp = -1.0,
+                            emu = -1.0,
+                            esigma = -1.0,
+                            elambda = -1.0,
+                            earea = -1.0,
+                            econv = -1L,
                             note = "",
-                            exectime = -1,
-                            file = -1)
+                            height = -1.0,
+                            fh1b = -1L,
+                            th1b = -1L,
+                            fh5b = -1L,
+                            th5b = -1L,
+                            fh50b = -1L,
+                            th50b = -1L,
+                            wb = -1.0,
+                            fwhm = -1.0,
+                            area = -1.0,
+                            a = -1.0,
+                            b = -1.0,
+                            tf = -1.0,
+                            sn = Inf,
+                            file = -1L,
+                            exectime = -1.0)
+             # results = list(apex = -1,
+             #                bl_front_bound = -1,
+             #                bl_tail_bound = -1,
+             #                front_bound = -1,
+             #                tail_bound = -1,
+             #                h1_front_bound = -1,
+             #                h1_tail_bound = -1,
+             #                h5_front_bound = -1,
+             #                h5_tail_bound = -1,
+             #                h50_front_bound = -1,
+             #                h50_tail_bound = -1,
+             #                fwhm = -1,
+             #                wb = -1,
+             #                a = -1,
+             #                b = -1,
+             #                tf = -1,
+             #                height = -1,
+             #                area = -1,
+             #                sn = -1,
+             #                code = "",
+             #                note = "",
+             #                exectime = -1,
+             #                file = -1)
          ))
 
 #### Method: getProcParams ####
@@ -433,6 +465,10 @@ setMethod("getResults", signature("cpc_chrom"), function(x) x@results)
 setMethod("setResults<-", signature("cpc_chrom"), function(x, value)
 {
     if (class(value) != "list") stop("Result vals must be a named list.")
+    if (any(unlist(lapply(value, length)) > 1))
+    {
+        stop("Results need to be a named list with all elements of length 1.")
+    }
     
     resNames <- names(x@results)
     valNames <- names(value)
@@ -440,8 +476,20 @@ setMethod("setResults<-", signature("cpc_chrom"), function(x, value)
     if (length(valNames) < 1) stop("Result vals must be a named list.")
     
     matchedNames <- which(!is.na(match(valNames, resNames)))
+    newNames <- which(is.na(match(valNames, resNames)))
     
     x@results[valNames[matchedNames]] <- value[matchedNames]
+    
+    if (length(matchedNames) > 0)
+    {
+        x@results[valNames[matchedNames]] <- value[matchedNames]
+    }
+    
+    if (length(newNames) > 0)
+    {
+        x@results[valNames[newNames]] <- value[newNames]
+    }
+    
     x
 })
 
@@ -482,7 +530,8 @@ setMethod("setXIC<-", signature("cpc_chrom"), function(x, value)
 #' @export
 #' @docType methods
 #' @rdname cpc_chrom-methods
-setMethod("plotPeak", signature("cpc_chrom"), function(x)
+setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS = T,
+                                                       annotation = character(1))
 {
     if (x@results$apex > 0)
     {
@@ -494,7 +543,7 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x)
     
     if (results)
     {
-        ylim = c(0, max(x@xic[x@results$bl_front_bound:x@results$bl_tail_bound]))
+        ylim = c(0, max(x@xic[x@results$fblb:x@results$tblb]))
     } else
     {
         ylim = c(0, max(x@xic[x@procData$plotrange[1]:x@procData$plotrange[2]]))
@@ -524,23 +573,25 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x)
     
     ## d0 current vars
     char_ann <- paste0("id ", x@id, "\n",
-                      "note ", x@results$note, "\n")
+                       "note ", x@results$note, "\n")
+    
+    if (nchar(annotation)>0)
+    {
+        char_ann <- paste0(char_ann, annotation, "\n")
+    }
     
     ## results textbox
     if (results)
         char_ann <- paste0(char_ann,
-                          "bl_bound ", paste(c(x@results$bl_front_bound,
-                                               x@results$bl_tail_bound), collapse = "->"), "\n",
-                          "peak_bound ", paste(c(x@results$front_bound,
-                                                 x@results$tail_bound), collapse = "->"), "\n",
-                          "code ", x@results$code, "\n",
-                          "SN ", round(x@results$sn, 3), "\n",
-                          "fwhm ", round(x@results$fwhm, 3), "\n",
-                          "wb ", round(x@results$wb, 3), "\n",
-                          "TF ", round(x@results$tf, 3), "\n")
-    
-    text(x = x@procData$plotrange[1], y = 0.95*ylim[2], 
-         labels = char_ann, adj = c(0,1), cex = 0.75)
+                           "bl_bound ", paste(c(x@results$fblb,
+                                                x@results$tblb), collapse = "->"), "\n",
+                           "peak_bound ", paste(c(x@results$fpkb,
+                                                  x@results$tpkb), collapse = "->"), "\n",
+                           "code ", paste0(x@results$fcode, x@results$tcode), "\n",
+                           "SN ", round(x@results$sn, 3), "\n",
+                           "fwhm ", round(x@results$fwhm, 3), "\n",
+                           "wb ", round(x@results$wb, 3), "\n",
+                           "TF ", round(x@results$tf, 3), "\n")
     
     ## metadata textbox
     text(x = x@procData$plotrange[2], y = 0.95*ylim[2],
@@ -559,58 +610,89 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x)
     #           col = "red", pch = 20, type = "o")
     # }
     
+    # d0 emg fit
+    if (plotEMG && !is.null(x@results$emu) && x@results$emu >= 0)
+    {
+        lines(x = x@results$fblb:x@results$tblb,
+              y = c_emgfun(x = x@results$fblb:x@results$tblb, 
+                           pars = c(x@results$emu,
+                                    x@results$esigma,
+                                    x@results$elambda,
+                                    x@results$earea), 
+                           npeaks = 1), col = "red", type = "o", pch = 20)
+        
+        char_ann <- paste0(char_ann,
+                           "fit_emg: yes")
+    }
+    
     
     ## d0 peak box
     
     if (results)
     {
         # d0 baseline
-        points(x = c(x@results$bl_front_bound,
-                     x@results$bl_tail_bound),
-               y = x@d0[c(x@results$bl_front_bound,
-                          x@results$bl_tail_bound)],
+        points(x = c(x@results$fblb,
+                     x@results$tblb),
+               y = x@d0[c(x@results$fblb, x@results$tblb)],
                col = "red", pch = 20, cex = 1.1)
-        lines(x = c(x@results$bl_front_bound,
-                    x@results$bl_tail_bound),
-              y = x@d0[c(x@results$bl_front_bound,
-                         x@results$bl_tail_bound)],
+        lines(x = c(x@results$fblb, x@results$tblb),
+              y = x@d0[c(x@results$fblb, x@results$tblb)],
               col = "red", lty = "dashed")
         
         ## bottom
-        tmp_x <- unlist(x@results[c("front_bound", "tail_bound")])
-        tmp_y <- c(interpolate_y(x = unlist(x@results[c("bl_front_bound", "bl_tail_bound")]),
-                                 y = x@d0[unlist(x@results[c("bl_front_bound", "bl_tail_bound")])],
-                                 xval = unlist(x@results$front_bound)),
-                   interpolate_y(x = unlist(x@results[c("bl_front_bound", "bl_tail_bound")]),
-                                 y = x@d0[unlist(x@results[c("bl_front_bound", "bl_tail_bound")])],
-                                 xval = unlist(x@results$tail_bound)))
+        tmp_x <- unlist(x@results[c("fpkb", "tpkb")])
+        tmp_y <- c(interpolate_y(x = unlist(x@results[c("fblb", "tblb")]),
+                                 y = x@d0[unlist(x@results[c("fblb", "tblb")])],
+                                 xval = unlist(x@results$fpkb)),
+                   interpolate_y(x = unlist(x@results[c("fblb", "tblb")]),
+                                 y = x@d0[unlist(x@results[c("fblb", "tblb")])],
+                                 xval = unlist(x@results$tpkb)))
         
         lines(x = tmp_x, y = tmp_y, col = "red")
         
         ## left
-        tmp_x <- rep(x@results$front_bound, 2)
-        tmp_y <- c(interpolate_y(x = unlist(x@results[c("bl_front_bound", "bl_tail_bound")]),
-                                 y = x@d0[unlist(x@results[c("bl_front_bound", "bl_tail_bound")])],
-                                 xval = unlist(x@results$front_bound)),
-                   max(x@d0[floor(x@results$front_bound):floor(x@results$tail_bound)]))
+        tmp_x <- rep(x@results$fpkb, 2)
+        tmp_y <- c(interpolate_y(x = unlist(x@results[c("fblb", "tblb")]),
+                                 y = x@d0[unlist(x@results[c("fblb", "tblb")])],
+                                 xval = unlist(x@results$fpkb)),
+                   max(x@d0[floor(x@results$fpkb):floor(x@results$tpkb)]))
         
         lines(x = tmp_x, y = tmp_y, col = "red")
         
         ## top
-        tmp_x <- unlist(x@results[c("front_bound", "tail_bound")])
-        tmp_y <- rep(max(x@d0[floor(x@results$front_bound):floor(x@results$tail_bound)]), 2)
+        tmp_x <- unlist(x@results[c("fpkb", "tpkb")])
+        tmp_y <- rep(max(x@d0[floor(x@results$fpkb):floor(x@results$tpkb)]), 2)
         
         lines(x = tmp_x, y = tmp_y, col = "red")
         
         ## right
-        tmp_x <- rep(x@results$tail_bound, 2)
-        tmp_y <- c(interpolate_y(x = unlist(x@results[c("bl_front_bound", "bl_tail_bound")]),
-                                 y = x@d0[unlist(x@results[c("bl_front_bound", "bl_tail_bound")])],
-                                 xval = unlist(x@results$tail_bound)),
-                   max(x@d0[floor(x@results$front_bound):floor(x@results$tail_bound)]))
+        tmp_x <- rep(x@results$tpkb, 2)
+        tmp_y <- c(interpolate_y(x = unlist(x@results[c("fblb", "tblb")]),
+                                 y = x@d0[unlist(x@results[c("fblb", "tblb")])],
+                                 xval = unlist(x@results$tpkb)),
+                   max(x@d0[floor(x@results$fpkb):floor(x@results$tpkb)]))
         
         lines(x = tmp_x, y = tmp_y, col = "red")
     }
+    
+    # plot XCMS bounds if plotXCMS == TRUE
+    if (plotXCMS && !any(c(x@procData$pd$scmin,
+                           x@procData$pd$scpos,
+                           x@procData$pd$scmax) <= -1))
+    {
+        points(x = c(x@procData$pd$scmin,
+                     x@procData$pd$scpos,
+                     x@procData$pd$scmax),
+               y = x@d0[c(x@procData$pd$scmin,
+                          x@procData$pd$scpos,
+                          x@procData$pd$scmax)],
+               col = "#0000FF", pch = "o", cex = 1.1)
+    }
+    
+    # data box in main plot
+    text(x = x@procData$plotrange[1], y = 0.95*ylim[2], 
+         labels = char_ann, adj = c(0,1), cex = 0.6)
+    
     
     # d2 main plot
     par(mar = c(5.1,4.1,0,1))
@@ -623,9 +705,9 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x)
     points(x@d2, pch = 20, cex = 0.9)
     # d2 peak bounds
     if (results)
-        points(x = unlist(x@results[c("front_bound", "tail_bound")]), 
-               y = x@d2[unlist(x@results[c("front_bound", "tail_bound")])],
-           col = "red", pch = 20)
+        points(x = unlist(x@results[c("fpkb", "tpkb")]), 
+               y = x@d2[unlist(x@results[c("fpkb", "tpkb")])],
+               col = "red", pch = 20)
     # d2 0 line
     abline(h = 0, col = "red")
     
@@ -652,94 +734,84 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x)
 #' @rdname cpc_chrom-methods
 setMethod("calculatePeakCharacteristics", signature("cpc_chrom"), function(x)
 {
-    # peak apex
-    setResults(x) <- list(apex = x@procResults$adj_apex)
-    
-    # baseline bounds
-    setResults(x) <- list(bl_front_bound = x@procResults$bl_bounds[1],
-                          bl_tail_bound = x@procResults$bl_bounds[2])
-    
-    # peak bounds
-    setResults(x) <- list(front_bound = x@procResults$peak_bounds[1],
-                          tail_bound = x@procResults$peak_bounds[2])
     
     # peak height
     setResults(x) <- list(height = x@d0[x@results$apex] - 
-                              interpolate_y(x = x@procResults$bl_bounds, 
-                                            y = x@d0[x@procResults$bl_bounds], 
+                              interpolate_y(x = c(x@results$fblb, x@results$tblb), 
+                                            y = x@d0[c(x@results$fblb, x@results$tblb)], 
                                             xval = x@results$apex))
     
     # height bounds
     ## 1% peak height
     tmp <- find_height_bounds(y = x@d0, apex = x@results$apex,
-                              bl_bounds = x@procResults$bl_bounds,
-                              peak_bounds = x@procResults$peak_bounds,
+                              bl_bounds = c(x@results$fblb, x@results$tblb),
+                              peak_bounds = c(x@results$fpkb, x@results$tpkb),
                               frac = 0.01, id = x@id,
                               debug = getParam(x@param, "verbose_output"), 
                               plot = getParam(x@param, "plot"))
-    setResults(x) <- list(h1_front_bound = tmp[1],
-                          h1_tail_bound = tmp[2])
+    setResults(x) <- list(fh1b = tmp[1],
+                          th1b = tmp[2])
     
     ## 5% peak height
     tmp <- find_height_bounds(y = x@d0, apex = x@results$apex,
-                              bl_bounds = x@procResults$bl_bounds,
-                              peak_bounds = x@procResults$peak_bounds,
+                              bl_bounds = c(x@results$fblb, x@results$tblb),
+                              peak_bounds = c(x@results$fpkb, x@results$tpkb),
                               frac = 0.05, id = x@id,
                               debug = getParam(x@param, "verbose_output"), 
                               plot = getParam(x@param, "plot"))
-    setResults(x) <- list(h5_front_bound = tmp[1],
-                          h5_tail_bound = tmp[2])
+    setResults(x) <- list(fh5b = tmp[1],
+                          th5b = tmp[2])
     
     ## 50% peak height
     tmp <- find_height_bounds(y = x@d0, apex = x@results$apex,
-                              bl_bounds = x@procResults$bl_bounds,
-                              peak_bounds = x@procResults$peak_bounds,
+                              bl_bounds = c(x@results$fblb, x@results$tblb),
+                              peak_bounds = c(x@results$fpkb, x@results$tpkb),
                               frac = 0.5, id = x@id,
                               debug = getParam(x@param, "verbose_output"), 
                               plot = getParam(x@param, "plot"))
-    setResults(x) <- list(h50_front_bound = tmp[1],
-                          h50_tail_bound = tmp[2])
+    setResults(x) <- list(fh50b = tmp[1],
+                          th50b = tmp[2])
     
     # base width
-    setResults(x) <- list(wb = x@results$h5_tail_bound - x@results$h5_front_bound)
+    setResults(x) <- list(wb = x@results$th5b - x@results$fh5b)
     
     # fwhm
-    setResults(x) <- list(fwhm = x@results$h50_tail_bound - x@results$h50_front_bound)
+    setResults(x) <- list(fwhm = x@results$th50b - x@results$fh50b)
     
     # peak integral
-    integral_x <- floor(x@results$h1_front_bound):floor(x@results$h1_tail_bound)
-    integral_y <- x@d0[floor(x@results$h1_front_bound):floor(x@results$h1_tail_bound)]
+    integral_x <- floor(x@results$fh1b):floor(x@results$th1b)
+    integral_y <- x@d0[integral_x]
     
-    if (floor(x@results$h1_front_bound) < x@results$h1_front_bound)
+    if (floor(x@results$fh1b) < x@results$fh1b)
     {
-        integral_x <- c(x@results$h1_front_bound, integral_x)
-        integral_y <- c(interpolate_y(x = c(floor(x@results$h1_front_bound),
-                                            floor(x@results$h1_front_bound)+1),
-                                      y = x@d0[c(floor(x@results$h1_front_bound),
-                                                 floor(x@results$h1_front_bound)+1)],
-                                      xval = x@results$h1_front_bound),
+        integral_x <- c(x@results$fh1b, integral_x)
+        integral_y <- c(interpolate_y(x = c(floor(x@results$fh1b),
+                                            floor(x@results$fh1b)+1),
+                                      y = x@d0[c(floor(x@results$fh1b),
+                                                 floor(x@results$fh1b)+1)],
+                                      xval = x@results$fh1b),
                         integral_y)
     }
     
-    if (floor(x@results$h1_tail_bound) < x@results$h1_tail_bound)
+    if (floor(x@results$th1b) < x@results$th1b)
     {
-        integral_x <- c(integral_x, x@results$h1_tail_bound)
+        integral_x <- c(integral_x, x@results$th1b)
         integral_y <- c(integral_y,
-                        interpolate_y(x = c(floor(x@results$h1_tail_bound),
-                                            floor(x@results$h1_tail_bound)+1),
-                                      y = x@d0[c(floor(x@results$h1_tail_bound),
-                                                 floor(x@results$h1_tail_bound)+1)],
-                                      xval = x@results$h1_tail_bound))
+                        interpolate_y(x = c(floor(x@results$th1b),
+                                            floor(x@results$th1b)+1),
+                                      y = x@d0[c(floor(x@results$th1b),
+                                                 floor(x@results$th1b)+1)],
+                                      xval = x@results$th1b))
     }
     
-    integral_bl <- ((integral_x - x@results$bl_front_bound) * x@procResults$bl_slope) + 
-        x@d0[x@results$bl_front_bound]
+    integral_bl <- ((integral_x - x@results$fblb) * x@results$blslp) + 
+        x@d0[x@results$fblb]
     
     setResults(x) <- list(area = peak_integral(x = integral_x, y = integral_y - integral_bl)) # ~5 µsecs for 25509
     
     # asymmetry
-    setResults(x) <- list(a = x@results$apex - x@results$h50_front_bound,
-                          b = x@results$h50_tail_bound - x@results$apex)
+    setResults(x) <- list(a = x@results$apex - x@results$fh50b,
+                          b = x@results$th50b - x@results$apex)
     
     setResults(x) <- list(tf = x@results$b / x@results$a)
     
@@ -747,9 +819,6 @@ setMethod("calculatePeakCharacteristics", signature("cpc_chrom"), function(x)
     setResults(x) <- list(sn = ifelse(x@procData$xic_noise > 0,
                                       2*x@results$height / x@procData$xic_noise,
                                       Inf))
-    
-    # boundary codes
-    setResults(x) <- list(code = paste(x@procResults$code, collapse = ""))
     
     # note
     setResults(x) <- list(note = "detected")
@@ -859,200 +928,200 @@ setMethod("smoothChromatogram", signature("cpc_chrom"), function(x)
     return(x)
 })
 
-
-#### Method: fitEMG ####
-
-#' @title Method EMG deconvolution of a chromatogram
 #' 
-#' @description 
+#' #### Method: fitEMG ####
 #' 
-#' Internal method for fitting a series of EMG functions to the chromatogram for
-#' deconvolution of the peak shapes.
-#' 
-#' @param x A \code{cpc_chrom} object
-#' 
-#' @return A \code{cpc_chrom} object
-#' 
-#' @export
-#' @docType methods
-#' @rdname cpc_chrom-methods
-setMethod("fitEMG", signature("cpc_chrom"), function(x)
-{
-    # select peaks to use in the fitting
-    # to test: just use the VIP and the closest peaks before and after
-    sel <- x@rawProcResults$current_peak+1
-    
-    if (x@rawProcResults$front_code[x@rawProcResults$current_peak+1] != 0)
-    {
-        sel <- c(x@rawProcResults$current_peak, sel)
-    }
-    
-    if (x@rawProcResults$tail_code[x@rawProcResults$current_peak+1] != 0)
-    {
-        sel <- c(sel, x@rawProcResults$current_peak+2)
-    }
-    
-    # calculate sigma for selected peaks
-    sel_sigma <- (x@rawProcResults$tail_inf[sel] - x@rawProcResults$front_inf[sel])/2
-    
-    # determine points to fit: front bound of first peak -> tail bound of last peak
-    sel_bound_full <- c(x@rawProcResults$front_peak_bound[sel[1]]+1,
-                        x@rawProcResults$tail_peak_bound[sel[length(sel)]]+1)
-    
-    sel_bound_vip <- c(x@rawProcResults$front_peak_bound[x@rawProcResults$current_peak+1]+1,
-                       x@rawProcResults$tail_peak_bound[x@rawProcResults$current_peak+1]+1)
-    
-    # use only front inf, 3p around apex and tail inf of each selected peak
-    sel1_idx <- sort(unique(c(x@rawProcResults$front_inf[sel]+1,
-                              x@rawProcResults$adj_apex[sel],
-                              x@rawProcResults$adj_apex[sel]+1,
-                              x@rawProcResults$adj_apex[sel]+2,
-                              x@rawProcResults$tail_inf[sel]+1)))
-    
-    # fit peaks
-    (bfgs_full_xic <- fitemgs_bfgs(signal = x@xic[sel_bound_full[1]:sel_bound_full[2]], 
-                                  scantime = sel_bound_full[1]:sel_bound_full[2], 
-                                  seed = list(mu = x@rawProcResults$adj_apex[sel],
-                                              sigma = sel_sigma,
-                                              lambda = rep(10, length(sel))),
-                                  upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
-                                               sigma = sel_sigma*.75,
-                                               lambda = rep(1, length(sel))*.9),
-                                  lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
-                                               sigma = sel_sigma*1.25,
-                                               lambda = rep(30, length(sel))*1.1),
-                                  plot.fit = T))
-    (bfgs_vip_xic <- fitemgs_bfgs(signal = x@xic[sel_bound_vip[1]:sel_bound_vip[2]], 
-                                 scantime = sel_bound_vip[1]:sel_bound_vip[2], 
-                                 seed = list(mu = x@rawProcResults$adj_apex[sel],
-                                             sigma = sel_sigma,
-                                             lambda = rep(10, length(sel))),
-                                 lower = list(mu = x@rawProcResults$adj_apex[sel]-5,
-                                              sigma = sel_sigma*.75,
-                                              lambda = rep(1, length(sel))*.9),
-                                 upper = list(mu = x@rawProcResults$adj_apex[sel]+5,
-                                              sigma = sel_sigma*1.25,
-                                              lambda = rep(30, length(sel))*1.1),
-                                 plot.fit = T))
-    (bfgs_sel1_xic <- fitemgs_bfgs(signal = x@xic[sel1_idx], 
-                                  scantime = sel1_idx, 
-                                  seed = list(mu = x@rawProcResults$adj_apex[sel],
-                                              sigma = sel_sigma,
-                                              lambda = rep(10, length(sel))),
-                                  upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
-                                               sigma = sel_sigma*.75,
-                                               lambda = rep(1, length(sel))*.9),
-                                  lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
-                                               sigma = sel_sigma*1.25,
-                                               lambda = rep(30, length(sel))*1.1),
-                                  plot.fit = T))
-    
-    (bfgs2_full_xic <- fitemgs_bfgs_2(signal = x@xic[sel_bound_full[1]:sel_bound_full[2]], 
-                                     scantime = sel_bound_full[1]:sel_bound_full[2], 
-                                     seed = list(mu = x@rawProcResults$adj_apex[sel],
-                                                 sigma = sel_sigma,
-                                                 lambda = rep(10, length(sel))),
-                                     plot.fit = T))
-    (bfgs2_vip_xic <- fitemgs_bfgs_2(signal = x@xic[sel_bound_vip[1]:sel_bound_vip[2]], 
-                                    scantime = sel_bound_vip[1]:sel_bound_vip[2], 
-                                    seed = list(mu = x@rawProcResults$adj_apex[sel],
-                                                sigma = sel_sigma,
-                                                lambda = rep(10, length(sel))),
-                                    plot.fit = T))
-    (bfgs2_sel1_xic <- fitemgs_bfgs_2(signal = x@xic[sel1_idx], 
-                                    scantime = sel1_idx, 
-                                    seed = list(mu = x@rawProcResults$adj_apex[sel],
-                                                sigma = sel_sigma,
-                                                lambda = rep(10, length(sel))),
-                                    plot.fit = T))
-    
-    (bfgs_full_d0 <- fitemgs_bfgs(signal = x@d0[sel_bound_full[1]:sel_bound_full[2]], 
-                                   scantime = sel_bound_full[1]:sel_bound_full[2], 
-                                   seed = list(mu = x@rawProcResults$adj_apex[sel],
-                                               sigma = sel_sigma,
-                                               lambda = rep(10, length(sel))),
-                                   upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
-                                                sigma = sel_sigma*.75,
-                                                lambda = rep(1, length(sel))*.9),
-                                   lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
-                                                sigma = sel_sigma*1.25,
-                                                lambda = rep(30, length(sel))*1.1),
-                                   plot.fit = T))
-    (bfgs_vip_d0 <- fitemgs_bfgs(signal = x@d0[sel_bound_vip[1]:sel_bound_vip[2]], 
-                                  scantime = sel_bound_vip[1]:sel_bound_vip[2], 
-                                  seed = list(mu = x@rawProcResults$adj_apex[sel],
-                                              sigma = sel_sigma,
-                                              lambda = rep(10, length(sel))),
-                                  upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
-                                               sigma = sel_sigma*.75,
-                                               lambda = rep(1, length(sel))*.9),
-                                  lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
-                                               sigma = sel_sigma*1.25,
-                                               lambda = rep(30, length(sel))*1.1),
-                                  plot.fit = T))
-    (bfgs_sel1_d0 <- fitemgs_bfgs(signal = x@d0[sel1_idx], 
-                                   scantime = sel1_idx, 
-                                   seed = list(mu = x@rawProcResults$adj_apex[sel],
-                                               sigma = sel_sigma,
-                                               lambda = rep(10, length(sel))),
-                                   upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
-                                                sigma = sel_sigma*.75,
-                                                lambda = rep(1, length(sel))*.9),
-                                   lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
-                                                sigma = sel_sigma*1.25,
-                                                lambda = rep(30, length(sel))*1.1),
-                                   plot.fit = T))
-    
-    (bfgs2_full_d0 <- fitemgs_bfgs_2(signal = x@d0[sel_bound_full[1]:sel_bound_full[2]], 
-                                      scantime = sel_bound_full[1]:sel_bound_full[2], 
-                                      seed = list(mu = x@rawProcResults$adj_apex[sel],
-                                                  sigma = sel_sigma,
-                                                  lambda = rep(10, length(sel))),
-                                      plot.fit = T))
-    (bfgs2_vip_d0 <- fitemgs_bfgs_2(signal = x@d0[sel_bound_vip[1]:sel_bound_vip[2]], 
-                                     scantime = sel_bound_vip[1]:sel_bound_vip[2], 
-                                     seed = list(mu = x@rawProcResults$adj_apex[sel],
-                                                 sigma = sel_sigma,
-                                                 lambda = rep(10, length(sel))),
-                                     plot.fit = T))
-    (bfgs2_sel1_d0 <- fitemgs_bfgs_2(signal = x@d0[sel1_idx], 
-                                     scantime = sel1_idx, 
-                                     seed = list(mu = x@rawProcResults$adj_apex[sel],
-                                                 sigma = sel_sigma,
-                                                 lambda = rep(10, length(sel))),
-                                     plot.fit = T))
-    
-    fitemgs(signal = x@xic[sel_bound_full[1]:sel_bound_full[2]], 
-            scantime = sel_bound_full[1]:sel_bound_full[2], 
-            seed = list(mu = x@rawProcResults$adj_apex[sel]+1,
-                        sigma = sel_sigma,
-                        lambda = rep(10, length(sel))),
-            upper = list(mu = x@rawProcResults$adj_apex[sel]+10,
-                         sigma = sel_sigma*2,
-                         lambda = rep(1, length(sel))),
-            lower = list(mu = x@rawProcResults$adj_apex[sel]-10,
-                         sigma = sel_sigma*0.25,
-                         lambda = rep(100, length(sel))),
-            plot.fit = T)
-    
-    fitemgs(signal = x@d0[sel_bound_full[1]:sel_bound_full[2]], 
-            scantime = sel_bound_full[1]:sel_bound_full[2], 
-            seed = list(mu = x@rawProcResults$adj_apex[sel]+1,
-                        sigma = sel_sigma,
-                        lambda = rep(10, length(sel))),
-            upper = list(mu = c(70, 90, 110),
-                         sigma = c(5, 7, 6),
-                         lambda = rep(1, length(sel))),
-            lower = list(mu = c(50, 70, 90),
-                         sigma = c(1.5, 4, 3),
-                         lambda = rep(100, length(sel))),
-            plot.fit = T)
-    
-    
-    
-    # return result
-    return(x)
-})
+#' #' @title Method EMG deconvolution of a chromatogram
+#' #' 
+#' #' @description 
+#' #' 
+#' #' Internal method for fitting a series of EMG functions to the chromatogram for
+#' #' deconvolution of the peak shapes.
+#' #' 
+#' #' @param x A \code{cpc_chrom} object
+#' #' 
+#' #' @return A \code{cpc_chrom} object
+#' #' 
+#' #' @export
+#' #' @docType methods
+#' #' @rdname cpc_chrom-methods
+#' setMethod("fitEMG", signature("cpc_chrom"), function(x)
+#' {
+#'     # select peaks to use in the fitting
+#'     # to test: just use the VIP and the closest peaks before and after
+#'     sel <- x@rawProcResults$current_peak+1
+#'     
+#'     if (x@rawProcResults$front_code[x@rawProcResults$current_peak+1] != 0)
+#'     {
+#'         sel <- c(x@rawProcResults$current_peak, sel)
+#'     }
+#'     
+#'     if (x@rawProcResults$tail_code[x@rawProcResults$current_peak+1] != 0)
+#'     {
+#'         sel <- c(sel, x@rawProcResults$current_peak+2)
+#'     }
+#'     
+#'     # calculate sigma for selected peaks
+#'     sel_sigma <- (x@rawProcResults$tail_inf[sel] - x@rawProcResults$front_inf[sel])/2
+#'     
+#'     # determine points to fit: front bound of first peak -> tail bound of last peak
+#'     sel_bound_full <- c(x@rawProcResults$front_peak_bound[sel[1]]+1,
+#'                         x@rawProcResults$tail_peak_bound[sel[length(sel)]]+1)
+#'     
+#'     sel_bound_vip <- c(x@rawProcResults$front_peak_bound[x@rawProcResults$current_peak+1]+1,
+#'                        x@rawProcResults$tail_peak_bound[x@rawProcResults$current_peak+1]+1)
+#'     
+#'     # use only front inf, 3p around apex and tail inf of each selected peak
+#'     sel1_idx <- sort(unique(c(x@rawProcResults$front_inf[sel]+1,
+#'                               x@rawProcResults$adj_apex[sel],
+#'                               x@rawProcResults$adj_apex[sel]+1,
+#'                               x@rawProcResults$adj_apex[sel]+2,
+#'                               x@rawProcResults$tail_inf[sel]+1)))
+#'     
+#'     # fit peaks
+#'     (bfgs_full_xic <- fitemgs_bfgs(signal = x@xic[sel_bound_full[1]:sel_bound_full[2]], 
+#'                                   scantime = sel_bound_full[1]:sel_bound_full[2], 
+#'                                   seed = list(mu = x@rawProcResults$adj_apex[sel],
+#'                                               sigma = sel_sigma,
+#'                                               lambda = rep(10, length(sel))),
+#'                                   upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
+#'                                                sigma = sel_sigma*.75,
+#'                                                lambda = rep(1, length(sel))*.9),
+#'                                   lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
+#'                                                sigma = sel_sigma*1.25,
+#'                                                lambda = rep(30, length(sel))*1.1),
+#'                                   plot.fit = T))
+#'     (bfgs_vip_xic <- fitemgs_bfgs(signal = x@xic[sel_bound_vip[1]:sel_bound_vip[2]], 
+#'                                  scantime = sel_bound_vip[1]:sel_bound_vip[2], 
+#'                                  seed = list(mu = x@rawProcResults$adj_apex[sel],
+#'                                              sigma = sel_sigma,
+#'                                              lambda = rep(10, length(sel))),
+#'                                  lower = list(mu = x@rawProcResults$adj_apex[sel]-5,
+#'                                               sigma = sel_sigma*.75,
+#'                                               lambda = rep(1, length(sel))*.9),
+#'                                  upper = list(mu = x@rawProcResults$adj_apex[sel]+5,
+#'                                               sigma = sel_sigma*1.25,
+#'                                               lambda = rep(30, length(sel))*1.1),
+#'                                  plot.fit = T))
+#'     (bfgs_sel1_xic <- fitemgs_bfgs(signal = x@xic[sel1_idx], 
+#'                                   scantime = sel1_idx, 
+#'                                   seed = list(mu = x@rawProcResults$adj_apex[sel],
+#'                                               sigma = sel_sigma,
+#'                                               lambda = rep(10, length(sel))),
+#'                                   upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
+#'                                                sigma = sel_sigma*.75,
+#'                                                lambda = rep(1, length(sel))*.9),
+#'                                   lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
+#'                                                sigma = sel_sigma*1.25,
+#'                                                lambda = rep(30, length(sel))*1.1),
+#'                                   plot.fit = T))
+#'     
+#'     (bfgs2_full_xic <- fitemgs_bfgs_2(signal = x@xic[sel_bound_full[1]:sel_bound_full[2]], 
+#'                                      scantime = sel_bound_full[1]:sel_bound_full[2], 
+#'                                      seed = list(mu = x@rawProcResults$adj_apex[sel],
+#'                                                  sigma = sel_sigma,
+#'                                                  lambda = rep(10, length(sel))),
+#'                                      plot.fit = T))
+#'     (bfgs2_vip_xic <- fitemgs_bfgs_2(signal = x@xic[sel_bound_vip[1]:sel_bound_vip[2]], 
+#'                                     scantime = sel_bound_vip[1]:sel_bound_vip[2], 
+#'                                     seed = list(mu = x@rawProcResults$adj_apex[sel],
+#'                                                 sigma = sel_sigma,
+#'                                                 lambda = rep(10, length(sel))),
+#'                                     plot.fit = T))
+#'     (bfgs2_sel1_xic <- fitemgs_bfgs_2(signal = x@xic[sel1_idx], 
+#'                                     scantime = sel1_idx, 
+#'                                     seed = list(mu = x@rawProcResults$adj_apex[sel],
+#'                                                 sigma = sel_sigma,
+#'                                                 lambda = rep(10, length(sel))),
+#'                                     plot.fit = T))
+#'     
+#'     (bfgs_full_d0 <- fitemgs_bfgs(signal = x@d0[sel_bound_full[1]:sel_bound_full[2]], 
+#'                                    scantime = sel_bound_full[1]:sel_bound_full[2], 
+#'                                    seed = list(mu = x@rawProcResults$adj_apex[sel],
+#'                                                sigma = sel_sigma,
+#'                                                lambda = rep(10, length(sel))),
+#'                                    upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
+#'                                                 sigma = sel_sigma*.75,
+#'                                                 lambda = rep(1, length(sel))*.9),
+#'                                    lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
+#'                                                 sigma = sel_sigma*1.25,
+#'                                                 lambda = rep(30, length(sel))*1.1),
+#'                                    plot.fit = T))
+#'     (bfgs_vip_d0 <- fitemgs_bfgs(signal = x@d0[sel_bound_vip[1]:sel_bound_vip[2]], 
+#'                                   scantime = sel_bound_vip[1]:sel_bound_vip[2], 
+#'                                   seed = list(mu = x@rawProcResults$adj_apex[sel],
+#'                                               sigma = sel_sigma,
+#'                                               lambda = rep(10, length(sel))),
+#'                                   upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
+#'                                                sigma = sel_sigma*.75,
+#'                                                lambda = rep(1, length(sel))*.9),
+#'                                   lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
+#'                                                sigma = sel_sigma*1.25,
+#'                                                lambda = rep(30, length(sel))*1.1),
+#'                                   plot.fit = T))
+#'     (bfgs_sel1_d0 <- fitemgs_bfgs(signal = x@d0[sel1_idx], 
+#'                                    scantime = sel1_idx, 
+#'                                    seed = list(mu = x@rawProcResults$adj_apex[sel],
+#'                                                sigma = sel_sigma,
+#'                                                lambda = rep(10, length(sel))),
+#'                                    upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
+#'                                                 sigma = sel_sigma*.75,
+#'                                                 lambda = rep(1, length(sel))*.9),
+#'                                    lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
+#'                                                 sigma = sel_sigma*1.25,
+#'                                                 lambda = rep(30, length(sel))*1.1),
+#'                                    plot.fit = T))
+#'     
+#'     (bfgs2_full_d0 <- fitemgs_bfgs_2(signal = x@d0[sel_bound_full[1]:sel_bound_full[2]], 
+#'                                       scantime = sel_bound_full[1]:sel_bound_full[2], 
+#'                                       seed = list(mu = x@rawProcResults$adj_apex[sel],
+#'                                                   sigma = sel_sigma,
+#'                                                   lambda = rep(10, length(sel))),
+#'                                       plot.fit = T))
+#'     (bfgs2_vip_d0 <- fitemgs_bfgs_2(signal = x@d0[sel_bound_vip[1]:sel_bound_vip[2]], 
+#'                                      scantime = sel_bound_vip[1]:sel_bound_vip[2], 
+#'                                      seed = list(mu = x@rawProcResults$adj_apex[sel],
+#'                                                  sigma = sel_sigma,
+#'                                                  lambda = rep(10, length(sel))),
+#'                                      plot.fit = T))
+#'     (bfgs2_sel1_d0 <- fitemgs_bfgs_2(signal = x@d0[sel1_idx], 
+#'                                      scantime = sel1_idx, 
+#'                                      seed = list(mu = x@rawProcResults$adj_apex[sel],
+#'                                                  sigma = sel_sigma,
+#'                                                  lambda = rep(10, length(sel))),
+#'                                      plot.fit = T))
+#'     
+#'     fitemgs(signal = x@xic[sel_bound_full[1]:sel_bound_full[2]], 
+#'             scantime = sel_bound_full[1]:sel_bound_full[2], 
+#'             seed = list(mu = x@rawProcResults$adj_apex[sel]+1,
+#'                         sigma = sel_sigma,
+#'                         lambda = rep(10, length(sel))),
+#'             upper = list(mu = x@rawProcResults$adj_apex[sel]+10,
+#'                          sigma = sel_sigma*2,
+#'                          lambda = rep(1, length(sel))),
+#'             lower = list(mu = x@rawProcResults$adj_apex[sel]-10,
+#'                          sigma = sel_sigma*0.25,
+#'                          lambda = rep(100, length(sel))),
+#'             plot.fit = T)
+#'     
+#'     fitemgs(signal = x@d0[sel_bound_full[1]:sel_bound_full[2]], 
+#'             scantime = sel_bound_full[1]:sel_bound_full[2], 
+#'             seed = list(mu = x@rawProcResults$adj_apex[sel]+1,
+#'                         sigma = sel_sigma,
+#'                         lambda = rep(10, length(sel))),
+#'             upper = list(mu = c(70, 90, 110),
+#'                          sigma = c(5, 7, 6),
+#'                          lambda = rep(1, length(sel))),
+#'             lower = list(mu = c(50, 70, 90),
+#'                          sigma = c(1.5, 4, 3),
+#'                          lambda = rep(100, length(sel))),
+#'             plot.fit = T)
+#'     
+#'     
+#'     
+#'     # return result
+#'     return(x)
+#' })
 
 
 #### Method: processChromatogram ####
@@ -1083,6 +1152,33 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
     {
         setParam(x@param) <- list(nscan = length(x@xic))
     }
+    
+    ## check that XCMS data exist
+    if (is.null(getParam(x@param, "p")))
+    {
+        if (getParam(x@param, "vebose_output"))
+            cat(paste("[debug] idx =", x@id, "missing xcms data.\n"))
+        
+        setResults(x) <- list(id = x@id, note = "xcms_missing")
+        
+        return(x)
+        
+    } else if (getParam(x@param, "p") < 1)
+    {
+        if (getParam(x@param, "vebose_output"))
+            cat(paste("[debug] idx =", x@id, "missing xcms data.\n"))
+        
+        setResults(x) <- list(id = x@id, note = "xcms_missing")
+        
+        return(x)
+    }
+    
+    # determine plotrange
+    setProcData(x) <- list(plotrange = c(max(1, floor(getParam(x@param, "p") - 
+                                                          20*getParam(x@param, "s"))),
+                                         min(x@procData$nscan, 
+                                             floor(getParam(x@param, "p") + 
+                                                       20*getParam(x@param, "s")))))
     
     # setup and check procParams
     ## smooth times
@@ -1125,33 +1221,6 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
         setParam(x@param) <- list(smooth_win = getParam(x@param, "max_w"))
     }
     
-    ## check that XCMS data exist
-    if (is.null(getParam(x@param, "p")))
-    {
-        if (getParam(x@param, "vebose_output"))
-            cat(paste("[debug] idx =", x@id, "missing xcms data.\n"))
-        
-        setResults(x) <- list(id = x@id, note = "xcms_missing")
-        
-        return(x)
-        
-    } else if (getParam(x@param, "p") < 1)
-    {
-        if (getParam(x@param, "vebose_output"))
-            cat(paste("[debug] idx =", x@id, "missing xcms data.\n"))
-        
-        setResults(x) <- list(id = x@id, note = "xcms_missing")
-        
-        return(x)
-    }
-    
-    # determine plotrange
-    setProcData(x) <- list(plotrange = c(max(1, floor(getParam(x@param, "p") - 
-                                                          20*getParam(x@param, "s"))),
-                                         min(x@procData$nscan, 
-                                             floor(getParam(x@param, "p") + 
-                                                       20*getParam(x@param, "s")))))
-    
     # calculate smoothed vectors
     if (getParam(x@param, "smooth_method") == "savgol") # use savitzky-golay filter
     {
@@ -1188,6 +1257,8 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
                                 floor(getParam(x@param, "smooth_win")/2))
         
     }
+    
+    # x <- smoothChromatogram(x)
     
     # calculate noise
     setProcData(x) <- list(noise_sel = which(abs(x@d2) <= quantile(abs(x@d2), .95)))
@@ -1243,46 +1314,73 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
                                              w = floor(getParam(x@param, "smooth_win")/2L), 
                                              p = getParam(x@param, "p")-1L,
                                              output = as.integer(x@param@verbose_output), 
-                                             fit_emg = 1L, fit_only_vip = 1L)
+                                             fit_emg = as.integer(x@param@fit_emg), 
+                                             fit_only_vip = 1L)
     
     # check that the current peak was detected
     if (x@rawProcResults$current_peak < 0)
     {
+        # set not_detected flag in results
         setResults(x) <- list(note = "not_detected")
         
+        # plot result if plot
         if (getParam(x@param, "plot")) plotPeak(x)
         
         return(x)
     }
     
     # record results from processing
-    x@procResults <- list(
-        adj_apex = x@rawProcResults$adj_apex[x@rawProcResults$current_peak+1]+1,
-        bl_bounds = c(x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1,
-                      x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1),
-        bl_slope = (x@d0[(x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1)] - 
-                        x@d0[(x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1)]) / 
+    # x@procResults <- list(
+    #     adj_apex = x@rawProcResults$adj_apex[x@rawProcResults$current_peak+1]+1,
+    #     bl_bounds = c(x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1,
+    #                   x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1),
+    #     bl_slope = (x@d0[(x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1)] - 
+    #                     x@d0[(x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1)]) / 
+    #         ((x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1) - 
+    #              (x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1)),
+    #     peak_bounds = c(x@rawProcResults$front_peak_bound[x@rawProcResults$current_peak+1]+1,
+    #                     x@rawProcResults$tail_peak_bound[x@rawProcResults$current_peak+1]+1),
+    #     code = c(switch(x@rawProcResults$front_code[x@rawProcResults$current_peak+1]+1, 
+    #                     "B", "V", "S", "R"),
+    #              switch(x@rawProcResults$tail_code[x@rawProcResults$current_peak+1]+1, 
+    #                     "B", "V", "S", "R")),
+    #     inf = c(x@rawProcResults$front_inf[x@rawProcResults$current_peak+1]+1,
+    #             x@rawProcResults$tail_inf[x@rawProcResults$current_peak+1]+1),
+    #     emg_mu = x@rawProcResults$emg_mu[x@rawProcResults$current_peak+1]+1,
+    #     emg_sigma = x@rawProcResults$emg_sigma[x@rawProcResults$current_peak+1],
+    #     emg_lambda = x@rawProcResults$emg_lambda[x@rawProcResults$current_peak+1],
+    #     emg_area = x@rawProcResults$emg_area[x@rawProcResults$current_peak+1],
+    #     emg_conv = x@rawProcResults$emg_conv[x@rawProcResults$current_peak+1]
+    # )
+    
+    setResults(x) <- list(
+        apex = x@rawProcResults$adj_apex[x@rawProcResults$current_peak+1]+1,
+        finf = x@rawProcResults$front_inf[x@rawProcResults$current_peak+1]+1,
+        tinf = x@rawProcResults$tail_inf[x@rawProcResults$current_peak+1]+1,
+        fblb = x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1,
+        tblb = x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1,
+        fpkb = x@rawProcResults$front_peak_bound[x@rawProcResults$current_peak+1]+1,
+        tpkb = x@rawProcResults$tail_peak_bound[x@rawProcResults$current_peak+1]+1,
+        fcode = switch(x@rawProcResults$front_code[x@rawProcResults$current_peak+1]+1, 
+                       "B", "V", "S", "R"),
+        tcode = switch(x@rawProcResults$tail_code[x@rawProcResults$current_peak+1]+1, 
+                       "B", "V", "S", "R"),
+        blslp = (x@d0[(x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1)] - 
+                     x@d0[(x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1)]) / 
             ((x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1) - 
                  (x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1)),
-        peak_bounds = c(x@rawProcResults$front_peak_bound[x@rawProcResults$current_peak+1]+1,
-                        x@rawProcResults$tail_peak_bound[x@rawProcResults$current_peak+1]+1),
-        code = c(switch(x@rawProcResults$front_code[x@rawProcResults$current_peak+1]+1, 
-                        "B", "V", "S", "R"),
-                 switch(x@rawProcResults$tail_code[x@rawProcResults$current_peak+1]+1, 
-                        "B", "V", "S", "R")),
-        inf = c(x@rawProcResults$front_inf[x@rawProcResults$current_peak+1]+1,
-                x@rawProcResults$tail_inf[x@rawProcResults$current_peak+1]+1),
-        emg_mu = x@rawProcResults$emg_mu[x@rawProcResults$current_peak+1]+1,
-        emg_sigma = x@rawProcResults$emg_sigma[x@rawProcResults$current_peak+1],
-        emg_lambda = x@rawProcResults$emg_lambda[x@rawProcResults$current_peak+1],
-        emg_area = x@rawProcResults$emg_area[x@rawProcResults$current_peak+1],
-        emg_conv = x@rawProcResults$emg_conv[x@rawProcResults$current_peak+1]
+        emu = x@rawProcResults$emg_mu[x@rawProcResults$current_peak+1]+1,
+        esigma = x@rawProcResults$emg_sigma[x@rawProcResults$current_peak+1],
+        elambda = x@rawProcResults$emg_lambda[x@rawProcResults$current_peak+1],
+        earea = x@rawProcResults$emg_area[x@rawProcResults$current_peak+1],
+        econv = x@rawProcResults$emg_conv[x@rawProcResults$current_peak+1],
+        note = "detected"
     )
     
     # check peak bounds and apex
-    if (any(x@procResults$bl_bounds < 1) ||
-        any(x@procResults$peak_bounds < 1) ||
-        x@procResults$adj_apex < 1)
+    if (x@results$fblb < 1 || x@results$tblb < 1 || 
+        x@results$fpkb < 1 || x@results$tpkb < 1 || 
+        x@results$apex < 1)
     {
         setResults(x) <- list(note = "not_detected")
         
@@ -1292,8 +1390,7 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
     }
     
     # check peak width
-    if (x@procResults$peak_bounds[2] - 
-        x@procResults$peak_bounds[1] < getParam(x@param, "min_pts"))
+    if (x@results$tpkb - x@results$fpkb < getParam(x@param, "min_pts"))
     {
         setResults(x) <- list(note = "too_narrow")
         
@@ -1878,6 +1975,16 @@ setMethod("parsePeaklist", signature("cpc"), function(x)
     # check that xd contain peak information
     if (nrow(chromPeaks(x@xd)) < 1) stop("'xd' does not contain any peak information.")
     
+    # check if there is feature data
+    if (hasFeatures(x@xd)) {
+        message(paste0("Removing existing feature definitions from XCMS object. ",
+                      "Run retention alignment and peak filling again after ",
+                      "processing."))
+        
+        x@xd <- dropFeatureDefinitions(x@xd)
+        
+    }
+    
     # get the peaklist from the XCMS object
     x@pt <- as.data.frame(xcms::chromPeaks(x@xd))
     
@@ -2063,17 +2170,17 @@ setMethod("processPeaks", signature("cpc"), function(x)
     {
         # start timer
         full_timer <- Sys.time()
-
+        
         # calculate threshold for sigma as 75% quantile of pt$sigma in current file
         setParam(x@param) <- list(max_sigma =
-                                as.numeric(quantile(x@pt$sigma[which(x@pt$sample == i &
-                                                                         !is.na(x@pt$sigma) &
-                                                                         x@pt$sigma > 0)],
-                                                    probs = 0.75)))
-
+                                      as.numeric(quantile(x@pt$sigma[which(x@pt$sample == i &
+                                                                               !is.na(x@pt$sigma) &
+                                                                               x@pt$sigma > 0)],
+                                                          probs = 0.75)))
+        
         i_idx <- getParam(x@param, "sel_peaks")[which(x@pt$sample[getParam(x@param, "sel_peaks")] == i)]
         i_npeaks <- length(i_idx)
-
+        
         # output
         cat(paste("Processing file:", x@procData$file_paths[i], "\n"))
         
@@ -2160,6 +2267,8 @@ setMethod("processPeaks", signature("cpc"), function(x)
             # add params from cpc object
             setParam(chrom@param) <- x@param
             
+            setProcData(chrom) <- list(pd = pd)
+            
             # check if xcms data is missing
             if (any(c(pd["scpos"], pd["sigma"]) == -1) || is.na(unlist(pd["sigma"])))
             {
@@ -2168,13 +2277,13 @@ setMethod("processPeaks", signature("cpc"), function(x)
                 setResults(chrom) <- list(note = "xcms_missing", file = i)
             } else # if xcms data exist
             {
-                setResults(chrom) <- list(file = i)
-                
                 # get XIC
                 setXIC(chrom) <- getXIC(raw, mzrange = getParam(chrom@param, "mz_range"))
                 
                 # process chromatogram
                 chrom <- processChromatogram(chrom)
+                
+                setResults(chrom) <- list(file = i)
                 
             }
             
@@ -2233,13 +2342,22 @@ setMethod("filterPeaks", signature("cpc"), function(x)
     if (!hasCharacterizedPeakTable(x))
         stop(paste("Please run processPeaks() before trying to filter peaks."))
     
+    # check that the cpt contains the same amount of peaks as the XCMSnExp object
+    if (nrow(x@cpt) != nrow(xcms::chromPeaks(x@xd)))
+    {
+        stop(paste0("The number of peaks inte the characterized peaklist does ",
+                    "not match the number of peaks in the XCMSnExp object."))
+        
+    }
+    
     # TODO: Invoke a refineChromPeaks() method that is available in the github but does
     # not seem to be available in my current package version. For compatibility reasons
     # I will implement my own version of this.
     
     # check that there are chromatographic peaks in the xcms object
-    if (!hasChromPeaks(x@xd)) {
+    if (!xcms::hasChromPeaks(x@xd)) {
         stop("No chromatographic peaks present in XCMS object.")
+        
     }
     
     # copy the xcms object
@@ -2247,17 +2365,35 @@ setMethod("filterPeaks", signature("cpc"), function(x)
     
     # drop feature definitions if present
     if (hasFeatures(x@xdFilt)) {
-        message(paste("Removing existing feature definitions from XCMS object.",
-                      "Please run correspondence again..."))
-        x@xdFilt <- dropFeatureDefinitions(x@xdFilt)
+        message(paste0("Removing existing feature definitions from XCMS object. ",
+                       "Run retention alignment and peak filling again after ",
+                       "filtering."))
+        
+        x@xdFilt <- xcms::dropFeatureDefinitions(x@xdFilt)
+        
     }
+    
+    # get chromPeaks from the filtered object
+    ncp <- xcms::chromPeaks(x@xdFilt)
     
     # create a vector of peaks to remove based on params
     keep <- peaksToKeep(x)
     
+    # if the XCMSnExp has filled peaks they will be removed when running
+    # xcms::dropFeatureDefinitions() and so if this is the case, then I will 
+    # need to match the idx in keep with those remaining.
+    if (xcms::hasFilledChromPeaks(x@xd))
+    {
+        keep_names <- rownames(xcms::chromPeaks(x@xd))[keep]
+        
+        keep_names <- keep_names[which(!is.na(match(keep_names, rownames(ncp))))]
+        
+        keep <- match(keep_names, rownames(ncp))
+        
+    }
+    
     # remove peaks from xcms object
-    ncp <- chromPeaks(x@xdFilt)
-    chromPeaks(x@xdFilt) <- ncp[keep, ]
+    xcms::chromPeaks(x@xdFilt) <- ncp[keep, ]
     
     # return cpc object
     return(x)
@@ -2306,6 +2442,8 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
     
     # new param methodology with a cpcParam object
     setParam(chrom@param) <- x@param
+    
+    setProcData(chrom) <- list(pd = x@pt[id, ])
     
     # load raw data
     matchedPeakIdx <- match(id, x@pt$id)
