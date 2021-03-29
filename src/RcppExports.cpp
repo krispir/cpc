@@ -20,6 +20,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// c_emgfun
+vec_d c_emgfun(vec_d& x, vec_d& pars, unsigned int npeaks);
+RcppExport SEXP _cpc_c_emgfun(SEXP xSEXP, SEXP parsSEXP, SEXP npeaksSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< vec_d& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< vec_d& >::type pars(parsSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type npeaks(npeaksSEXP);
+    rcpp_result_gen = Rcpp::wrap(c_emgfun(x, pars, npeaks));
+    return rcpp_result_gen;
+END_RCPP
+}
 // process_chromatogram
 Rcpp::List process_chromatogram(vec_d& d0, vec_d& d2, double apex_thresh, int w, int p, double liftoff, double touchdown, int output, int fit_emg, int fit_only_vip, int fit_hess, double fit_rel_lim, int pts_per_peak, const double reltol, const double abstol, const double alpha, const double gamma, const double rho, const double sigma, const int maxit, const int maxeval);
 RcppExport SEXP _cpc_process_chromatogram(SEXP d0SEXP, SEXP d2SEXP, SEXP apex_threshSEXP, SEXP wSEXP, SEXP pSEXP, SEXP liftoffSEXP, SEXP touchdownSEXP, SEXP outputSEXP, SEXP fit_emgSEXP, SEXP fit_only_vipSEXP, SEXP fit_hessSEXP, SEXP fit_rel_limSEXP, SEXP pts_per_peakSEXP, SEXP reltolSEXP, SEXP abstolSEXP, SEXP alphaSEXP, SEXP gammaSEXP, SEXP rhoSEXP, SEXP sigmaSEXP, SEXP maxitSEXP, SEXP maxevalSEXP) {
@@ -318,44 +331,10 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// c_emgfit
-arma::vec c_emgfit(arma::vec& si, arma::vec& st, arma::vec& wt, arma::vec seed, arma::vec& lower, arma::vec& upper, int np, bool hess, int trace, double h, const std::string method, const bool range_scaled);
-RcppExport SEXP _cpc_c_emgfit(SEXP siSEXP, SEXP stSEXP, SEXP wtSEXP, SEXP seedSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP npSEXP, SEXP hessSEXP, SEXP traceSEXP, SEXP hSEXP, SEXP methodSEXP, SEXP range_scaledSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec& >::type si(siSEXP);
-    Rcpp::traits::input_parameter< arma::vec& >::type st(stSEXP);
-    Rcpp::traits::input_parameter< arma::vec& >::type wt(wtSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type seed(seedSEXP);
-    Rcpp::traits::input_parameter< arma::vec& >::type lower(lowerSEXP);
-    Rcpp::traits::input_parameter< arma::vec& >::type upper(upperSEXP);
-    Rcpp::traits::input_parameter< int >::type np(npSEXP);
-    Rcpp::traits::input_parameter< bool >::type hess(hessSEXP);
-    Rcpp::traits::input_parameter< int >::type trace(traceSEXP);
-    Rcpp::traits::input_parameter< double >::type h(hSEXP);
-    Rcpp::traits::input_parameter< const std::string >::type method(methodSEXP);
-    Rcpp::traits::input_parameter< const bool >::type range_scaled(range_scaledSEXP);
-    rcpp_result_gen = Rcpp::wrap(c_emgfit(si, st, wt, seed, lower, upper, np, hess, trace, h, method, range_scaled));
-    return rcpp_result_gen;
-END_RCPP
-}
-// emgfun
-vec_d emgfun(vec_d& x, vec_d& pars, unsigned int npeaks);
-RcppExport SEXP _cpc_emgfun(SEXP xSEXP, SEXP parsSEXP, SEXP npeaksSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< vec_d& >::type x(xSEXP);
-    Rcpp::traits::input_parameter< vec_d& >::type pars(parsSEXP);
-    Rcpp::traits::input_parameter< unsigned int >::type npeaks(npeaksSEXP);
-    rcpp_result_gen = Rcpp::wrap(emgfun(x, pars, npeaks));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_cpc_LinearSpacedArray", (DL_FUNC) &_cpc_LinearSpacedArray, 3},
+    {"_cpc_c_emgfun", (DL_FUNC) &_cpc_c_emgfun, 3},
     {"_cpc_process_chromatogram", (DL_FUNC) &_cpc_process_chromatogram, 21},
     {"_cpc_test_emgfit", (DL_FUNC) &_cpc_test_emgfit, 23},
     {"_cpc_getEIC_min", (DL_FUNC) &_cpc_getEIC_min, 5},
@@ -376,8 +355,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cpc_c_local_min", (DL_FUNC) &_cpc_c_local_min, 2},
     {"_cpc_c_get_inflection_points", (DL_FUNC) &_cpc_c_get_inflection_points, 2},
     {"_cpc_c_get_directional_inflection_points", (DL_FUNC) &_cpc_c_get_directional_inflection_points, 2},
-    {"_cpc_c_emgfit", (DL_FUNC) &_cpc_c_emgfit, 12},
-    {"_cpc_emgfun", (DL_FUNC) &_cpc_emgfun, 3},
     {NULL, NULL, 0}
 };
 
