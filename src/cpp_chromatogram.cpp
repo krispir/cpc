@@ -235,6 +235,140 @@ int which_max(vec_i &v, int a, int b)
     return max;
 }
 
+int next_max(vec_d &v, int a, int b, int d)
+{
+    int nv = v.size();
+    int max;
+    int i;
+    int c;
+    
+    if (d < 0)
+    {
+        d = -1;
+    } else
+    {
+        d = 1;
+    }
+    
+    if (a < 0) a = 0;
+    if (b > nv-1) b = nv-1;
+    
+    if (a > b)
+    {
+        c = a;
+        a = b;
+        b = c;
+    }
+    
+    if (d < 0)
+    {
+        i = b;
+    } else
+    {
+        i = a;
+    }
+    
+    max = i;
+    while(i >= a && i <= b)
+    {
+        if (v.at(i) > v.at(max))
+        {
+            max = i;
+        } else if (v.at(i) < v.at(max))
+        {
+            break;
+        }
+        
+        i += d;
+    }
+    
+    return max;
+}
+
+int next_max(vec_i &v, int a, int b, int d)
+{
+    int nv = v.size();
+    int max;
+    int i;
+    int c;
+    
+    if (d < 0)
+    {
+        d = -1;
+    } else
+    {
+        d = 1;
+    }
+    
+    if (a < 0) a = 0;
+    if (b > nv-1) b = nv-1;
+    
+    if (a > b)
+    {
+        c = a;
+        a = b;
+        b = c;
+    }
+    
+    if (d < 0)
+    {
+        i = b;
+    } else
+    {
+        i = a;
+    }
+    
+    max = i;
+    while(i >= a && i <= b)
+    {
+        if (v.at(i) > v.at(max))
+        {
+            max = i;
+        } else if (v.at(i) < v.at(max))
+        {
+            break;
+        }
+        
+        i += d;
+    }
+    
+    return max;
+}
+
+/*******************************************************************************
+ * External EMG function for plotting
+ ******************************************************************************/
+
+double emg(double x, double u, double s, double l)
+{
+    return exp(log(l)+l*(u+((l*s*s)/2)-x) +
+               R::pnorm((u+l*s*s-x)/s, 0.0, 1.0, false, true));
+}
+
+/*******************************************************************************
+ * External EMG trace generator for development and plotting
+ ******************************************************************************/
+
+// [[Rcpp::export]]
+vec_d c_emgfun(vec_d &x, vec_d &pars, unsigned int npeaks)
+{
+    unsigned int nx = x.size();
+    unsigned int npars = pars.size()/npeaks;
+
+    vec_d y(nx, 0.0);
+
+    for (unsigned int i = 0; i < nx; i++)
+    {
+        for (unsigned int j = 0; j < npeaks; j++)
+        {
+            y.at(i) += pars.at(3+j*npars) *
+                emg(x.at(i), pars.at(j*npars), pars.at(1+j*npars), pars.at(2+j*npars));
+        }
+    }
+
+    return y;
+}
+
 /*******************
  * data structures *
  *******************/
@@ -393,6 +527,7 @@ struct PeakTable
     vec_i emg_conv;     // EMG fitting convergence
     
     vec_i remove_these_later;
+    vec_i remove_these_now;
     
     int npeaks;
     int vip = -1;
@@ -402,6 +537,8 @@ struct PeakTable
     void remove_peak(int _peak);
     void remove_tagged_peaks();
     
+    void print_remove_these_now();
+    void print_remove_these_later();
     void summary();
     void print_clusters();
     
@@ -1201,6 +1338,7 @@ private:
     unsigned int nvals;
     unsigned int nx;
     unsigned int scalemethod;
+    double invsq_nx;
     
     double lambdascale = 1.0;
     
@@ -1230,6 +1368,7 @@ public:
         // this->npeaks = npeaks_;
         
         this->nx = x_.size();
+        this->invsq_nx = std::sqrt(1/(this->nx-1)); // for calculating SD
         this->nvals = seed_.size();
         this->npars = this->nvals / npeaks_;
         
@@ -1240,6 +1379,8 @@ public:
     }
     
     // internal functions
+    // the emg function is a very slow function due to the exponentials
+    // I would like to fix this at some point...
     void emg(const unsigned int &i, const double &u, 
              const double &s, const double &l)
     {
@@ -1307,7 +1448,15 @@ public:
             this->SS += this->wt.at(i) * (this->y.at(i) - this->scansum) * (this->y.at(i) - this->scansum);
         }
         
+        // here I should be able to use the quake fast inverse square root 
+        // function down the line. we have sd = sqrt(ss/(nx-1)) which can be 
+        // rewritten sd = sqrt(ss)*sqrt(1/(nx-1))
+        // or I can calculate sqrt(1/(nx-1)) when I instatiate the class which
+        // will mean I only calculate it once.
+        // It is, for now, calculated upon instatiating the object and stored in
+        // this->invsq_nx.
         this->sd = std::sqrt(this->SS/(this->nx-1));
+        // this->sd = std::sqrt(this->SS)*this->invsq_nx;
         
     }
     
@@ -1317,7 +1466,8 @@ public:
         
         for (unsigned int i = 0; i < this->nvals; i++)
         {
-            if (par_.at(i) > this->upper.at(i) || par_.at(i) < this->lower.at(i))
+            if (par_.at(i) > this->upper.at(i) || 
+                par_.at(i) < this->lower.at(i))
             {
                 // this->pen += std::numeric_limits<double>::infinity();
                 this->penval += 1.0e35;
@@ -1794,13 +1944,13 @@ private:
     
     void find_apices();
     void detect_vip();
-    
     void calculate_peak_expansion_thresholds(int peak);
     void determine_peak_expansion_start_bounds(int peak);
     // void expand_to_baseline(int _peak);
     void peak_baseline_expansion(int peak);
     void calculate_baseline_residual(int fblb, int tblb);
     void adjust_cluster_baseline(vec_i &clust);
+    void check_peaks();
     void detect_peaks();
     void determine_apex_type(int peak_);
     void detect_clusters();
@@ -1921,6 +2071,26 @@ public:
  * Method definitions *
  **********************/
 
+void PeakTable::print_remove_these_now()
+{
+    Rcout << "remove_these_now:";
+    
+    for (int i = 0; i < (int) this->remove_these_now.size(); i++)
+        Rcout << " " << this->remove_these_now.at(i);
+    
+    Rcout << std::endl;
+}
+
+void PeakTable::print_remove_these_later()
+{
+    Rcout << "remove_these_now:";
+    
+    for (int i = 0; i < (int) this->remove_these_later.size(); i++)
+        Rcout << " " << this->remove_these_later.at(i);
+    
+    Rcout << std::endl;
+}
+
 // PeakTable methods
 void PeakTable::summary()
 {
@@ -1996,12 +2166,8 @@ void PeakTable::summary()
         Rcout << std::endl;
     }
     
-    Rcout << "remove_these_later:";
-    
-    for (int i = 0; i < (int) this->remove_these_later.size(); i++)
-        Rcout << " " << this->remove_these_later.at(i);
-    
-    Rcout << std::endl;
+    this->print_remove_these_now();
+    this->print_remove_these_later();
     
     Rcout << this->final_clust.size() << " clusters detected." << std::endl;
 }
@@ -2039,6 +2205,7 @@ void PeakTable::init_peaks(vec_i &_apex)
     
     // removal tags
     this->remove_these_later = vec_i(this->npeaks, 0);
+    this->remove_these_now = vec_i(this->npeaks, 0);
 }
 
 void PeakTable::remove_peak(int _peak)
@@ -2074,6 +2241,7 @@ void PeakTable::remove_peak(int _peak)
     this->emg_conv.erase(this->emg_conv.begin() + _peak);
     
     this->remove_these_later.erase(this->remove_these_later.begin() + _peak);
+    this->remove_these_now.erase(this->remove_these_now.begin() + _peak);
     
     /*********************************
      * adjust vip value if necessary *
@@ -2250,17 +2418,21 @@ void Chromatogram::print_clusters()
     this->pt.print_clusters();
 }
 
+// TODO: Add last maxima as well to keep track of apex magnitude
 void Chromatogram::find_apices()
 {
     int j;
     int start, end;
     
     int last_min = -1;
+    int last_max = -1;
+    
     this->npeaks = 0;
     
     vec_i local_min(this->nscans, 0);
     
     bool is_local_min = false;
+    bool is_local_max = false;
     
     /***********************
      * detect local minima *
@@ -2283,14 +2455,56 @@ void Chromatogram::find_apices()
             end = i + this->options.w;
         }
         
+        // check if i is an extreme point (minima or maxima)
         for (int j = start; j <= end; j++)
         {
+            // check if i is a local minima
             if (this->d2.at(j) < this->d2.at(i)) is_local_min = false;
+            
+            // check if i is a local maxima
+            // if (this->d2.at(j) > this->d2.at(i)) is_local_max = false;
+            
         }
         
-        if (is_local_min && this->d2.at(i) < 0.0)// && d2[i] <= -apex_thresh)
+        // if a local maxima
+        // this logic could probably be better formulated...
+        // if (is_local_max)
+        // {
+        //     // check that the current maxima is not closer to last maxima by w
+        //     if (last_max > 0 && i - last_max < this->options.w)
+        //     {
+        //         // check if the current maxima is larger than the last maxima
+        //         if (this->d2.at(i) > this->d2.at(last_max))
+        //         {
+        //             last_max = i;
+        //         }
+        //     
+        //     // if no previous maxima is found or the current maxima is further
+        //     // away than w from the last maxima
+        //     } else
+        //     {
+        //         last_max = i;
+        //         
+        //     }
+        //     
+        // }
+        
+        // if at a local minima -> check if the local minima deviates from the
+        // last maxima more than the noise level
+        // this was added to avoid false detection of shoulders and rounded
+        // peak shapes in noisy data
+        // if (is_local_min && last_max > 0 &&
+        //     std::abs(this->d2.at(i) - this->d2.at(last_max)) < 
+        //         this->options.apex_thresh)
+        // {
+        //     is_local_min = false;
+        //     
+        // }
+        
+        // if at a local negative minima (possible apex)
+        if (is_local_min && this->d2.at(i) < 0.0)
         {
-            // if (last_min > 0 && i - last_min < 2*w)
+            // check that the current minima is not closer to last minima by w
             if (last_min > 0 && i - last_min < this->options.w)
             {
                 if (this->d2.at(i) < this->d2.at(last_min))
@@ -2298,6 +2512,9 @@ void Chromatogram::find_apices()
                     local_min.at(last_min) = 0;
                     local_min.at(i) = 1;
                 }
+                
+            // if no previous minima has been found or the current minima is
+            // further away than w
             } else
             {
                 local_min.at(i) = 1;
@@ -2305,6 +2522,7 @@ void Chromatogram::find_apices()
             }
             
             last_min = i;
+            
         }
     }
     
@@ -2383,21 +2601,94 @@ double Chromatogram::slope_at_point(double _point)
     return interpolate_y(lhs_idx, rhs_idx, lhs_d1, rhs_d1, _point);
 }
 
+/*
+ * check_apices():
+ * in this method checks of the detected apices can be performed with solutions
+ * implemented
+ * 
+ */
+void Chromatogram::check_peaks()
+{
+    int i;
+    int maxima;
+    int smaller;
+    
+    // loop over the detected peaks and runs checks on them
+    if (this->options.output) Rcout << "Check peaks: ";
+    
+    i = 1;
+    while (i < this->pt.npeaks)
+    {
+        if (this->options.output) Rcout << i << ":";
+        
+        // ensure that peak detection has been performed
+        if (this->pt.finf.at(i) > 0 && this->pt.tinf.at(i) > 0)
+        {
+            // check for shoulder and rounded events that are lower than the noise
+            // in magnitude
+            
+            // check if the current peak share inflection points with the 
+            // previous peak (rounded peak shape)
+            if (this->pt.finf.at(i) == this->pt.finf.at(i-1) &&
+                this->pt.tinf.at(i) == this->pt.tinf.at(i-1))
+            {
+                // ensure that the absolute difference in value of the d2 minima
+                // and the maxima between the two d2 minimas is larger than the
+                // noise value
+                maxima = which_max(this->d2, 
+                                   (int) this->pt.apex.at(i-1),
+                                   (int) this->pt.apex.at(i));
+                
+                if (this->d2.at(this->pt.apex.at(i)) <
+                    this->d2.at(this->pt.apex.at(i-1)))
+                {
+                    smaller = i-1;
+                } else
+                {
+                    smaller = i;
+                }
+
+                if (std::abs(this->d2.at(this->pt.apex.at(i)) -
+                    this->d2.at(maxima)) < this->options.apex_thresh ||
+                    std::abs(this->d2.at(this->pt.apex.at(i-1)) -
+                    this->d2.at(maxima)) < this->options.apex_thresh)
+                {
+                    if (this->options.output) Rcout << "R";
+                    
+                    // mark peak for removal now
+                    this->pt.remove_these_now.at(i) = 1;
+                    
+                }
+                
+            }
+        }
+        
+        if (this->options.output) Rcout << " ";
+        
+        i++;
+    }
+    
+    if (this->options.output) Rcout << std::endl;
+}
+
 void Chromatogram::detect_peaks()
 {
     // first find apices using d2
     this->find_apices();
     
-    int j;
+    int i,j;
     
-    stack<int> remove_these_now;
+    // stack<int> remove_these_now;
+    
+    // vec_i remove_these_now(this->pt.npeaks, 0);
     
     bool remove_later = false;
     
     // loop over apices and find their inflection points
-    for (int i = 0; i < this->pt.npeaks; i++)
+    for (i = 0; i < this->pt.npeaks; i++)
     {
         if (this->options.output) Rcout << "Peak " << i << ": ";
+        
         remove_later = false;
         
         // locate lhs inflection point
@@ -2406,7 +2697,10 @@ void Chromatogram::detect_peaks()
         if (this->options.output) Rcout << "apex = " << this->pt.apex.at(i) << "; ";
         
         // if too small -> mark for removal later
-        if (this->d2.at(this->pt.apex.at(i)) > -this->options.apex_thresh) remove_later = true;
+        if (this->d2.at(this->pt.apex.at(i)) > -this->options.apex_thresh)
+        {
+            remove_later = true;
+        }
         
         while(j > 0 && this->d2.at(j) < 0.0) j--;
         
@@ -2416,7 +2710,8 @@ void Chromatogram::detect_peaks()
         if (j == 0 && this->d2.at(j) < 0.0)
         {
             // mark for removal now
-            remove_these_now.push(i);
+            // remove_these_now.push(i);
+            this->pt.remove_these_now.at(i) = 1;
             
             if (this->options.output) Rcout << "remove" << std::endl;
             
@@ -2425,7 +2720,8 @@ void Chromatogram::detect_peaks()
         } else
         {
             // interpolate lhs inflection point
-            this->pt.finf.at(i) = interpolate_x(j, j + 1, this->d2.at(j), this->d2.at(j + 1), 0.0);
+            this->pt.finf.at(i) = interpolate_x(j, j + 1, this->d2.at(j), 
+                             this->d2.at(j + 1), 0.0);
             
             if (this->options.output) Rcout << "finf = " << pt.finf.at(i) << "; ";
         }
@@ -2440,7 +2736,8 @@ void Chromatogram::detect_peaks()
         if (j == nscans - 1 && d2.at(j) < 0.0)
         {
             // mark for removal now
-            remove_these_now.push(i);
+            // remove_these_now.push(i);
+            this->pt.remove_these_now.at(i) = 1;
             
             if (this->options.output) Rcout << "remove" << std::endl;
             
@@ -2458,7 +2755,8 @@ void Chromatogram::detect_peaks()
         if (this->pt.tinf.at(i) - this->pt.finf.at(i) < this->options.min_inf_pts)
         {
             // mark for removal now
-            remove_these_now.push(i);
+            // remove_these_now.push(i);
+            this->pt.remove_these_now.at(i) = 1;
             
             if (this->options.output) Rcout << "remove" << std::endl;
             
@@ -2477,18 +2775,26 @@ void Chromatogram::detect_peaks()
         if (this->options.output) Rcout << std::endl;
     }
     
+    // check the detected peaks
+    this->check_peaks();
+    
     // remove peaks marked for removal now
-    if (this->options.output) Rcout << "Found " << remove_these_now.size() 
-                                    << " peaks to remove." << std::endl;
-    
-    while (!remove_these_now.empty())
+    // while (!remove_these_now.empty())
+    i = 0;
+    while (i < this->pt.npeaks)
     {
-        j = remove_these_now.top();
-        remove_these_now.pop();
-
-        this->pt.remove_peak(j);
+        // j = remove_these_now.top();
+        // remove_these_now.pop();
+        // this->pt.remove_peak(j);
+        
+        if (this->pt.remove_these_now.at(i) > 0)
+        {
+            this->pt.remove_peak(i);
+        } else
+        {
+            i++;
+        }
     }
-    
 }
 
 void Chromatogram::calculate_peak_expansion_thresholds(int peak)
@@ -2500,15 +2806,9 @@ void Chromatogram::calculate_peak_expansion_thresholds(int peak)
     vec_d thresholds(2, 0.0);
     
     // calculate interpolated d1 value at front inflection point
-    // cur_front_d1 = interpolate_y(floor(pt.finf[peak]), floor(pt.finf[peak])+1, 
-    //                              d1[floor(pt.finf[peak])], d1[floor(pt.finf[peak])+1],
-    //                              (double) pt.finf[peak]);
     cur_front_d1 = this->slope_at_point((double) this->pt.finf.at(peak));
     
     // calculate interpolated d1 value at tail inflection point
-    // cur_tail_d1 = interpolate_y(floor(pt.tinf[peak]), floor(pt.tinf[peak])+1, 
-    //                             d1[floor(pt.tinf[peak]8)], d1[floor(pt.tinf[peak])+1],
-    //                             (double) pt.tinf[peak]);
     cur_tail_d1 = this->slope_at_point((double) this->pt.tinf.at(peak));
     
     // calculate interpolated d0 value at front inflection point
@@ -3110,7 +3410,7 @@ void Chromatogram::expand_all_peaks()
 //     
 // }
 
-void Chromatogram::detect_clusters()
+void Chromatogram:: detect_clusters()
 {
     double cur_fslp, cur_tslp;
     
@@ -3127,7 +3427,7 @@ void Chromatogram::detect_clusters()
     
     while(i < this->pt.npeaks)
     {
-        if (this->options.output) Rcout << "# " << i << "; ";
+        if (this->options.output) Rcout << "# " << i << ": ";
         
         /******************************************************
          * calculate slope at front and tail inflection points
@@ -3136,7 +3436,10 @@ void Chromatogram::detect_clusters()
         cur_fslp = this->slope_at_point((double) this->pt.finf.at(i));
         cur_tslp = this->slope_at_point((double) this->pt.tinf.at(i));
         
-        if (this->options.output) Rcout << setprecision(6) << "fslp "
+        if (this->options.output) Rcout << setprecision(6) 
+                                        << "fpkb " << this->pt.fpkb.at(i) << "; "
+                                        << "tpkb " << this->pt.tpkb.at(i) << "; "
+                                        << "fslp "
                                         << cur_fslp << "; "
                                         << "tslp " << cur_tslp << "; ";
         
@@ -3187,8 +3490,10 @@ void Chromatogram::detect_clusters()
             this->pt.check_boundary_overlap(cur_cluster.at(0), i))
         {
             // check for rounded peak shape
-            if ((this->pt.atyp.at(i) == 3 && this->pt.atyp.at(i-1) == 2) ||
-                (this->pt.finf.at(i) == this->pt.finf.at(i-1) && 
+            // if ((this->pt.atyp.at(i) == 3 && this->pt.atyp.at(i-1) == 2) &&
+            //     (this->pt.finf.at(i) == this->pt.finf.at(i-1) && 
+            //      this->pt.tinf.at(i) == this->pt.tinf.at(i-1)))
+            if ((this->pt.finf.at(i) == this->pt.finf.at(i-1) && 
                  this->pt.tinf.at(i) == this->pt.tinf.at(i-1)))
             {
                 this->pt.atyp.at(i-1) = 4;
@@ -3209,11 +3514,16 @@ void Chromatogram::detect_clusters()
             // shoulder peak bound
             if (this->pt.atyp.at(i-1) == 2 || this->pt.atyp.at(i) == 3)
             {
+                if (this->options.output) Rcout << "shoulder; ";
+                
                 this->pt.ttyp.at(i-1) = 2;
                 this->pt.ftyp.at(i) = 2;
                 
-                new_bound = which_max(this->d2, (int) floor(this->pt.tinf.at(i - 1)),
-                                                (int) floor(this->pt.finf.at(i)));
+                // new_bound = which_max(this->d2, (int) floor(this->pt.tinf.at(i - 1)),
+                //                                 (int) floor(this->pt.finf.at(i)));
+                new_bound = next_max(this->d2, (int) floor(this->pt.tinf.at(i - 1)),
+                                               (int) floor(this->pt.finf.at(i)),
+                                               -1);
                 
             // rounded peak bound
             } else if (this->pt.atyp.at(i-1) == 4 && this->pt.atyp.at(i) == 5)
@@ -3221,8 +3531,9 @@ void Chromatogram::detect_clusters()
                 this->pt.ttyp.at(i-1) = 3;
                 this->pt.ftyp.at(i) = 3;
                 
-                new_bound = which_max(this->d2, (int) this->pt.apex.at(i - 1),
-                                                (int) this->pt.apex.at(i));
+                new_bound = next_max(this->d2, (int) this->pt.apex.at(i - 1),
+                                               (int) this->pt.apex.at(i),
+                                               -1);
                 
             // any other case is a valley
             } else
@@ -4029,6 +4340,9 @@ void Chromatogram::fit_emg()
     int n_scans_to_fit = 0; // n scans that will be fit for current cluster
     k = 0;
     
+    double bl_slope;
+    double bl_m;
+    int bl_x0;
     
     /***************************************************************************
      * DETERMINE WHICH CLUSTERS TO PERFORM EMG FITTING ON
@@ -4082,15 +4396,18 @@ void Chromatogram::fit_emg()
         clusters_to_fit = vec_i(this->pt.final_clust.size());
 
         i = 0;
-        std::fill(clusters_to_fit.begin(), clusters_to_fit.end(), i++);
+        // std::fill(clusters_to_fit.begin(), clusters_to_fit.end(), i++);
+        std::iota(clusters_to_fit.begin(), clusters_to_fit.end(), 0);
         
         if (this->options.output)
         {
             Rcout << "Clusters to fit (" << clusters_to_fit.size() << "): ";
             for (i = 0; i < clusters_to_fit.size(); i++)
             {
-                Rcout << i << ":[" << this->pt.final_clust.at(i).at(0)
-                      << "->" << this->pt.final_clust.at(i).at(1) << "] ";
+                Rcout << clusters_to_fit.at(i) << ":[" 
+                      << this->pt.final_clust.at(clusters_to_fit.at(i)).at(0)
+                      << "->" 
+                      << this->pt.final_clust.at(clusters_to_fit.at(i)).at(1) << "] ";
             }
             Rcout << std::endl;
         }
@@ -4135,7 +4452,7 @@ void Chromatogram::fit_emg()
                 wb_j = 2*(this->pt.tinf.at(j) - this->pt.finf.at(j));
                 
                 cur_rs = 2*abs(this->pt.adj_apex.at(j) - this->pt.adj_apex.at(this->get_vip())) / 
-                                1.70*(wb_j + wb_vip);
+                                (1.70*(wb_j + wb_vip));
                 
                 if (this->options.output)
                 {
@@ -4162,9 +4479,12 @@ void Chromatogram::fit_emg()
             if (this->options.output) Rcout << std::endl;
             
         // if all peaks should be fit
+        // TODO: implement the same resolution limitation to this case as well
+        // to increase speed (low priority as this will only be used when the
+        // tool is used to process full chromatograms)
         } else
         {
-            // TODO: replace with iota
+            // TODO: replace with iota this is slow as hell
             for (j = cur_clust.at(0); j <= cur_clust.at(1); j++)
             {
                 peaks_to_fit.insert(peaks_to_fit.end(), { j });
@@ -4244,6 +4564,10 @@ void Chromatogram::fit_emg()
                 
             }
             
+            // add the scans to the vector (this is rather slow I think...)
+            // an alternative could be to loop over the data first and 
+            // determine how many scans should be fitted and then preallocate
+            // the vector after that.
             scans_to_fit.insert(scans_to_fit.end(), cur_scans.begin(), cur_scans.end());
             
         }
@@ -4262,10 +4586,9 @@ void Chromatogram::fit_emg()
         n_scans_to_fit = scans_to_fit.size();
         
         
-        /***************************************
-         * setup seeds and bounds for minimizer
-         ***************************************/
-        
+        /***************************************************************
+         * create data vectors and setup seeds and bounds for minimizer
+         ***************************************************************/
         
         // create data vectors for minimizer
         vec_d x(n_scans_to_fit); // scan index (time)
@@ -4276,11 +4599,26 @@ void Chromatogram::fit_emg()
         vec_d upper(n_peaks_to_fit*4); // upper bounds for params
         vec_d stepsize(n_peaks_to_fit*4); // stepsize for params
         
+        // calculate baseline data for the current cluster
+        bl_slope = (this->d0.at(this->pt.tblb.at(cur_clust.at(0))) - 
+                        this->d0.at(this->pt.fblb.at(cur_clust.at(0)))) / 
+                    (this->pt.tblb.at(cur_clust.at(0)) - 
+                        this->pt.fblb.at(cur_clust.at(0)));
+        bl_m = this->d0.at(this->pt.fblb.at(cur_clust.at(0)));
+        bl_x0 = this->pt.fblb.at(cur_clust.at(0));
+        
         // populate the vectors
         for (j = 0; j < n_scans_to_fit; j++)
         {
+            // fill x with scan idx
             x.at(j) = scans_to_fit.at(j);
-            y.at(j) = this->d0.at(scans_to_fit.at(j));
+            
+            // fill y with d0 value
+            // y.at(j) = this->d0.at(scans_to_fit.at(j));
+            
+            // fill y with baseline corrected d0 vals
+            y.at(j) = this->d0.at(scans_to_fit.at(j)) - 
+                        (bl_slope * (x.at(j)-bl_x0) + bl_m);
             wt.at(j) = 1.0;
         }
         
@@ -4350,8 +4688,8 @@ void Chromatogram::fit_emg()
                 Rcout << left << setw(5) << setfill(filler) << cur_clust.at(0)+j;
                 Rcout << left << setw(colwidth) << setfill(filler) << seed.at((j*4)+0);
                 Rcout << left << setw(colwidth) << setfill(filler) << seed.at((j*4)+1);
-                Rcout << left << setw(colwidth) << setfill(filler) << std::exp(seed.at((j*4)+2));
-                Rcout << left << setw(colwidth) << setfill(filler) << std::exp(seed.at((j*4)+3));
+                Rcout << left << setw(colwidth) << setfill(filler) << seed.at((j*4)+2);
+                Rcout << left << setw(colwidth) << setfill(filler) << seed.at((j*4)+3);
                 
                 if (this->get_vip() == cur_clust.at(0)+j)
                 {
@@ -4413,33 +4751,6 @@ void Chromatogram::fit_emg()
                 Rcout << std::endl;
             }
             Rcout << std::endl;
-            
-            // // print st vector
-            // Rcout << "x: ";
-            // for (j = 0; j < x.size(); j++)
-            // {
-            //     Rcout << x.at(j);
-            //     if (j < x.size()-1) { Rcout << ", "; }
-            // }
-            // Rcout << std::endl;
-            // 
-            // // print signal vector
-            // Rcout << "y: ";
-            // for (j = 0; j < y.size(); j++)
-            // {
-            //     Rcout << y.at(j);
-            //     if (j < y.size()-1) { Rcout << ", "; }
-            // }
-            // Rcout << std::endl;
-            // 
-            // // print weights vector
-            // Rcout << "wt: ";
-            // for (j = 0; j < wt.size(); j++)
-            // {
-            //     Rcout << wt.at(j);
-            //     if (j < wt.size()-1) { Rcout << ", "; }
-            // }
-            // Rcout << std::endl;
             
         }
         
@@ -5320,12 +5631,15 @@ void Chromatogram::fit_emg()
 void Chromatogram::process_chromatogram()
 {
     if (this->options.output) Rcout << "Detecting peaks..." << std::endl;
+    
+    // run peak detection
     this->detect_peaks();
+    
     if (this->options.output) Rcout << "Found " << this->pt.npeaks << " peaks."
                                     << std::endl << std::endl;
     
-    if (this->options.output) Rcout << "Expanding peaks..." << std::endl;
     // expand all peaks
+    if (this->options.output) Rcout << "Expanding peaks..." << std::endl;
     this->expand_all_peaks();
     
     if (this->options.output) pt.summary();
@@ -5333,56 +5647,44 @@ void Chromatogram::process_chromatogram()
     // only run the processing if the VIP is detecter or no p is set
     if ((this->options.p >= 0 && this->get_vip() >= 0) || this->options.p < 0)
     {
-        // if (output) this->pt.summary();
-        
         if (this->options.output) Rcout << "Detecting clusters..." << std::endl;
         
         // detect clusters
         this->detect_clusters();
         
-        // if (output) pt.summary();
-        
-        if (this->options.output) Rcout << "Found " << this->pt.clust.size() 
+        if (this->options.output) Rcout << "Found " << this->pt.clust.size()
                                         << " clusters." << std::endl << std::endl;
         
-        if (this->options.output) Rcout << "Expanding all clusters..." << std::endl;
         // expand all clusters
+        if (this->options.output) Rcout << "Expanding all clusters..." << std::endl;
         this->expand_all_clusters();
         
-        // if (this->options.output) this->pt.summary();
-        
+        // adjust apex location to the point maxima
         if (this->options.output) Rcout << "Adjusting apices..." << std::endl;
-        // determine adjusted apices
         this->adjust_apices();
-        
+
     }
-    
+
     if (this->options.output) this->print_clusters();
-    
-    if (this->options.output) Rcout << "Removing tagged peaks... " << std::endl;
-    
+
     // remove peaks that have been tagged for removal
+    if (this->options.output) Rcout << "Removing tagged peaks... " << std::endl;
     this->pt.remove_tagged_peaks();
 
     if (this->options.output) this->pt.summary();
     if (this->options.output) this->print_clusters();
-    
+
     // calculate peak characteristics
     this->calculate_peak_characteristics();
-    
+
     if (this->options.output) this->pt.summary();
     if (this->options.output) this->print_clusters();
-    
-    // emg fitting
-    // int fit_emg = 1;
-    // int fit_only_vip = 1;
-    // int fit_trace = 0;
-    // int fit_hess = 0;
+
+    // fit emg to peak cluster
     if (this->options.fit_emg) this->fit_emg();
-    
+
     if (this->options.output) this->pt.summary();
     
-    // this->print_clusters();
 }
 
 
