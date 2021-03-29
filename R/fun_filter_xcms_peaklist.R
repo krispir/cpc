@@ -10,19 +10,15 @@
 #' steps will have to be performed again after running this function.
 #'
 #' @param xd \code{XCMSnExp} object
-#' @param verbose_output \code{boolean} indicating if verbose output is to be given.
-#' @param return_type Default: xcms.
-#' @param plot \code{boolean} indicating if you want each peak to be plotted after characterization.
-#' @param ... Other parameters passed to \code{characterize_peaklist}.
+#' @param param \code{cpcProcParam} object with process parameters
 #'
 #' @return Either an \code{XCMSnExp} object or a \code{cpc} object.
 #' 
 #' @seealso \link{characterize_xcms_peaklist}
 #' 
 #' @export
-filter_xcms_peaklist <- function(xd, verbose_output = FALSE,
-                                 return_type = c("xcms", "cpc"),
-                                 plot = FALSE, ...)
+filter_xcms_peaklist <- function(xd, return_type = c("xcms", "cpc"),
+                                 param = cpcProcParam())
 {
     # requirements
     if(!require(mzR)) stop("Package: mzR required...")
@@ -32,22 +28,13 @@ filter_xcms_peaklist <- function(xd, verbose_output = FALSE,
     # check params
     return_type <- match.arg(return_type)
     
-    if(!is.logical(verbose_output))
-    {
-        message(paste("Argument 'verbose_output' has to be TRUE/FALSE.",
-                      "Using verbose_output = FALSE."))
-        verbose_output = FALSE
-    }
-    
     # data checks
     
     ## check that xd object is XCMSnExp
     if (class(xd) != "XCMSnExp") stop("'xd' must be an XCMS object of type 'XCMSnExp'.")
     
     # run peak processing on peaklist
-    cpc <- characterize_xcms_peaklist(xd = xd, 
-                                      verbose_output = verbose_output, 
-                                      plot = plot, ...)
+    cpc <- characterize_xcms_peaklist(xd = xd, param = param)
     
     # filter peaklist in XCMS object
     cpc <- filterPeaks(cpc)
