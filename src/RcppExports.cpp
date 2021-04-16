@@ -8,14 +8,14 @@
 using namespace Rcpp;
 
 // LinearSpacedArray
-vec_i LinearSpacedArray(int a, int b, std::size_t N);
+vec_i LinearSpacedArray(int a, int b, int N);
 RcppExport SEXP _cpc_LinearSpacedArray(SEXP aSEXP, SEXP bSEXP, SEXP NSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type a(aSEXP);
     Rcpp::traits::input_parameter< int >::type b(bSEXP);
-    Rcpp::traits::input_parameter< std::size_t >::type N(NSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
     rcpp_result_gen = Rcpp::wrap(LinearSpacedArray(a, b, N));
     return rcpp_result_gen;
 END_RCPP
