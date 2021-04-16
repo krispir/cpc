@@ -9,6 +9,10 @@ c_emgfun <- function(x, pars, npeaks) {
     .Call(`_cpc_c_emgfun`, x, pars, npeaks)
 }
 
+testApexFinder <- function(v, w) {
+    .Call(`_cpc_testApexFinder`, v, w)
+}
+
 #' @encoding UTF-8
 #' @title Rcpp wrapper that calls the C++ chromatogram processing framework
 #' 
