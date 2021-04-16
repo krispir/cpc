@@ -33,6 +33,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// testApexFinder
+vec_i testApexFinder(vec_d v, int w);
+RcppExport SEXP _cpc_testApexFinder(SEXP vSEXP, SEXP wSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< vec_d >::type v(vSEXP);
+    Rcpp::traits::input_parameter< int >::type w(wSEXP);
+    rcpp_result_gen = Rcpp::wrap(testApexFinder(v, w));
+    return rcpp_result_gen;
+END_RCPP
+}
 // process_chromatogram
 Rcpp::List process_chromatogram(vec_d& d0, vec_d& d2, double apex_thresh, int w, int p, double liftoff, double touchdown, int output, int fit_emg, int fit_only_vip, int fit_hess, double fit_rel_lim, int pts_per_peak, const double reltol, const double abstol, const double alpha, const double gamma, const double rho, const double sigma, const int maxit, const int maxeval);
 RcppExport SEXP _cpc_process_chromatogram(SEXP d0SEXP, SEXP d2SEXP, SEXP apex_threshSEXP, SEXP wSEXP, SEXP pSEXP, SEXP liftoffSEXP, SEXP touchdownSEXP, SEXP outputSEXP, SEXP fit_emgSEXP, SEXP fit_only_vipSEXP, SEXP fit_hessSEXP, SEXP fit_rel_limSEXP, SEXP pts_per_peakSEXP, SEXP reltolSEXP, SEXP abstolSEXP, SEXP alphaSEXP, SEXP gammaSEXP, SEXP rhoSEXP, SEXP sigmaSEXP, SEXP maxitSEXP, SEXP maxevalSEXP) {
@@ -335,6 +347,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_cpc_LinearSpacedArray", (DL_FUNC) &_cpc_LinearSpacedArray, 3},
     {"_cpc_c_emgfun", (DL_FUNC) &_cpc_c_emgfun, 3},
+    {"_cpc_testApexFinder", (DL_FUNC) &_cpc_testApexFinder, 2},
     {"_cpc_process_chromatogram", (DL_FUNC) &_cpc_process_chromatogram, 21},
     {"_cpc_test_emgfit", (DL_FUNC) &_cpc_test_emgfit, 23},
     {"_cpc_getEIC_min", (DL_FUNC) &_cpc_getEIC_min, 5},
