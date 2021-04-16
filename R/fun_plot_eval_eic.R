@@ -21,7 +21,27 @@ plotPeaks <- function(cpc, peakIdx,
     # the user (if noPrompt is FALSE)
     if (missing(peakIdx))
     {
-        peakIdx <- 1:nrow(cpc@pt)
+        response <- 
+            readline(prompt = 
+                         paste0("No peaks were selected. Do you want to plot ",
+                                "all peaks in the XCMS object (NUMBER) or all ", 
+                                "processed peaks? (a = all peaks, p = all ",
+                                "processed peaks) "))
+        
+        if (response %in% c("a", "all"))
+        {
+            # set peakIdx to contain all peaks in the XCMS object
+            peakIdx <- 1:nrow(cpc@pt)
+            
+        } else if (response %in% c("p", "processed"))
+        {
+            # set peakIdx to contain all processed peaks in the XCMS object
+            peakIdx <- match(row.names(cpc@cpt), row.names(cpc@pt))
+            
+        } else
+        {
+            stop("No peaks were selected...")
+        }
         
         if (!noPrompt)
         {
@@ -29,17 +49,29 @@ plotPeaks <- function(cpc, peakIdx,
             
             while(!(response %in% c("y", "n", "yes", "no")))
             {
-                response <- readline(prompt = paste0("No peaks were selected, will ",
-                                                     "plot all peaks. ", length(peakIdx), 
-                                                     " peak(s) will be plotted. Do ",
-                                                     "you want to continue? (y/n) \n"))
+                response <- 
+                    readline(prompt = 
+                                 paste0("A total of ", length(peakIdx), 
+                                        " peak(s) will be plotted. Do ",
+                                        "you want to continue? (y/n) \n"))
             }
             
             if (response %in% c("n", "no"))
             {
-                stop("No peaks selected.")
+                stop("No peaks were selected...")
             }
+            
         }
+    } else if (!is.numeric(peakIdx))
+    {
+        stop(paste0("Invalid peaks selected. peakIdx should contain a numeric ",
+                    "vector of peak indices (matching the XCMS peak table)."))
+    }
+    
+    # quick check to make sure there are now selected peaks
+    if (is.null(peakIdx) || is.na(peakIdx) || length(peakIdx) < 1)
+    {
+        stop("No peaks were selected...")
     }
     
     # check if supplied annotation vector length match the number of peaks
@@ -58,17 +90,21 @@ plotPeaks <- function(cpc, peakIdx,
         stop("One or more peaks selected are out of bounds.")
     }
     
+    # get the unique names of the selected peaks
+    peakNames <- row.names(cpc@pt)[peakIdx]
+    
     # determine which files the peaks are from
-    selectedFiles <- sort(unique(cpc@pt$sample[peakIdx]))
+    selectedFiles <- sort(unique(cpc@pt[peakNames, "sample"]))
     
     # loop over files
     # (curFile <- selectedFiles[1])
     for (curFile in selectedFiles)
     {
         # determine which of the selected peaks are from curFile
-        peaksFromCurFile <- peakIdx[which(cpc@pt$sample[peakIdx] == curFile)]
+        peaksFromCurFile <- peakIdx[which(cpc@pt[peakNames, "sample"] == curFile)]
         
         # output
+        # TODO: Do I really need to open the raw file here? I dont think so...
         cat(paste("Opening file:", cpc@procData$file_paths[curFile], "\n"))
         
         # fetch raw data
@@ -76,11 +112,17 @@ plotPeaks <- function(cpc, peakIdx,
         raw <- parseMz(raw)
         
         # loop over peaks
+        # curPeak <- 1
         for (curPeak in 1:length(peaksFromCurFile))
         {
             curAnnotation <- ifelse(length(annotation) > 1,
-                                     annotation[curPeak],
-                                     annotation[1])
+                                    annotation[match(peaksFromCurFile[curPeak], peakIdx)],
+                                    annotation[1])
+            
+            if (is.na(curAnnotation))
+            {
+                warning("Something went wrong with annotation...")
+            }
             
             # open device (optional)
             if (!is.null(outPath) || !is.null(prefix))
@@ -91,23 +133,29 @@ plotPeaks <- function(cpc, peakIdx,
                 } else
                 {
                     # check path
-                    if (!file.exists(outPath))
+                    if (!dir.exists(outPath))
                     {
                         dir.create(path = outPath, recursive = T)
                     }
                 }
                 
-                outFileName <- paste0(outPath, "/", 
-                                      ifelse(is.null(prefix),
-                                             basename(sub(".CDF", "", 
-                                                          MSnbase::fileNames(cpc@xd)[curFile])),
-                                             prefix),
-                                      "_", peaksFromCurFile[curPeak], ".", device)
+                outFileName <- 
+                    paste0(outPath, "/", 
+                           ifelse(is.null(prefix),
+                                  basename(sub(".CDF", "", 
+                                               MSnbase::fileNames(cpc@xd)[curFile])),
+                                  prefix),
+                           "_", peakNames[match(peaksFromCurFile[curPeak], peakIdx)], 
+                           ".", device)
                 
-                do.call(device, list(filename = outFileName, ...))
+                # do.call(device, list(filename = outFileName, ...))
+                do.call(device, list(filename = outFileName,
+                                     width = 7, height = 7,
+                                     units = "in", res = 330))
             }
             
             # create a chromatogram object
+            # x <- cpc
             chrom <- cpc::getChromatogram(cpc, id = peaksFromCurFile[curPeak])
             
             # plot peak

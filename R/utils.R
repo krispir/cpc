@@ -10,6 +10,82 @@ cut_by_size <- function (m, block.size, nb = ceiling(m/block.size))
     cbind(lower, upper, size)
 }
 
+binsearch_leftbound <- function(x, val, l = NULL, r = NULL)
+{
+    if (is.null(l) || l < 1) l <- 1
+    if (is.null(r) || r > length(x) || r < 1) r <- length(x)
+    
+    if (l > r) stop("l should be an integer value less than r.")
+    
+    while (l < r)
+    {
+        mid <- floor((l+r)/2)
+        
+        if (x[mid] < val)
+        {
+            l <- mid + 1
+        } else
+        {
+            r <- mid
+        }
+    }
+    
+    return(l)
+}
+
+binsearch_rightbound <- function(x, val, l = NULL, r = NULL)
+{
+    if (is.null(l) || l < 1) l <- 1
+    if (is.null(r) || r > length(x) || r < 1) r <- length(x)
+    
+    if (l > r) stop("l should be an integer value less than r.")
+    
+    while (l < r)
+    {
+        mid <- floor((l+r)/2)
+        
+        if (x[mid] > val)
+        {
+            r <- mid
+        } else
+        {
+            l <- mid + 1
+        }
+    }
+    
+    return(r-1)
+}
+
+binsearch_closest <- function(x, val, l = NULL, r = NULL)
+{
+    if (is.null(l) || l < 1) l <- 1
+    if (is.null(r) || r > length(x) || r < 1) r <- length(x)
+    
+    if (l > r) stop("l should be an integer value less than r.")
+    
+    while (l < r)
+    {
+        mid <- floor((l+r)/2)
+        
+        if (x[mid] > val)
+        {
+            r <- mid
+        } else
+        {
+            l <- mid + 1
+        }
+    }
+    
+    if (r == 1 || 
+        abs(x[r-1] - val) > abs(x[r] - val))
+    {
+        return(r)
+    } else
+    {
+        return(r-1)
+    }
+}
+
 output_formatted_time <- function(start, end)
 {
     elapsed_time <- as.numeric(difftime(end, start, units = "secs"))

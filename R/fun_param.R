@@ -92,7 +92,7 @@ cpcProcParam <- function(ppm = 50.0,
 #' criteria are used to filter out peaks that do not meet the criteria.
 #' 
 #' @param mz m/z value for the peak
-#' @param p Max scan of the peak (\code{scpos}) in the \code{XCMSnExp} peak table
+#' @param p Max scan of the peak (calculated from \code{rt}) in the \code{XCMSnExp} peak table
 #' @param s Sigma value of the peak in the \code{XCMSnExp} peak table
 #' @param mz_range m/z range for generating the XIC (determined from the ppm value)
 #' @param ppm The ppm range for generating XICs
