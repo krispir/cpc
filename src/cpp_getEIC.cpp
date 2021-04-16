@@ -93,10 +93,10 @@ int binary_search_leftmost(NumericVector &A, int n, double val, int L = -1, int 
 { // function binary_search_leftmost(A, n, val):
   
   // L := 0
-  if (L < 0) int L = 0;
+  if (L < 0) L = 0;
   
   // R := n
-  if (R < 0) int R = n;
+  if (R < 0) R = n;
   
   int m; // midpoint
   
@@ -127,10 +127,10 @@ int binary_search_rightmost(NumericVector &A, int n, double val, int L = -1, int
 { // function binary_search_rightmost(A, n, val):
   
   // L := 0
-  if (L < 0) int L = 0;
+  if (L < 0) L = 0;
   
   // R := n
-  if (R < 0) int R = n;
+  if (R < 0) R = n;
   
   int m; // midpoint
   

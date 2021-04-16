@@ -2111,7 +2111,7 @@ void PeakTable::summary()
     Rcout << left << setw(5) << setfill(filler) << "vip";
     Rcout << std::endl;
     
-    for (unsigned int i = 0; i < apex.size(); i++)
+    for (int i = 0; i < static_cast<int>(apex.size()); i++)
     {
         std::string code;
         Rcout << left << setw(3) << setfill(filler) << i;
@@ -2411,14 +2411,14 @@ void Chromatogram::find_apices()
     int start, end;
     
     int last_min = -1;
-    int last_max = -1;
+    // int last_max = -1;
     
     this->npeaks = 0;
     
     vec_i local_min(this->nscans, 0);
     
     bool is_local_min = false;
-    bool is_local_max = false;
+    // bool is_local_max = false;
     
     /***********************
      * detect local minima *
@@ -2597,7 +2597,7 @@ void Chromatogram::check_peaks()
 {
     int i;
     int maxima;
-    int smaller;
+    // int smaller;
     
     // loop over the detected peaks and runs checks on them
     if (this->options.output) Rcout << "Check peaks: ";
@@ -2625,14 +2625,14 @@ void Chromatogram::check_peaks()
                                    (int) this->pt.apex.at(i-1),
                                    (int) this->pt.apex.at(i));
                 
-                if (this->d2.at(this->pt.apex.at(i)) <
-                    this->d2.at(this->pt.apex.at(i-1)))
-                {
-                    smaller = i-1;
-                } else
-                {
-                    smaller = i;
-                }
+                // if (this->d2.at(this->pt.apex.at(i)) <
+                //     this->d2.at(this->pt.apex.at(i-1)))
+                // {
+                //     smaller = i-1;
+                // } else
+                // {
+                //     smaller = i;
+                // }
 
                 if (std::abs(this->d2.at(this->pt.apex.at(i)) -
                     this->d2.at(maxima)) < this->options.apex_thresh ||
@@ -2668,10 +2668,10 @@ void Chromatogram::detect_peaks()
     if (this->options.output)
     {
         Rcout << "Detected apices: ";
-        for (int i = 0; i < apices.size(); i++)
+        for (int i = 0; i < static_cast<int>(apices.size()); i++)
         {
             Rcout << apices.at(i);
-            if (i < apices.size()-1)
+            if (i < static_cast<int>(apices.size())-1)
             {
                 Rcout << ", ";
             }
@@ -4240,8 +4240,15 @@ void Chromatogram::adjust_apices()
 double Chromatogram::integrate_d0(int a, int b)
 {
     // Check that the bounds a and b are within scope
-    if (a < 0) a = 0;
-    if (b > this->d0.size()-1) b = this->d0.size()-1;
+    if (a < 0)
+    {
+        a = 0;
+    }
+    
+    if (b > static_cast<int>(this->d0.size()-1))
+    {
+        b = static_cast<int>(this->d0.size()-1);
+    }
     
     // Check that a is lower than b
     if (a > b)
@@ -4266,7 +4273,7 @@ double Chromatogram::integrate_d0(int a, int b)
 void Chromatogram::calculate_peak_characteristics()
 {
     // loop over all peaks
-    for (unsigned int i = 0; i < this->pt.npeaks; i++)
+    for (int i = 0; i < this->pt.npeaks; i++)
     {
         // integrate the peak
         this->pt.area.at(i) = this->integrate_d0(this->pt.fpkb.at(i),
@@ -4340,12 +4347,11 @@ void Chromatogram::fit_emg()
     vec_i scans_to_fit(0);
     vec_i clusters_to_fit;
     
-    int cur_clust_idx = -1;
-    int cur_n_scans = 0; // n scans to fit for current processed peak
-    unsigned int i, j, k; // iterators
+    // int cur_clust_idx = -1;
+    // int cur_n_scans = 0; // n scans to fit for current processed peak
+    // unsigned int i, j, k; // iterators
     int n_peaks_to_fit = 0; // n peaks that will be fit for current cluster
     int n_scans_to_fit = 0; // n scans that will be fit for current cluster
-    k = 0;
     
     double bl_slope;
     double bl_m;
@@ -4366,8 +4372,8 @@ void Chromatogram::fit_emg()
         if (this->options.output) Rcout << "Only VIP" << std::endl;
         
         // determine which cluster the vip is contained in
-        i = 0;
-        while(i < this->pt.final_clust.size() &&
+        int i = 0;
+        while(i < static_cast<int>(this->pt.final_clust.size()) &&
               !(this->pt.final_clust.at(i).at(0) <= this->get_vip() &&
               this->pt.final_clust.at(i).at(1) >= this->get_vip()))
         {
@@ -4402,14 +4408,13 @@ void Chromatogram::fit_emg()
         // set clusters to fit to be all clusters
         clusters_to_fit = vec_i(this->pt.final_clust.size());
 
-        i = 0;
         // std::fill(clusters_to_fit.begin(), clusters_to_fit.end(), i++);
         std::iota(clusters_to_fit.begin(), clusters_to_fit.end(), 0);
         
         if (this->options.output)
         {
             Rcout << "Clusters to fit (" << clusters_to_fit.size() << "): ";
-            for (i = 0; i < clusters_to_fit.size(); i++)
+            for (int i = 0; i < static_cast<int>(clusters_to_fit.size()); i++)
             {
                 Rcout << clusters_to_fit.at(i) << ":[" 
                       << this->pt.final_clust.at(clusters_to_fit.at(i)).at(0)
@@ -4425,7 +4430,7 @@ void Chromatogram::fit_emg()
     /***************************************************************************
      * loop over the clusters determined above and perform emg fitting
      **************************************************************************/
-    for (i = 0; i < clusters_to_fit.size(); i++)
+    for (int i = 0; i < static_cast<int>(clusters_to_fit.size()); i++)
     {
         if (this->options.output)
         {
@@ -4454,7 +4459,7 @@ void Chromatogram::fit_emg()
             
             wb_vip = 2*(this->pt.tinf.at(this->get_vip()) - this->pt.finf.at(this->get_vip()));
             
-            for (j = cur_clust.at(0); j <= cur_clust.at(1); j++)
+            for (int j = cur_clust.at(0); j <= cur_clust.at(1); j++)
             {
                 wb_j = 2*(this->pt.tinf.at(j) - this->pt.finf.at(j));
                 
@@ -4492,7 +4497,7 @@ void Chromatogram::fit_emg()
         } else
         {
             // TODO: replace with iota this is slow as hell
-            for (j = cur_clust.at(0); j <= cur_clust.at(1); j++)
+            for (int j = cur_clust.at(0); j <= cur_clust.at(1); j++)
             {
                 peaks_to_fit.insert(peaks_to_fit.end(), { j });
             }
@@ -4539,11 +4544,11 @@ void Chromatogram::fit_emg()
         
         // create a vector with the scans to fit for each peak
         n_scans_to_fit = 0;
-        int cur_nscan = 0;
+        // int cur_nscan = 0;
         int j_first_scan = 0;
         int j_last_scan = 0;
         
-        for (j = 0; j < n_peaks_to_fit; j++)
+        for (int j = 0; j < n_peaks_to_fit; j++)
         {
             vec_i cur_scans;
             
@@ -4582,10 +4587,10 @@ void Chromatogram::fit_emg()
         if (this->options.output)
         {
             Rcout << "Scans to fit: ";
-            for (j = 0; j < scans_to_fit.size(); j++)
+            for (int j = 0; j < static_cast<int>(scans_to_fit.size()); j++)
             {
                 Rcout << scans_to_fit.at(j);
-                if (j < scans_to_fit.size()-1) Rcout << ", ";
+                if (j < static_cast<int>(scans_to_fit.size()-1)) Rcout << ", ";
             }
             Rcout << std::endl;
         }
@@ -4615,7 +4620,7 @@ void Chromatogram::fit_emg()
         bl_x0 = this->pt.fblb.at(cur_clust.at(0));
         
         // populate the vectors
-        for (j = 0; j < n_scans_to_fit; j++)
+        for (int j = 0; j < n_scans_to_fit; j++)
         {
             // fill x with scan idx
             x.at(j) = scans_to_fit.at(j);
@@ -4629,7 +4634,7 @@ void Chromatogram::fit_emg()
             wt.at(j) = 1.0;
         }
         
-        for (j = 0; j < n_peaks_to_fit; j++)
+        for (int j = 0; j < n_peaks_to_fit; j++)
         {
             // seed
             // seed[0] mu seed value determined as the adj_apex
@@ -4690,7 +4695,7 @@ void Chromatogram::fit_emg()
             Rcout << left << setw(colwidth) << setfill(filler) << "area";
             Rcout << left << setw(colwidth) << setfill(filler) << "vip" << std::endl;
             
-            for (j = 0; j < n_peaks_to_fit; j++)
+            for (int j = 0; j < n_peaks_to_fit; j++)
             {
                 Rcout << left << setw(5) << setfill(filler) << cur_clust.at(0)+j;
                 Rcout << left << setw(colwidth) << setfill(filler) << seed.at((j*4)+0);
@@ -4716,7 +4721,7 @@ void Chromatogram::fit_emg()
             Rcout << left << setw(colwidth) << setfill(filler) << "area";
             Rcout << left << setw(colwidth) << setfill(filler) << "vip" << std::endl;
             
-            for (j = 0; j < n_peaks_to_fit; j++)
+            for (int j = 0; j < n_peaks_to_fit; j++)
             {
                 Rcout << left << setw(5) << setfill(filler) << cur_clust.at(0)+j;
                 Rcout << left << setw(colwidth) << setfill(filler) << lower.at((j*4)+0);
@@ -4742,7 +4747,7 @@ void Chromatogram::fit_emg()
             Rcout << left << setw(colwidth) << setfill(filler) << "area";
             Rcout << left << setw(colwidth) << setfill(filler) << "vip" << std::endl;
             
-            for (j = 0; j < n_peaks_to_fit; j++)
+            for (int j = 0; j < n_peaks_to_fit; j++)
             {
                 Rcout << left << setw(5) << setfill(filler) << cur_clust.at(0)+j;
                 Rcout << left << setw(colwidth) << setfill(filler) << upper.at((j*4)+0);
@@ -4798,7 +4803,7 @@ void Chromatogram::fit_emg()
         vec_d opt_param = opt.vopt.par;
 
         // record values
-        for (j = 0; j < n_peaks_to_fit; j++)
+        for (int j = 0; j < n_peaks_to_fit; j++)
         {
             // this->pt.emg_mu.at(cur_clust.at(0)+j) = opt_param.at(j*4);
             // this->pt.emg_sigma.at(cur_clust.at(0)+j) = opt_param.at(1+(j*4));

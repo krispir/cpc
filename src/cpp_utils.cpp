@@ -924,9 +924,14 @@ vec_i c_get_inflection_points(vec_d &x, int b = 0)
     vec_i p;
     
     for (int i = 0; i < nx-1; i++)
-        if ((x[i] >= b && x[i+1] <= b) || (x[i] <= b && x[i+1] >= b)) p.push_back(i);
-        
-        return p;
+    {
+        if ((x[i] >= b && x[i+1] <= b) || (x[i] <= b && x[i+1] >= b))
+        {
+            p.push_back(i);
+        }
+    }
+    
+    return p;
 }
 
 // [[Rcpp::export]]
