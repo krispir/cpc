@@ -4,54 +4,12 @@
 \alias{characterize_xcms_peaklist}
 \title{Wrapper function for characterization of the peaks detected by XCMS}
 \usage{
-characterize_xcms_peaklist(
-  xd,
-  ppm = 50,
-  min_pts = 7,
-  min_inf_width = 3,
-  min_sn = 10,
-  min_frac = NULL,
-  min_intensity = NULL,
-  smooth_method = c("savgol", "mean"),
-  smooth_times = 2,
-  smooth_win = NULL,
-  fit_emg = TRUE,
-  sel_peaks = NULL,
-  sel_files = NULL,
-  verbose_output = FALSE,
-  plot = FALSE
-)
+characterize_xcms_peaklist(xd, param = cpcProcParam())
 }
 \arguments{
 \item{xd}{\code{XCMSnExp} object with peak information}
 
-\item{ppm}{\code{ppm} value for generating XICs}
-
-\item{min_pts}{Minimum points across the peak}
-
-\item{min_inf_width}{Minimum points between inflection points (~60\% peak height)}
-
-\item{min_sn}{Minimum signal-to-noise ratio.}
-
-\item{min_frac}{}
-
-\item{min_intensity}{Minimum value for second derivative apex points}
-
-\item{smooth_method}{Method used for smoothing (Default: "savgol").}
-
-\item{smooth_times}{Number of smoothing iterations (Default: 2).}
-
-\item{smooth_win}{Width of the smoothing function window. Keep as \code{NULL} if you want the algorithm to determine it automatically.}
-
-\item{fit_emg}{\code{boolean} indicating if EMG deconvolution should be performed.}
-
-\item{sel_peaks}{\code{integer} vector of peak indices in the XCMS peak table. Leave as \code{NULL} if you want to process all peaks.}
-
-\item{sel_files}{\code{integer} vector of file indices in the \code{XCMSnExp} object. Leave as \code{NULL} if you want to process all files.}
-
-\item{verbose_output}{\code{boolean} indicating if you want verbose output.}
-
-\item{plot}{\code{boolean} indicating if you want each peak to be plotted after characterization.}
+\item{param}{\code{cpcProcParam} object with process parameters}
 }
 \value{
 \code{cpc} object
@@ -63,5 +21,5 @@ independently to only characterize the peaks in the \code{XCMSnExp}.
 TODO: Add a description about the algorithms used.
 }
 \seealso{
-\link{filter_xcms_peaklist}, \link{cpc-class}
+\link{filter_xcms_peaklist}, \link{cpc-class}, \link{cpcProcParam}
 }
