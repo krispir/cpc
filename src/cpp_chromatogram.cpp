@@ -5709,7 +5709,6 @@ void Chromatogram::process_chromatogram()
 //' Do not use this function, this function is called via the R interface functions.
 //'
 //' @param d0 Smoothed XIC trace
-//' @param d1 First derivative of smoothed XIC. Currently not used.
 //' @param d2 Second derivative of smoothed XIC
 //' @param apex_thresh Second derivative threshold value.
 //' @param w Apex detection window. Do not change unless you know what you are doing.
@@ -5717,11 +5716,19 @@ void Chromatogram::process_chromatogram()
 //' @param liftoff Slope difference threshold (in percent) for the peak front.
 //' @param touchdown Slope difference threshold (in percent) for the peak tail.
 //' @param output \code{integer} value (0 = no output, 1 = verbose output).
-//' @param fit_emg
-//' @param fit_only_vip
-//' @param fit_hess
-//' @param _reltol
-//' @param fit_method
+//' @param fit_emg Indicates if EMG deconvolution should be performed (0 = no EMG deconvolution, 1 = EMG deconvolution will be performed)
+//' @param fit_only_vip Indicates if EMG deconvolution should be performed on only the selected peak indicated by p (0 = no, 1 = yes)
+//' @param fit_hess Deprecated.
+//' @param fit_rel_lim Minimum relative peak height of neighboring peaks to the selected peak that will be deconvoluted.
+//' @param pts_per_peak Minimum number of points per peak
+//' @param reltol Relative tolerance of the Nelder-Mead minimizer for EMG deconvolution
+//' @param abstol Absolute tolerance of the Nelder-Mead minimizer for EMG deconvolution
+//' @param alpha Reflection coefficient of the Nelder-Mead minimizer for EMG deconvolution
+//' @param gamma Expansion coefficient of the Nelder-Mead minimizer for EMG deconvolution
+//' @param rho Contraction coefficient of the Nelder-Mead minimizer for EMG deconvolution
+//' @param sigma Shrink coefficient of the Nelder-Mead minimizer for EMG deconvolution
+//' @param maxit Maximum iterations for the Nelder-Mead minimizer for EMG deconvolution
+//' @param maxeval Maximum objective function calls for the Nelder-Mead minimizer for EMG deconvolution
 //' 
 //' @return A list of peak characteristics.
 //'
@@ -5735,7 +5742,7 @@ void Chromatogram::process_chromatogram()
 //' nvec <- vec + noise # create a noisy `chromatogram`.
 //' smvec <- signal::sgolayfilt(nvec, n = 5) # smooth the vector using Savitzky-Golay
 //' ddsmvec <- signal::sgolayfilt(nvec, n = 5, m = 2) # get the second derivative of the smoothed vector
-//' cpc::process_chromatogram(d0 = smvec, d1 = 1.0, d2 = ddsmvec, apex_thresh = 10)
+//' cpc::process_chromatogram(d0 = smvec, d2 = ddsmvec, apex_thresh = 10)
 // [[Rcpp::export]]
 Rcpp::List process_chromatogram(vec_d &d0, 
                                 vec_d &d2,
