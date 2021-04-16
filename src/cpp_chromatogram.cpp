@@ -1785,134 +1785,120 @@ public:
 };
 
 
-// arma::vec c_emgfit_2(arma::vec &si, arma::vec &st, arma::vec &wt, arma::vec seed, 
-//                    arma::vec &lower, arma::vec &upper,
-//                    int np, 
-//                    bool hess = false, 
-//                    int trace = 0, 
-//                    double h = 1e-5, 
-//                    const std::string method = "Nelder-Mead",
-//                    const double reltol = 1.49e-8,
-//                    const double alpha = 1.5, 
-//                    const double beta = 0.5, 
-//                    const double gamma = 2.0,
-//                    const int maxit = 500)
-// {
-//     // EMGFit(arma::vec &_si,
-//     //        arma::vec &_st,
-//     //        arma::vec &_wt,
-//     //        arma::vec &_seed,
-//     //        arma::vec &_lower,
-//     //        arma::vec &_upper,
-//     //        unsigned int _npeaks,
-//     //        double _h = 1e-5,
-//     //        const std::string &_method = "Not-NM")
-//     EMGFit fit(si, st, wt, seed, lower, upper, np, h, method);
-//     
-//     Roptim<EMGFit> opt(method);
-//     
-//     if (method == "L-BFGS-B" &&
-//         (lower.size() != seed.size() || upper.size() != seed.size()))
-//     {
-//         Rcpp::stop("L-BFGS-B require bounds");
-//     } else if (method == "L-BFGS-B")
-//     {
-//         opt.set_lower(lower);
-//         opt.set_upper(upper);
-//     }
-//     
-//     // if (method.compare("Nelder-Mead") == 0)
-//     // {
-//     //   opt.control.maxit = 2000;
-//     // }
-//     
-//     opt.control.trace = trace;
-//     
-//     opt.control.reltol = reltol;
-//     opt.control.alpha = alpha;
-//     opt.control.beta = beta;
-//     opt.control.gamma = gamma;
-//     
-//     opt.control.maxit = maxit;
-//     
-//     opt.set_hessian(hess);
-//     
-//     opt.minimize(fit, seed);
-//     
-//     if (trace)
-//     {
-//         Rcpp::Rcout << std::endl;
-//         opt.print();
-//         Rcpp::Rcout << std::endl;
-//     }
-//     
-//     return opt.par();
-// }
-// 
-// arma::vec c_emgfit_3(arma::vec &si, arma::vec &st, arma::vec &wt, arma::vec seed, 
-//                      arma::vec &lower, arma::vec &upper,
-//                      int np, 
-//                      bool hess = false, 
-//                      int trace = 0, 
-//                      double h = 1e-5, 
-//                      const std::string method = "Nelder-Mead",
-//                      const double reltol = 1.49e-8,
-//                      const double alpha = 1.5, 
-//                      const double beta = 0.5, 
-//                      const double gamma = 2.0,
-//                      const int maxit = 500,
-//                      const int objout = 0)
-// {
-//     // EMGFit(arma::vec &_si,
-//     //        arma::vec &_st,
-//     //        arma::vec &_wt,
-//     //        arma::vec &_seed,
-//     //        arma::vec &_lower,
-//     //        arma::vec &_upper,
-//     //        unsigned int _npeaks,
-//     //        double _h = 1e-5,
-//     //        const std::string &_method = "Not-NM")
-//     EMGFit2 fit(si, st, wt, seed, lower, upper, np, h, method, objout);
-//     
-//     Roptim<EMGFit2> opt(method);
-//     
-//     if (method == "L-BFGS-B" &&
-//         (lower.size() != seed.size() || upper.size() != seed.size()))
-//     {
-//         Rcpp::stop("L-BFGS-B require bounds");
-//     } else if (method == "L-BFGS-B")
-//     {
-//         opt.set_lower(lower);
-//         opt.set_upper(upper);
-//     }
-//     
-//     // if (method.compare("Nelder-Mead") == 0)
-//     // {
-//     //   opt.control.maxit = 2000;
-//     // }
-//     
-//     opt.control.trace = trace;
-//     
-//     opt.control.reltol = reltol;
-//     opt.control.alpha = alpha;
-//     opt.control.beta = beta;
-//     opt.control.gamma = gamma;
-//     
-//     opt.control.maxit = maxit;
-//     
-//     opt.set_hessian(hess);
-//     
-//     opt.minimize(fit, seed);
-//     
-//     if (trace)
-//     {
-//         Rcpp::Rcout << std::endl;
-//         opt.print();
-//         Rcpp::Rcout << std::endl;
-//     }
-//     
-//     return opt.par();
-// }
+// CLASS ApexFinder
+class cpcApexFinder
+{
+private:
+    
+    vec_d v;
+    vec_i loc_min;
+    vec_i apices;
+    
+    int j;
+    int start = -1;
+    int end = -1;
+    int last_min = -1;
+    int last_max = -1;
+    int npeaks = 0;
+    int nscans;
+    
+    double w;
+    
+    bool is_loc_min = false;
+    bool is_loc_max = false;
+    
+public:
+    cpcApexFinder(const vec_d &_v, const double &_w)
+    {
+        this->v = _v;
+        this->w = _w;
+        
+        this->nscans = this->v.size();
+        this->loc_min = vec_i(this->nscans, 0);
+        
+        /***********************
+         * detect local minima *
+         ***********************/
+        for (int i = 0; i < this->nscans; i++)
+        {
+            is_loc_min = true;
+            
+            if (i < this->w)
+            {
+                start = 0;
+                end = (2 * this->w) + 1;
+            } else if (i > this->nscans - this->w - 1)
+            {
+                start = this->nscans - 2 * this->w - 1;
+                end = this->nscans - 1;
+            } else
+            {
+                start = i - this->w;
+                end = i + this->w;
+            }
+            
+            // check if i is an extreme point (minima or maxima)
+            for (int j = start; j <= end; j++)
+            {
+                // check if i is a local minima
+                if (this->v.at(j) < this->v.at(i)) is_loc_min = false;
+                
+            }
+            
+            // if at a local negative minima (possible apex)
+            if (is_loc_min && this->v.at(i) < 0.0)
+            {
+                // check that the current minima is not closer to last minima by w
+                if (last_min > 0 && i - last_min < this->w)
+                {
+                    if (this->v.at(i) < this->v.at(last_min))
+                    {
+                        loc_min.at(last_min) = 0;
+                        loc_min.at(i) = 1;
+                    }
+                    
+                    // if no previous minima has been found or the current minima is
+                    // further away than w
+                } else
+                {
+                    loc_min.at(i) = 1;
+                    this->npeaks++;
+                }
+                
+                last_min = i;
+                
+            }
+        }
+        
+        /**********************
+         * create apex vector *
+         **********************/
+        this->apices = vec_i(this->npeaks, -1);
+        j = 0;
+        
+        for (int i = 0; i < this->nscans; i++)
+        {
+            if (loc_min.at(i) > 0)
+            {
+                this->apices.at(j) = i;
+                j++;
+            }
+        }
+    }
+    
+    vec_i getApices()   { return this->apices; }
+    
+};
+
+// [[Rcpp::export]]
+vec_i testApexFinder(vec_d v, int w)
+{
+    cpcApexFinder af(v, w);
+    
+    return af.getApices();
+}
+
+
 
 /*********************************
  * Chromatogram class definition *
@@ -2534,9 +2520,9 @@ void Chromatogram::find_apices()
     
     for (int i = 0; i < this->nscans; i++)
     {
-        if (local_min[i] > 0)
+        if (local_min.at(i) > 0)
         {
-            apices[j] = i;
+            apices.at(j) = i;
             j++;
         }
     }
@@ -2674,7 +2660,28 @@ void Chromatogram::check_peaks()
 void Chromatogram::detect_peaks()
 {
     // first find apices using d2
-    this->find_apices();
+    // this->find_apices();
+    
+    cpcApexFinder af(this->d2, this->options.w);
+    vec_i apices = af.getApices();
+    
+    if (this->options.output)
+    {
+        Rcout << "Detected apices: ";
+        for (int i = 0; i < apices.size(); i++)
+        {
+            Rcout << apices.at(i);
+            if (i < apices.size()-1)
+            {
+                Rcout << ", ";
+            }
+        }
+        Rcout << std::endl;
+    }
+    
+    this->pt.init_peaks(apices);
+    
+    if (this->options.output) this->pt.summary();
     
     int i,j;
     
