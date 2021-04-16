@@ -40,10 +40,10 @@ using vec_i = std::vector<int>;
  ********************/
 
 // [[Rcpp::export]]
-vec_i LinearSpacedArray(int a, int b, std::size_t N)
+vec_i LinearSpacedArray(int a, int b, int N)
 {
     int h;
-    std::size_t Nout;
+    int Nout;
     
     if (N <= 1)
     {
@@ -57,7 +57,7 @@ vec_i LinearSpacedArray(int a, int b, std::size_t N)
     } else
     {
         Nout = N;
-        h = (b - a) / static_cast<int>(N-1);
+        h = (b - a) / N-1;
     }
     
     vec_i xs(Nout);
