@@ -76,7 +76,7 @@ int upperBound(NumericVector &x, double val, int first, int length) {
     half = length >> 1;
     mid = first;
     mid += half;
-    if (val < x[mid]){
+    if (val < x[mid]) {
       length = half;
     }
     else {
