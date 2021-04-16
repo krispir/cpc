@@ -7,20 +7,30 @@
 \usage{
 process_chromatogram(
   d0,
-  d1,
   d2,
   apex_thresh = 0,
   w = 5L,
   p = -1L,
   liftoff = 0,
   touchdown = 0.5,
-  output = 0L
+  output = 0L,
+  fit_emg = 1L,
+  fit_only_vip = 1L,
+  fit_hess = 0L,
+  fit_rel_lim = 0.05,
+  pts_per_peak = 10L,
+  reltol = 1e-08,
+  abstol = -1e+35,
+  alpha = 1,
+  gamma = 2.1,
+  rho = 0.75,
+  sigma = 0.75,
+  maxit = 2000L,
+  maxeval = 2000L
 )
 }
 \arguments{
 \item{d0}{Smoothed XIC trace}
-
-\item{d1}{First derivative of smoothed XIC. Currently not used.}
 
 \item{d2}{Second derivative of smoothed XIC}
 
@@ -35,6 +45,10 @@ process_chromatogram(
 \item{touchdown}{Slope difference threshold (in percent) for the peak tail.}
 
 \item{output}{\code{integer} value (0 = no output, 1 = verbose output).}
+
+\item{d1}{First derivative of smoothed XIC. Currently not used.}
+
+\item{fit_method}{}
 }
 \value{
 A list of peak characteristics.
@@ -52,5 +66,5 @@ noise <- rnorm(length(x), 0, 5) # generate a noise vector
 nvec <- vec + noise # create a noisy `chromatogram`.
 smvec <- signal::sgolayfilt(nvec, n = 5) # smooth the vector using Savitzky-Golay
 ddsmvec <- signal::sgolayfilt(nvec, n = 5, m = 2) # get the second derivative of the smoothed vector
-cpc::process_chromatogram(d0 = smvec, d1 = 1.0, d2 = ddsmvec, apex_thresh = 10)
+cpc::process_chromatogram(d0 = smvec, d2 = ddsmvec, apex_thresh = 10)
 }

@@ -18,9 +18,9 @@
 \alias{parsePeaklist,cpc-method}
 \alias{parseFeatures,cpc-method}
 \alias{filePaths,cpc-method}
+\alias{getChromatogram,cpc-method}
 \alias{processPeaks,cpc-method}
 \alias{filterPeaks,cpc-method}
-\alias{getChromatogram,cpc-method}
 \alias{show,cpc-method}
 \alias{summary,cpc-method}
 \title{Method to check if a \code{cpc} object has a parsed peaktable}
@@ -59,11 +59,11 @@
 
 \S4method{filePaths}{cpc}(x)
 
+\S4method{getChromatogram}{cpc}(x, id)
+
 \S4method{processPeaks}{cpc}(x)
 
 \S4method{filterPeaks}{cpc}(x)
-
-\S4method{getChromatogram}{cpc}(x, id)
 
 \S4method{show}{cpc}(x)
 
@@ -111,11 +111,11 @@ A \code{cpc} object
 
 A \code{character} vector with file paths
 
-A \code{cpc} object
-
-A \code{cpc} object
-
 A \code{cpc_chrom} object
+
+A \code{cpc} object
+
+A \code{cpc} object
 }
 \description{
 Takes a named \code{list} of parameters as argument. If a parameter name 
@@ -129,22 +129,22 @@ This method will set the \code{sel_peaks} parameter in \code{procParams} to
 include only peaks that make up a part of a feature. It will call 
 \code{parsePeaklist} with the new peak subset.
 
+Prior to running this method the peak table must be parsed using the 
+\code{parsePeaklist} or \code{parseFeatures} methods.
+
 This is the main method run on a \code{cpc} object to characterize the peaks detected by XCMS.
 Prior to running this method the peak table must be parsed using the \code{parsePeaklist} method.
 
 This method is run after \code{processPeaks} in order to remove the peaks 
 that do not fulfill the criteria and creates a filtered \code{XCMSnExp} 
 object and stores it in the \code{xdFilt} slot.
-
-Prior to running this method the peak table must be parsed using the 
-\code{parsePeaklist} or \code{parseFeatures} methods.
 }
 \seealso{
 \link{parsePeaklist}
 
+\link{parsePeaklist}, \link{parseFeatures}, \link{cpc_chrom-class}
+
 \link{parsePeaklist}, \link{parseFeatures}
 
 \link{processPeaks}
-
-\link{parsePeaklist}, \link{parseFeatures}, \link{cpc_chrom-class}
 }

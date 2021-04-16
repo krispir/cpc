@@ -4,7 +4,18 @@
 \alias{plotPeaks}
 \title{Plotting of characterized peaks}
 \usage{
-plotPeaks(cpc, peakIdx, outPath = NULL, prefix = NULL, device = "png", ...)
+plotPeaks(
+  cpc,
+  peakIdx,
+  outPath = NULL,
+  prefix = NULL,
+  device = "png",
+  plotEMG = F,
+  plotXCMS = T,
+  noPrompt = F,
+  annotation = character(1),
+  ...
+)
 }
 \arguments{
 \item{cpc}{A \code{cpc} object}

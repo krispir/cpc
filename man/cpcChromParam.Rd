@@ -31,7 +31,7 @@ cpcChromParam(
 \arguments{
 \item{mz}{m/z value for the peak}
 
-\item{p}{Max scan of the peak (\code{scpos}) in the \code{XCMSnExp} peak table}
+\item{p}{Max scan of the peak (calculated from \code{rt}) in the \code{XCMSnExp} peak table}
 
 \item{s}{Sigma value of the peak in the \code{XCMSnExp} peak table}
 

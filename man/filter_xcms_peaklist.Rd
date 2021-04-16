@@ -6,22 +6,14 @@
 \usage{
 filter_xcms_peaklist(
   xd,
-  verbose_output = FALSE,
   return_type = c("xcms", "cpc"),
-  plot = FALSE,
-  ...
+  param = cpcProcParam()
 )
 }
 \arguments{
 \item{xd}{\code{XCMSnExp} object}
 
-\item{verbose_output}{\code{boolean} indicating if verbose output is to be given.}
-
-\item{return_type}{Default: xcms.}
-
-\item{plot}{\code{boolean} indicating if you want each peak to be plotted after characterization.}
-
-\item{...}{Other parameters passed to \code{characterize_peaklist}.}
+\item{param}{\code{cpcProcParam} object with process parameters}
 }
 \value{
 Either an \code{XCMSnExp} object or a \code{cpc} object.
