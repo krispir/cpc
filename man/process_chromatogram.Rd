@@ -46,9 +46,31 @@ process_chromatogram(
 
 \item{output}{\code{integer} value (0 = no output, 1 = verbose output).}
 
-\item{d1}{First derivative of smoothed XIC. Currently not used.}
+\item{fit_emg}{Indicates if EMG deconvolution should be performed (0 = no EMG deconvolution, 1 = EMG deconvolution will be performed)}
 
-\item{fit_method}{}
+\item{fit_only_vip}{Indicates if EMG deconvolution should be performed on only the selected peak indicated by p (0 = no, 1 = yes)}
+
+\item{fit_hess}{Deprecated.}
+
+\item{fit_rel_lim}{Minimum relative peak height of neighboring peaks to the selected peak that will be deconvoluted.}
+
+\item{pts_per_peak}{Minimum number of points per peak}
+
+\item{reltol}{Relative tolerance of the Nelder-Mead minimizer for EMG deconvolution}
+
+\item{abstol}{Absolute tolerance of the Nelder-Mead minimizer for EMG deconvolution}
+
+\item{alpha}{Reflection coefficient of the Nelder-Mead minimizer for EMG deconvolution}
+
+\item{gamma}{Expansion coefficient of the Nelder-Mead minimizer for EMG deconvolution}
+
+\item{rho}{Contraction coefficient of the Nelder-Mead minimizer for EMG deconvolution}
+
+\item{sigma}{Shrink coefficient of the Nelder-Mead minimizer for EMG deconvolution}
+
+\item{maxit}{Maximum iterations for the Nelder-Mead minimizer for EMG deconvolution}
+
+\item{maxeval}{Maximum objective function calls for the Nelder-Mead minimizer for EMG deconvolution}
 }
 \value{
 A list of peak characteristics.
