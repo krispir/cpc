@@ -25,3 +25,7 @@ Collate:
   "fun_plot_eval_eic.R"
   "utils.R"
   "RcppExports.R"
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
