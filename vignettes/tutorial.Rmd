@@ -1,0 +1,105 @@
+---
+title: "Filtering of chromatographic peaks in an XCMS object"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+
+library(xcms)
+library(cpc)
+
+```
+
+# XCMS processing
+
+This tutorial will showcase the CPC package functionality using an example data set composed of 4 replicate injections of protein precipitated plasma on a HILIC platform. The example data is heavily filtered in order to keep package size and processing times to a minimum. The filtering is made in two steps: (1) The full data set was processed using XCMS and CPC in the same way described below. A subset of 100 peaks was randomly selected from those that were retained in the filtering step, based on the calculated signal-to-noise of the peaks (25 from each quartile). Similarily 100 peaks were randomly selected from those removed in the filtering step (33-34 each from those removed due to not being detected, having too low signal to noise, or having too few data points along the peak range). (2) The data set was then filtered to (i) only include scan indices 1-1200, (ii) only include mass peaks with intensity > 2.225*median intensity (removes a lot of noise peaks), and (iii) include only mass peaks whose m/z value coincide with one of the selected peaks in step (1) within a ppm value of 50 and a retention window of +/- 120 seconds.
+
+The first step in this tutorial is to use XCMS to process the reduced data set. The parameters used here are the same as those used to process the full data set. For more information on how to use XCMS for processing LC/MS data, see XCMS documentation. Only the peak picking will be performed as the retention alignment will not work properly with this heavily filtered dataset, and is not important to illustrate the workflow.
+
+```{r}
+
+# get example raw data file paths from package
+fp_raw <- list.files(system.file("extdata", package = "cpc"), full.names = T)
+fp_raw <- list.files(path = paste0("C:/Users/kripi733/Work Folders/Documents/", 
+                                   "4_R/Projects/cpc/inst/extdata"), 
+                     full.names = T)
+
+fp_raw <- list.files(path = paste0("C:/Users/kripi733/Work Folders/Documents/", 
+                                   "4_R/Projects/cpc/loc_data/filtered2/"), 
+                     full.names = T, pattern = "*.mzML")
+
+# setup multi-core processing for XCMS
+register(bpstart(SnowParam()))
+
+# setup metadata
+(pd <- data.frame(sample_name = paste0("HILIC_", seq(1,4,1)),
+                  sample_group = rep("HILIC_POS", 4),
+                  stringsAsFactors = F))
+
+# Create raw data object
+(msraw <- readMSData(files = fp_raw,
+                     pdata = new("NAnnotatedDataFrame", pd),
+                     mode = "onDisk", msLevel. = 1, centroided. = T))
+
+# --- PEAK DETECTION ---
+cat(paste0("Peak picking start at: ", Sys.time(), "\n"))
+
+# run peak detection
+xd <- findChromPeaks(msraw, 
+                     param = CentWaveParam(ppm = 60, 
+                                           peakwidth = c(5, 50), 
+                                           fitgauss = T, 
+                                           noise = 200,
+                                           integrate = 2, 
+                                           prefilter = c(5, 1000), 
+                                           verboseColumns = T, 
+                                           mzdiff = 0.01), 
+                     msLevel = 1L)
+
+print(xd)
+
+```
+
+# CPC peak filtering
+
+The way in which the CPC package is applied to the workflow is via two wrapper functions. The first one (*characterize_xcms_peaklist()*) will only characterize the peaks detected by XCMS, whereas the second (*filter_xcms_peaklist()*) will also run the filtering method and can return either a *cpc* object containing all the information, including the filtered XCMSnExp object, or the filtered XCMSnExp object. The latter function will call *characterize_xcms_peaklist()*.
+
+The *cpcProcParam* object holds processing parameters for both peak characterization as well as peak filtering.
+
+```{r}
+
+cpc <- filter_xcms_peaklist(xd = xd, return_type = "cpc", 
+                            param = cpcProcParam())
+
+```
+
+With this data set the processing times are very fast (<10 seconds per file), but that is due to the heavy filtering that has been done. More realistic processing times, when working with full LC/MS data sets, range from a 2-10 minutes per file, depending on the number of peaks.
+
+# Visualizing the results
+
+First lets determine which peaks are kept and which are filtered. In the *cpc* object, there are two *XCMSnExp* objects, *xd* and *xdFilt*. *xdFilt*, as the name implies, is the filtered *XCMSnExp* object. It can be extracted using the *filteredObject()* method.
+
+```{r}
+
+
+
+```
+
+# Session info
+
+```{r}
+
+sessionInfo()
+
+```
