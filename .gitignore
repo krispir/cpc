@@ -9,3 +9,4 @@ src/*.dll
 *.so
 loc_dev/
 loc_data/
+inst/doc
