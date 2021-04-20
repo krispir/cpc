@@ -1689,6 +1689,19 @@ setMethod("xdObj<-", signature("cpc"), function(x, value)
     return(x)
 })
 
+#### Method: filteredObject ####
+
+#' @title Getter method that returns the filtered \code{XCMSnExp} object.
+#' 
+#' @param x A \code{cpc} object
+#' 
+#' @return A filtered \code{XCMSnExp} object
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+setMethod("filteredObject", signature("cpc"), function(x) return(x@xdFilt))
+
 
 #### Method: peaksToKeep ####
 

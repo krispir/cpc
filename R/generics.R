@@ -14,6 +14,7 @@ setGeneric("cpt<-", function(x, value) standardGeneric("cpt<-"))
 
 setGeneric("filePaths", function(x) standardGeneric("filePaths"))
 setGeneric("filterPeaks", function(x) standardGeneric("filterPeaks"))
+setGeneric("filteredObject", function(x) standardGeneric("filteredObject"))
 setGeneric("fitEMG", function(x) standardGeneric("fitEMG"))
 
 # G ############################################################################
