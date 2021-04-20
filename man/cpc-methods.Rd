@@ -6,6 +6,7 @@
 \alias{hasCharacterizedPeakTable,cpc-method}
 \alias{xdObj,cpc-method}
 \alias{xdObj<-,cpc-method}
+\alias{filteredObject,cpc-method}
 \alias{peaksToKeep,cpc-method}
 \alias{getPeaklist,cpc-method}
 \alias{setPeaklist<-,cpc-method}
@@ -32,6 +33,8 @@
 \S4method{xdObj}{cpc}(x)
 
 \S4method{xdObj}{cpc}(x) <- value
+
+\S4method{filteredObject}{cpc}(x)
 
 \S4method{peaksToKeep}{cpc}(x, returnBoolean = FALSE)
 
@@ -84,6 +87,8 @@ A \link{boolean}
 A \code{XCMSnExp} object
 
 A \code{cpc} object
+
+A filtered \code{XCMSnExp} object
 
 An \code{integer} vector of peak idx that pass the criteria
 
