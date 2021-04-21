@@ -4,7 +4,7 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 
 #include <Rcpp.h>
-#include <bits/stdc++.h>
+// #include <bits/stdc++.h>
 #include <deque>
 
 #include <roptim.h>
