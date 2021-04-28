@@ -31,13 +31,13 @@ The first step in this tutorial is to use XCMS to process the reduced data set. 
 
 # get example raw data file paths from package
 fp_raw <- list.files(system.file("extdata", package = "cpc"), full.names = T)
-fp_raw <- list.files(path = paste0("C:/Users/kripi733/Work Folders/Documents/", 
-                                   "4_R/Projects/cpc/inst/extdata"), 
-                     full.names = T)
-
-fp_raw <- list.files(path = paste0("C:/Users/kripi733/Work Folders/Documents/", 
-                                   "4_R/Projects/cpc/loc_data/filtered2/"), 
-                     full.names = T, pattern = "*.mzML")
+# fp_raw <- list.files(path = paste0("C:/Users/kripi733/Work Folders/Documents/", 
+#                                    "4_R/Projects/cpc/inst/extdata"), 
+#                      full.names = T)
+# 
+# fp_raw <- list.files(path = paste0("C:/Users/kripi733/Work Folders/Documents/", 
+#                                    "4_R/Projects/cpc/loc_data/filtered2/"), 
+#                      full.names = T, pattern = "*.mzML")
 
 # setup multi-core processing for XCMS
 register(bpstart(SnowParam()))
