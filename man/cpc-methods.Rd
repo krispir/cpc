@@ -22,6 +22,7 @@
 \alias{getChromatogram,cpc-method}
 \alias{processPeaks,cpc-method}
 \alias{filterPeaks,cpc-method}
+\alias{getFilteredXCMS,cpc-method}
 \alias{show,cpc-method}
 \alias{summary,cpc-method}
 \title{Method to check if a \code{cpc} object has a parsed peaktable}
@@ -67,6 +68,8 @@
 \S4method{processPeaks}{cpc}(x)
 
 \S4method{filterPeaks}{cpc}(x)
+
+\S4method{getFilteredXCMS}{cpc}(x)
 
 \S4method{show}{cpc}(x)
 

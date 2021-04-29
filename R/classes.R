@@ -1757,7 +1757,7 @@ setMethod("peaksToKeep", signature("cpc"), function(x, returnBoolean = FALSE)
 #' @export
 #' @docType methods
 #' @rdname cpc-methods
-setMethod("getPeaklist", signature("cpc"), function(x) x@pt)
+setMethod("getPeaklist", signature("cpc"), function(x) return(x@pt))
 
 
 #### Method: setPeaklist<- ####
@@ -2587,6 +2587,15 @@ setMethod("filterPeaks", signature("cpc"), function(x)
     
     # return cpc object
     return(x)
+})
+
+
+#### Method: getFilteredXCMS ####
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+setMethod("getFilteredXCMS", signature("cpc"), function(x) {
+    return(x@xdFilt)
 })
 
 

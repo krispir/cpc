@@ -27,6 +27,7 @@ setGeneric("getProcParams", function(x, value = NULL) standardGeneric("getProcPa
 setGeneric("getParam", function(x, param) standardGeneric("getParam"))
 setGeneric("getResults", function(x) standardGeneric("getResults"))
 setGeneric("getXIC", function(x, mzrange, scanrange = NULL, method = 1) standardGeneric("getXIC"))
+setGeneric("getFilteredXCMS", function(x) standardGeneric("getFilteredXCMS"))
 
 # H ############################################################################
 
