@@ -64,8 +64,23 @@ plotPeaks <- function(cpc, peakIdx,
         }
     } else if (!is.numeric(peakIdx))
     {
-        stop(paste0("Invalid peaks selected. peakIdx should contain a numeric ",
-                    "vector of peak indices (matching the XCMS peak table)."))
+        # check if peakIdx is a character vector, in which case the supplied
+        # ids may be peak ids
+        if (is.character(peakIdx))
+        {
+            # check that all the ids exist in the full peak list
+            if (all(peakIdx %in% row.names(xcms::chromPeaks(cpc@xd))))
+            {
+                # replace peakIdx with the numeric indices for now
+                peakIdx <- match(peakIdx, row.names(xcms::chromPeaks(cpc@xd)))
+            } else
+            {
+                stop(paste0("Invalid peaks selected. peakIdx should contain a ",
+                            "numeric vector of peak indices (matching the ",
+                            "XCMS peak table) or a character vector of peak ",
+                            "IDs matching the rownames of the peak list."))
+            }
+        }
     }
     
     # quick check to make sure there are now selected peaks
