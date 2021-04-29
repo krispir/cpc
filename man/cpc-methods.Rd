@@ -24,6 +24,7 @@
 \alias{filterPeaks,cpc-method}
 \alias{getOriginalXCMS,cpc-method}
 \alias{getFilteredXCMS,cpc-method}
+\alias{getRemovedPeaks,cpc-method}
 \alias{show,cpc-method}
 \alias{summary,cpc-method}
 \title{Method to check if a \code{cpc} object has a parsed peaktable}
@@ -73,6 +74,8 @@
 \S4method{getOriginalXCMS}{cpc}(x)
 
 \S4method{getFilteredXCMS}{cpc}(x)
+
+\S4method{getRemovedPeaks}{cpc}(x)
 
 \S4method{show}{cpc}(x)
 

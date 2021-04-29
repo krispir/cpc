@@ -2608,6 +2608,18 @@ setMethod("getFilteredXCMS", signature("cpc"), function(x) {
 })
 
 
+#### Method: getRemovedPeaks ####
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+setMethod("getRemovedPeaks", signature("cpc"), function(x) {
+    all_peaks <- row.names(chromPeaks(cpc@xd))
+    retained_peaks <- row.names(chromPeaks(cpc@xdFilt))
+    
+    return(all_peaks[which(!(all_peaks %in% retained_peaks))])
+})
+
+
 #### Method: show ####
 
 #' @export
