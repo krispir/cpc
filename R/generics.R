@@ -5,6 +5,7 @@
 # C ############################################################################
 
 setGeneric("calculatePeakCharacteristics", function(x) standardGeneric("calculatePeakCharacteristics"))
+setGeneric("checkPeaksAgainstCriteria", function(x) standardGeneric("checkPeaksAgainstCriteria"))
 setGeneric("cpt", function(x) standardGeneric("cpt"))
 setGeneric("cpt<-", function(x, value) standardGeneric("cpt<-"))
 

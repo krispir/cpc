@@ -2500,6 +2500,42 @@ setMethod("processPeaks", signature("cpc"), function(x)
 })
 
 
+#### Method: checkPeaksAgainstCriteria ####
+#' @title Method that check each peak in the XCMS object against the criteria 
+#' specified by the user in the *cpcProcParam* object
+#' 
+#' @description 
+#' 
+#' This method i called by the *filterPeaks* method and checks the peak
+#' characteristics of each detected peak against the criteria specified by the
+#' user in the *cpcProcParam* object.
+#' 
+#' @param x A \code{cpc} object
+#' 
+#' @return A \code{cpc} object
+#' 
+#' @seealso \link{processPeaks}
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+setMethod("checkPeaksAgainstCriteria", signature("cpc"), function(x) {
+    # check that the peak processing has been performed
+    if (!hasCharacterizedPeakTable(x))
+    {
+        stop("Please run peak characterization first!")
+    }
+    
+    x@cpt$note[which(x@cpt$area < 
+                           getParam(x@param, "min_intensity"))] <- "too_small"
+    x@cpt$note[which(x@cpt$tpkb - 
+                           x@cpt$fpkb + 1 < 
+                           getParam(x@param, "min_pts"))] <- "too_narrow"
+    X@cpt$note[which(x@cpt$sn < getParam(x@param, "min_sn"))] <- "low_sn"
+    
+})
+
+
 #### Method: filterPeaks ####
 
 #' @title Method that creates a filtered \code{XCMSnExp} object based on filter criteria
@@ -2565,10 +2601,14 @@ setMethod("filterPeaks", signature("cpc"), function(x)
     # get chromPeaks from the filtered object
     ncp <- xcms::chromPeaks(x@xdFilt)
     
+    # check all peaks against the specified criteria in the params object
+    x <- checkPeaksAgainstCriteria(x)
+    
     # create a vector of peaks to remove based on params
     # keep will be which peaks in the cpt slot that will be kept (NOT which
     # peaks in the XCMS object that will be kept!)
-    keep <- peaksToKeep(x)
+    # keep <- peaksToKeep(x)
+    keep <- which(x@cpt$note == "detected")
     
     # if the XCMSnExp has filled peaks they will be removed when running
     # xcms::dropFeatureDefinitions() and so if this is the case, then I will 

@@ -21,6 +21,7 @@
 \alias{filePaths,cpc-method}
 \alias{getChromatogram,cpc-method}
 \alias{processPeaks,cpc-method}
+\alias{checkPeaksAgainstCriteria,cpc-method}
 \alias{filterPeaks,cpc-method}
 \alias{getOriginalXCMS,cpc-method}
 \alias{getFilteredXCMS,cpc-method}
@@ -68,6 +69,8 @@
 \S4method{getChromatogram}{cpc}(x, id)
 
 \S4method{processPeaks}{cpc}(x)
+
+\S4method{checkPeaksAgainstCriteria}{cpc}(x)
 
 \S4method{filterPeaks}{cpc}(x)
 
@@ -130,6 +133,8 @@ A \code{cpc_chrom} object
 A \code{cpc} object
 
 A \code{cpc} object
+
+A \code{cpc} object
 }
 \description{
 Takes a named \code{list} of parameters as argument. If a parameter name 
@@ -149,6 +154,10 @@ Prior to running this method the peak table must be parsed using the
 This is the main method run on a \code{cpc} object to characterize the peaks detected by XCMS.
 Prior to running this method the peak table must be parsed using the \code{parsePeaklist} method.
 
+This method i called by the *filterPeaks* method and checks the peak
+characteristics of each detected peak against the criteria specified by the
+user in the *cpcProcParam* object.
+
 This method is run after \code{processPeaks} in order to remove the peaks 
 that do not fulfill the criteria and creates a filtered \code{XCMSnExp} 
 object and stores it in the \code{xdFilt} slot.
@@ -159,6 +168,8 @@ object and stores it in the \code{xdFilt} slot.
 \link{parsePeaklist}, \link{parseFeatures}, \link{cpc_chrom-class}
 
 \link{parsePeaklist}, \link{parseFeatures}
+
+\link{processPeaks}
 
 \link{processPeaks}
 }
