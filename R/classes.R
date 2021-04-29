@@ -1760,6 +1760,7 @@ setMethod("peaksToKeep", signature("cpc"), function(x, returnBoolean = FALSE)
 setMethod("getPeaklist", signature("cpc"), function(x) return(x@pt))
 
 
+
 #### Method: setPeaklist<- ####
 
 #' @title Setter method for the parsed peak table in a \code{cpc} object
@@ -2587,6 +2588,14 @@ setMethod("filterPeaks", signature("cpc"), function(x)
     
     # return cpc object
     return(x)
+})
+
+#### Method: getOriginalXCMS ####
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+setMethod("getOriginalXCMS", signature("cpc"), function(x) {
+    return(x@xd)
 })
 
 

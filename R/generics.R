@@ -20,14 +20,15 @@ setGeneric("fitEMG", function(x) standardGeneric("fitEMG"))
 # G ############################################################################
 
 setGeneric("getChromatogram", function(x, id) standardGeneric("getChromatogram"))
+setGeneric("getFilteredXCMS", function(x) standardGeneric("getFilteredXCMS"))
 setGeneric("getMzRange", function(x) standardGeneric("getMzRange"))
+setGeneric("getOriginalXCMS", function(x) standardGeneric("getOriginalXCMS"))
 setGeneric("getPeaklist", function(x) standardGeneric("getPeaklist"))
 setGeneric("getProcData", function(x, value = NULL) standardGeneric("getProcData"))
 setGeneric("getProcParams", function(x, value = NULL) standardGeneric("getProcParams"))
 setGeneric("getParam", function(x, param) standardGeneric("getParam"))
 setGeneric("getResults", function(x) standardGeneric("getResults"))
 setGeneric("getXIC", function(x, mzrange, scanrange = NULL, method = 1) standardGeneric("getXIC"))
-setGeneric("getFilteredXCMS", function(x) standardGeneric("getFilteredXCMS"))
 
 # H ############################################################################
 

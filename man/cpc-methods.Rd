@@ -22,6 +22,7 @@
 \alias{getChromatogram,cpc-method}
 \alias{processPeaks,cpc-method}
 \alias{filterPeaks,cpc-method}
+\alias{getOriginalXCMS,cpc-method}
 \alias{getFilteredXCMS,cpc-method}
 \alias{show,cpc-method}
 \alias{summary,cpc-method}
@@ -68,6 +69,8 @@
 \S4method{processPeaks}{cpc}(x)
 
 \S4method{filterPeaks}{cpc}(x)
+
+\S4method{getOriginalXCMS}{cpc}(x)
 
 \S4method{getFilteredXCMS}{cpc}(x)
 
