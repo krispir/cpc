@@ -2526,13 +2526,20 @@ setMethod("checkPeaksAgainstCriteria", signature("cpc"), function(x) {
         stop("Please run peak characterization first!")
     }
     
+    # mark peaks with too low intensity
     x@cpt$note[which(x@cpt$area < 
                            getParam(x@param, "min_intensity"))] <- "too_small"
+    
+    # mark peaks that are too narrow
     x@cpt$note[which(x@cpt$tpkb - 
                            x@cpt$fpkb + 1 < 
                            getParam(x@param, "min_pts"))] <- "too_narrow"
-    X@cpt$note[which(x@cpt$sn < getParam(x@param, "min_sn"))] <- "low_sn"
     
+    # mark peaks with too low signal-to-noise
+    x@cpt$note[which(x@cpt$sn < getParam(x@param, "min_sn"))] <- "low_sn"
+    
+    # return object
+    return(x)
 })
 
 
@@ -2608,7 +2615,8 @@ setMethod("filterPeaks", signature("cpc"), function(x)
     # keep will be which peaks in the cpt slot that will be kept (NOT which
     # peaks in the XCMS object that will be kept!)
     # keep <- peaksToKeep(x)
-    keep <- which(x@cpt$note == "detected")
+    cpt <- cpc::cpt(x)
+    keep <- which(cpt$note == "detected")
     
     # if the XCMSnExp has filled peaks they will be removed when running
     # xcms::dropFeatureDefinitions() and so if this is the case, then I will 
