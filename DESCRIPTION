@@ -27,5 +27,6 @@ Collate:
   "RcppExports.R"
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+	markdown
 VignetteBuilder: knitr
