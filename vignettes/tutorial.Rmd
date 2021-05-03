@@ -86,13 +86,156 @@ cpc <- filter_xcms_peaklist(xd = xd, return_type = "cpc",
 
 With this data set the processing times are very fast (<10 seconds per file), but that is due to the heavy filtering that has been done. More realistic processing times, when working with full LC/MS data sets, range from a 2-10 minutes per file, depending on the number of peaks.
 
+After processing we can get the original peak table from the XCMS object and the characterized peak table from the CPC object using the methods *cpt* and *getPeaklist*.
+
+```{r}
+
+cpcPeaktable <- cpc::cpt(cpc)
+xcmsPeaktableOrig <- cpc::getPeaklist(cpc)
+
+```
+
+The peak table that you get from the CPC package has a number of determined peak characteristics as well as calculated peak characteristics.
+
+| Column | Description |
+|--------|-------------|
+| id | The row number of the peak in the original peak table from XCMS. |
+| apex | The most intense scan point in the peak. |
+| finf | The interpolated front inflection point of the peak where the second derivative crosses zero. |
+| tinf | The interpolated tail inflection point of the peak where the second derivative crosses zero. |
+| fblb | The determined front baseline boundary scan. |
+| tblb | The determined tail baseline boundary scan. |
+| fpkb | The determined front peak bound. |
+| tpkb | The determined tail peak bound. |
+| fcode | The front peak bound type (B = baseline, V = valley, S = shoulder, R = rounded peak). |
+| tcode | The tail peak bound type (B = baseline, V = valley, S = shoulder, R = rounded peak). |
+| blslp | The slope of the baseline calculated between fblb and tblb. |
+| emu | The mu value of the fitted exponentially modified gaussian (EMG) function. This is only calculated if EMG deconvolution is turned on. |
+| esigma | The sigma value of the fitted EMG function. This is only calculated if EMG deconvolution is turned on. |
+| elambda | The lambda value of the fitted EMG function. This is only calculated if EMG deconvolution is turned on. |
+| earea | The area modifier of the fitted EMG function. This is only calculated if EMG deconvolution is turned on. |
+| econv | An indicator if the Nelder-Mead minimizer converged when performing EMG deconvolution. |
+| note | A character statement describing the result of the peak processing. This can be "detected", "not_detected", "too_narrow", "low_sn", "too_small". |
+| height | The peak height calculated between the apex scan point and the interpolated baseline value at that point. |
+| fh1b | Front bound at 1% peak height. |
+| th1b | Tail bound at 1% peak height. | 
+| fh5b | Front bound at 5% peak height. |
+| th5b | Tail bound at 5% peak height. |
+| fh50b | Front bound at 50% peak height. |
+| th50b | Tail bound at 50% peak height. |
+| wb | Base width of the peak calculated as th5b-fh5b. |
+| fwhm | Full width at half maxima of the peak calculated as th50b-fh50b. |
+| area | The area of the peak calculated using a trapezoid integrator between fh1b and th1b. |
+| a | *apex* - *fpkb*. Used to calculate the tailing factor. |
+| b | *tpkb* - *apex*. Used to calculate the tailing factor. |
+| tf | The tailing factor calculated as *tf* = *b*/*a*. |
+| sn | The calculated signal-to-noise ratio calculated as *sn* = 2**height*/noise. |
+| file | Which sample file the peak was detected in. |
+| exectime | The execution time for the peak in seconds. |
+
 # Visualizing the results
 
 First lets determine which peaks are kept and which are filtered. In the *cpc* object, there are two *XCMSnExp* objects, *xd* and *xdFilt*. *xdFilt*, as the name implies, is the filtered *XCMSnExp* object. It can be extracted using the *filteredObject()* method.
 
 ```{r}
 
+# get the original xcms object using getOriginalXCMS()
+xdOrig <- cpc::getOriginalXCMS(cpc)
 
+xdOrig
+
+# get the filtered xcms object using getFilteredXCMS()
+xdFilt <- cpc::getFilteredXCMS(cpc)
+
+xdFilt
+
+```
+
+So in the original XCMS object there were 1110 peaks identified in 4 files. In the filtered object there are 852 peaks identified, meaning 258 peaks were removed.
+
+To see how many peaks were removed in a file-by-file basis you can use the table function on the chromatographic peak table from the xcms object.
+
+```{r}
+
+rbind(Original = table(chromPeaks(xdOrig)[, "sample"]),
+      Filtered = table(chromPeaks(xdFilt)[, "sample"]),
+      Difference = table(chromPeaks(xdOrig)[, "sample"]) - 
+        table(chromPeaks(xdFilt)[, "sample"]))
+
+```
+
+So 52-71 peaks per sample were removed by the algorithm in each file. Let's have a look at some of these removed peaks. We will randomly select 2 peaks from each reson for removal.
+
+```{r}
+
+# set a seed for sample()
+seed <- 123
+
+# get all removed peaks
+removedPeaks <- cpc::getRemovedPeaks(cpc)
+removedPeaksId <- match(removedPeaks, row.names(cpc::getPeaklist(cpc)))
+
+# select 2 each from each of the three categories of peaks removed:
+# (1) Not detected as a peak
+# (2) Too low signal-to-noise
+# (3) Too narrow
+which(cpcPeaktable$note[removedPeaksId] == "not_detected")
+
+# select 5 of the removed peaks at random
+set.seed(seed); (randomRemoved <- sample(x = removedPeaks, size = 5, replace = F))
+
+```
+
+And then we can plot these peaks using the plotPeaks function...
+
+```{r fig.width = 7, fig.height = 5}
+
+cpc::plotPeaks(cpc, peakIdx = randomRemoved)
+
+```
+
+In the above plots the original XIC trace is plotted as a gray dashed line with the smoothed chromatogram overlaid on top in black. The black dots are the actual scan points. The blue circles represent the front boundar, apex location, and tail boundary, as determined by XCMS. The red box is the peak boundaries determined by CPC with the red dot representing the apex. The red dashed line is the baseline of the peak, as estimated by CPC.
+
+We can also plot some of the retained peaks in the same way. Here we will randomly select one peak from each quartile of the signal-to-noise range.
+
+```{r}
+
+# get a vector of all detected peaks
+allDetectedPeaks <- which(cpcPeaktable$note == "detected")
+
+# determine the quartile break points
+quarts <- quantile(cpcPeaktable$sn[allDetectedPeaks])
+quarts[1] <- 0 # set the first boundary to be 0
+
+# randomly select peaks in each quartile
+noPeakFromEachQuartile <- 2
+
+# randomly select the specified number of peaks from each quartile
+set.seed(seed); randomDetected <- c(
+  sample(allDetectedPeaks[
+    cpcPeaktable$sn[allDetectedPeaks] >= quarts[1] & 
+      cpcPeaktable$sn[allDetectedPeaks] < quarts[2]
+  ], noPeakFromEachQuartile, FALSE), # 0% <= SN < 25%
+  sample(allDetectedPeaks[
+    cpcPeaktable$sn[allDetectedPeaks] >= quarts[2] & 
+      cpcPeaktable$sn[allDetectedPeaks] < quarts[3]
+  ], noPeakFromEachQuartile, FALSE), # 25% <= SN < 50%
+  sample(allDetectedPeaks[
+    cpcPeaktable$sn[allDetectedPeaks] >= quarts[3] & 
+      cpcPeaktable$sn[allDetectedPeaks] < quarts[4]
+  ], noPeakFromEachQuartile, FALSE), # 50% <= SN < 75%
+  sample(allDetectedPeaks[
+    cpcPeaktable$sn[allDetectedPeaks] >= quarts[4] & 
+      cpcPeaktable$sn[allDetectedPeaks] < quarts[5]
+  ], noPeakFromEachQuartile, FALSE)) # 75% <= SN < 100%
+
+```
+
+And then we can plot all these peaks in the same way as with the removed peaks.
+
+```{r fig.width = 7, fig.height = 5}
+
+cpc::plotPeaks(cpc, peakIdx = randomDetected)
 
 ```
 
