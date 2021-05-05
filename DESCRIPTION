@@ -28,5 +28,5 @@ Collate:
 Suggests: 
     knitr,
     rmarkdown,
-	markdown
+	  markdown
 VignetteBuilder: knitr

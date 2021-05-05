@@ -1,7 +1,9 @@
 ---
 title: "Filtering of chromatographic peaks in an XCMS object"
+author: "Kristian Pirttilä"
+date: '2021-05-05'
 output:
-  rmarkdown::html_vignette:
+  html_document:
     toc: true
     toc_depth: 3
     toc_float: true
@@ -23,7 +25,7 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-This tutorial will showcase the CPC package functionality using an example data set composed of 4 replicate injections of protein precipitated plasma on a HILIC platform. The example data is heavily filtered in order to keep package size and processing times to a minimum. The filtering is made in two steps: (1) The full data set was processed using XCMS and CPC in the same way described below. A subset of 100 peaks was randomly selected from those that were retained in the filtering step, based on the calculated signal-to-noise of the peaks (25 from each quartile). Similarily 100 peaks were randomly selected from those removed in the filtering step (33-34 each from those removed due to not being detected, having too low signal to noise, or having too few data points along the peak range). (2) The data set was then filtered to (i) only include scan indices 1-1200, (ii) only include mass peaks with intensity > 2.225*median intensity (removes a lot of noise peaks), and (iii) include only mass peaks whose m/z value coincide with one of the selected peaks in step (1) within a ppm value of 50 and a retention window of +/- 120 seconds.
+This tutorial will describe the CPC package functionality using an example data set composed of 4 replicate injections of protein precipitated plasma on a HILIC platform. The example data is heavily filtered in order to keep package size and processing times to a minimum. The filtering is made in two steps: (1) The full data set was processed using XCMS and CPC in the same way described below. A subset of 100 peaks was randomly selected from those that were retained in the filtering step, based on the calculated signal-to-noise of the peaks (25 from each quartile). Similarily 100 peaks were randomly selected from those removed in the filtering step (33-34 each from those removed due to not being detected, having too low signal to noise, or having too few data points along the peak range). (2) The data set was then filtered to (i) only include scan indices 1-1200, (ii) only include mass peaks with intensity > 2.225*median intensity (removes a lot of noise peaks), and (iii) include only mass peaks whose m/z value coincide with one of the selected peaks in step (1) within a ppm value of 50 and a retention window of +/- 120 seconds.
 
 # Setup environment
 
@@ -84,7 +86,7 @@ print(xd)
 
 # CPC peak filtering
 
-The way in which the CPC package is applied to the workflow is via two wrapper functions. The first one (*characterize_xcms_peaklist()*) will only characterize the peaks detected by XCMS, whereas the second (*filter_xcms_peaklist()*) will also run the filtering method and can return either a *cpc* object containing all the information, including the filtered XCMSnExp object, or the filtered XCMSnExp object. The latter function will call *characterize_xcms_peaklist()*.
+The way in which the CPC package is applied to the workflow is via two wrapper functions, *characterize_peaklist()* and *filter_xcms_peaklist()*. The first one will only characterize the peaks detected by XCMS and returns a *cpc* object, whereas the second will call *characterize_peaklist()* as well as run the filtering method and can return either a *cpc* object containing all the information, including the filtered XCMSnExp object, or only the filtered XCMSnExp object. For incorporating the package into an XCMS workflow, it is recommended to use the function *filter_xcms_peaklist()* with *return_type = "xcms"* or use the *getFilteredXCMS()* method on the *cpc* object returned by *filter_xcms_peaklist()* as both cases will give the same result. The latter case will be used in this tutorial as we want to keep the information contained in the *cpc* object.
 
 The *cpcProcParam* object holds processing parameters for both peak characterization as well as peak filtering.
 
