@@ -9,7 +9,8 @@ To install the package, you need a suitable version of Rtools installed in order
 The cpc package can be installed from this github using the devtools function install_github(). Run the code in the example below to install the package. Note that it is important that build_vignettes is set to TRUE in order for the vignette to be compiled during installation.
 
 ```r
-install.package("devtools")
+if(!require("devtools")) install.package("devtools")
+if(!require("rmarkdown")) install.package("rmarkdown")
 
 devtools::install_github(repo = "krispir/cpc", 
                          build_vignettes = TRUE)
