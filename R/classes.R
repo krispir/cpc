@@ -29,7 +29,7 @@ setClass("cpcProcParam",
                    min_inf_width = 3.0,
                    min_sn = 10.0,
                    min_frac = 0.5,
-                   min_intensity = 1000L,
+                   min_intensity = 0L,
                    min_w = 5L,
                    max_w = 21L,
                    smooth_method = "savgol",
@@ -2526,17 +2526,35 @@ setMethod("checkPeaksAgainstCriteria", signature("cpc"), function(x) {
         stop("Please run peak characterization first!")
     }
     
-    # mark peaks with too low intensity
-    x@cpt$note[which(x@cpt$area < 
-                           getParam(x@param, "min_intensity"))] <- "too_small"
+    for (i in 1:nrow(x@cpt))
+    {
+        if (x@cpt$note[i] == "detected")
+        {
+            if (x@cpt$sn[i] < getParam(x@param, "min_sn"))
+            {
+                x@cpt$note[i] <- "low_sn"
+            } else if (x@cpt$tpkb[i] - x@cpt$fpkb[i] + 1 < 
+                       getParam(x@param, "min_pts"))
+            {
+                x@cpt$note[i] <- "too_narrow"
+            } else if (x@cpt$area[i] < getParam(x@param, "min_intensity"))
+            {
+                x@cpt$note[i] <- "too_small"
+            }
+        }
+    }
     
-    # mark peaks that are too narrow
-    x@cpt$note[which(x@cpt$tpkb - 
-                           x@cpt$fpkb + 1 < 
-                           getParam(x@param, "min_pts"))] <- "too_narrow"
-    
-    # mark peaks with too low signal-to-noise
-    x@cpt$note[which(x@cpt$sn < getParam(x@param, "min_sn"))] <- "low_sn"
+    # # mark peaks with too low intensity
+    # x@cpt$note[which(x@cpt$area < 
+    #                        getParam(x@param, "min_intensity"))] <- "too_small"
+    # 
+    # # mark peaks that are too narrow
+    # x@cpt$note[which(x@cpt$tpkb - 
+    #                        x@cpt$fpkb + 1 < 
+    #                        getParam(x@param, "min_pts"))] <- "too_narrow"
+    # 
+    # # mark peaks with too low signal-to-noise
+    # x@cpt$note[which(x@cpt$sn < getParam(x@param, "min_sn"))] <- "low_sn"
     
     # return object
     return(x)
