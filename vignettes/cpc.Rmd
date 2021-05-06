@@ -104,7 +104,6 @@ After processing we can get the original peak table from the XCMS object and the
 ```{r}
 
 cpcPeaktable <- cpc::cpt(cpc)
-xcmsPeaktableOrig <- cpc::getPeaklist(cpc)
 
 ```
 
@@ -157,27 +156,36 @@ xdOrig <- cpc::getOriginalXCMS(cpc)
 
 xdOrig
 
+# get the original peak table
+xcmsPeaktableOrig <- data.frame(xcms::chromPeaks(xdOrig))
+
 # get the filtered xcms object using getFilteredXCMS()
 xdFilt <- cpc::getFilteredXCMS(cpc)
 
 xdFilt
 
+# get the filtered peak table
+xcmsPeaktableFilt <- data.frame(xcms::chromPeaks(xdFilt))
+
+# get the filtered cpc peak table
+cpcPeaktableFilt <- cpcPeaktable[row.names(xcmsPeaktableFilt), ]
+
 ```
 
-So in the original XCMS object there were 1110 peaks identified in 4 files. In the filtered object there are 852 peaks identified, meaning 258 peaks were removed.
+In the original XCMS object there were 1110 peaks identified across 4 files. After filtering using our processing, 913 peaks remain.
 
 To see how many peaks were removed in a file-by-file basis you can use the table function on the chromatographic peak table from the xcms object.
 
 ```{r}
 
-rbind(Original = table(chromPeaks(xdOrig)[, "sample"]),
-      Filtered = table(chromPeaks(xdFilt)[, "sample"]),
+rbind(Original = table(xcmsPeaktableOrig[, "sample"]),
+      Filtered = table(xcmsPeaktableFilt[, "sample"]),
       Difference = table(chromPeaks(xdOrig)[, "sample"]) - 
         table(chromPeaks(xdFilt)[, "sample"]))
 
 ```
 
-As mentioned, in the *note* column of the cpc peak table, the outcome of the peak is defined.
+As mentioned, in the *note* column of the cpc peak table, the outcome of the peak is defined. To see the distribution of outcomes, we can again use the table function.
 
 ```{r}
 
@@ -200,13 +208,11 @@ removedPeaksId <- match(removedPeaks, row.names(cpc::getPeaklist(cpc)))
 # (1) Not detected as a peak
 # (2) Too low signal-to-noise
 # (3) Too narrow
-table(cpcPeaktable$note[removedPeaksId])
-
-which(cpcPeaktable$note[removedPeaksId] == "not_detected")
-which(cpcPeaktable$note[removedPeaksId] == "too_narrow")
-
-# select 5 of the removed peaks at random
-set.seed(seed); (randomRemoved <- sample(x = removedPeaks, size = 5, replace = F))
+set.seed(seed); randomRemoved <- c(
+  sample(which(cpcPeaktable$note == "not_detected"), 2, FALSE),
+  sample(which(cpcPeaktable$note == "too_narrow"), 2, FALSE),
+  sample(which(cpcPeaktable$note == "low_sn"), 2, FALSE)
+)
 
 ```
 
@@ -260,6 +266,34 @@ And then we can plot all these peaks in the same way as with the removed peaks.
 ```{r fig.width = 7, fig.height = 5}
 
 cpc::plotPeaks(cpc, peakIdx = randomDetected)
+
+```
+
+```{r}
+
+# m/z ~ apex scan number with point size indicating cpc determined peak area
+plot(x = cpcPeaktableFilt$apex, y = xcmsPeaktableFilt$mz, pch = 20, col = "#00000000",
+     xlab = "Apex scan number", ylab = "m/z")
+points(x = cpcPeaktable$apex[allDetectedPeaks],
+       y = xcmsPeaktableOrig$mz[allDetectedPeaks], pch = 20, col = "#55BB0075",
+       cex = log(cpcPeaktable$area[allDetectedPeaks] / 
+         median(cpcPeaktable$area[allDetectedPeaks])))
+points(x = cpcPeaktable$apex[removedPeaksId],
+       y = xcmsPeaktableOrig$mz[removedPeaksId], pch = 20, col = "#FF440075",
+       cex = log(pmax(0, cpcPeaktable$area[removedPeaksId]) / 
+         median(pmax(0, cpcPeaktable$area[removedPeaksId]))))
+
+# m/z ~ apex scan number with point size indicating xcms determined intensity
+plot(x = cpcPeaktableFilt$apex, y = xcmsPeaktableFilt$mz, pch = 20, col = "#00000000",
+     xlab = "Apex scan number", ylab = "m/z")
+points(x = cpcPeaktable$apex[allDetectedPeaks],
+       y = xcmsPeaktableOrig$mz[allDetectedPeaks], pch = 20, col = "#55BB0075",
+       cex = log(xcmsPeaktableOrig$into[allDetectedPeaks] / 
+         median(xcmsPeaktableOrig$into[allDetectedPeaks])))
+points(x = cpcPeaktable$apex[removedPeaksId],
+       y = xcmsPeaktableOrig$mz[removedPeaksId], pch = 20, col = "#FF440075",
+       cex = log(pmax(0, xcmsPeaktableOrig$into[removedPeaksId]) / 
+         median(pmax(0, xcmsPeaktableOrig$into[removedPeaksId]))))
 
 ```
 
