@@ -19,6 +19,8 @@ process_chromatogram(
   fit_hess = 0L,
   fit_rel_lim = 0.05,
   pts_per_peak = 10L,
+  min_shoulder_pts = 3L,
+  min_rounded_pts = 3L,
   reltol = 1e-08,
   abstol = -1e+35,
   alpha = 1,
@@ -55,6 +57,10 @@ process_chromatogram(
 \item{fit_rel_lim}{Minimum relative peak height of neighboring peaks to the selected peak that will be deconvoluted.}
 
 \item{pts_per_peak}{Minimum number of points per peak}
+
+\item{min_shoulder_pts}{Minimum number of points between minima and maxima for at least one of the peaks in a shoulder pair}
+
+\item{min_rounded_pts}{Minimum number of points between minima and maxima for at least one of the peaks in a rounded peak pair}
 
 \item{reltol}{Relative tolerance of the Nelder-Mead minimizer for EMG deconvolution}
 

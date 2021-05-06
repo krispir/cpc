@@ -11,6 +11,8 @@ cpcProcParam(
   min_sn = 10,
   min_frac = 0.5,
   min_intensity = 1000L,
+  min_shoulder_pts = 3L,
+  min_rounded_pts = 3L,
   min_w = 5L,
   max_w = 21L,
   smooth_method = "savgol",

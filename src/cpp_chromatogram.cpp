@@ -387,6 +387,8 @@ struct ChromatogramOptions
     int pts_per_peak = 20;
     int min_pts_per_peak = 20;
     int max_pts_per_peak = 40;
+    int min_shoulder_pts = 3;
+    int min_rounded_pts = 3;
     double fit_rel_lim = 0.05;
     double reltol;
     double abstol;
@@ -410,6 +412,8 @@ struct ChromatogramOptions
                         const int fit_hess_ = 0,
                         const double fit_rel_lim_ = 0.05,
                         const int pts_per_peak_ = 20,
+                        const int min_shoulder_pts_ = 3,
+                        const int min_rounded_pts_ = 3,
                         const double reltol_ = 1e-8,
                         const double abstol_ = 1.0e35,
                         const double alpha_ = 1.0,
@@ -430,6 +434,8 @@ struct ChromatogramOptions
         this->fit_hess = fit_hess_;
         this->fit_rel_lim = fit_rel_lim_;
         this->pts_per_peak = pts_per_peak_;
+        this->min_shoulder_pts = min_shoulder_pts_;
+        this->min_rounded_pts = min_rounded_pts_;
         this->reltol = reltol_;
         this->abstol = abstol_;
         this->alpha = alpha_;
@@ -1965,6 +1971,8 @@ public:
                  const int _fit_hess = 0,
                  const double _fit_rel_lim = 0.05,
                  const int _pts_per_peak = 10,
+                 const int _min_shoulder_pts = 3,
+                 const int _min_rounded_pts = 3,
                  const double _reltol = 1.0e-8,
                  const double _abstol = -1.0e35,
                  const double _alpha = 1.0,
@@ -2011,6 +2019,8 @@ public:
                                             _fit_hess, 
                                             _fit_rel_lim,
                                             _pts_per_peak,
+                                            _min_shoulder_pts,
+                                            _min_rounded_pts,
                                             _reltol,
                                             _abstol,
                                             _alpha,
@@ -2642,9 +2652,21 @@ void Chromatogram::check_peaks()
                     if (this->options.output) Rcout << "R";
                     
                     // mark peak for removal now
-                    this->pt.remove_these_now.at(i) = 1;
+                    this->pt.remove_these_now.at(i-1) = 1;
+                
+                // ensure that there is more than min_rounded_pts points between
+                // the maxima and minima for at least one of the peaks
+                } else if (std::abs(this->pt.apex.at(i) - maxima + 1 < this->options.min_rounded_pts) || 
+                           std::abs(this->pt.apex.at(i-1) - maxima + 1 < this->options.min_rounded_pts))
+                {
+                    if (this->options.output) Rcout << "R";
                     
+                    // mark the prior peak for removal, in case there is another rounded event following
+                    this->pt.remove_these_now.at(i-1) = 1;
                 }
+                
+                
+                
                 
             }
         }
@@ -5726,6 +5748,8 @@ void Chromatogram::process_chromatogram()
 //' @param fit_hess Deprecated.
 //' @param fit_rel_lim Minimum relative peak height of neighboring peaks to the selected peak that will be deconvoluted.
 //' @param pts_per_peak Minimum number of points per peak
+//' @param min_shoulder_pts Minimum number of points between minima and maxima for at least one of the peaks in a shoulder pair
+//' @param min_rounded_pts Minimum number of points between minima and maxima for at least one of the peaks in a rounded peak pair
 //' @param reltol Relative tolerance of the Nelder-Mead minimizer for EMG deconvolution
 //' @param abstol Absolute tolerance of the Nelder-Mead minimizer for EMG deconvolution
 //' @param alpha Reflection coefficient of the Nelder-Mead minimizer for EMG deconvolution
@@ -5762,6 +5786,8 @@ Rcpp::List process_chromatogram(vec_d &d0,
                                 int fit_hess = 0,
                                 double fit_rel_lim = 0.05,
                                 int pts_per_peak = 10,
+                                int min_shoulder_pts = 3,
+                                int min_rounded_pts = 3,
                                 const double reltol = 1.0e-8,
                                 const double abstol = -1.0e35,
                                 const double alpha = 1.0,
@@ -5806,6 +5832,8 @@ Rcpp::List process_chromatogram(vec_d &d0,
                        fit_hess,        // 0 = no hess, 1 = use hess
                        fit_rel_lim,     // relative size limit for fitting emg
                        pts_per_peak,    // max number of points to fit per peak
+                       min_shoulder_pts,// Minimum points between maxima and minima for shoulder peaks
+                       min_rounded_pts, // Minimum points between maxima and minima for rounded peaks
                        reltol,          // Algorithm convergence tolerance
                        abstol,          // Absolute convergence tolerance
                        alpha,           // Alpha value for the Nelder-Mead algo

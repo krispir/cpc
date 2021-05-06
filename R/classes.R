@@ -13,6 +13,8 @@ setClass("cpcProcParam",
                         min_sn = "numericOrNULL",
                         min_frac = "numericOrNULL",
                         min_intensity = "numericOrNULL",
+                        min_shoulder_pts = "numericOrNULL",
+                        min_rounded_pts = "numericOrNULL",
                         min_w = "numericOrNULL",
                         max_w = "numericOrNULL",
                         smooth_method = "character",
@@ -30,6 +32,8 @@ setClass("cpcProcParam",
                    min_sn = 10.0,
                    min_frac = 0.5,
                    min_intensity = 0L,
+                   min_shoulder_pts = 3L,
+                   min_rounded_pts = 3L,
                    min_w = 5L,
                    max_w = 21L,
                    smooth_method = "savgol",
@@ -1329,7 +1333,9 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
                                              p = getParam(x@param, "p")-1L,
                                              output = as.integer(x@param@verbose_output), 
                                              fit_emg = as.integer(x@param@fit_emg), 
-                                             fit_only_vip = 1L)
+                                             fit_only_vip = 1L,
+                                             min_shoulder_pts = getParam(x@param, "min_shoulder_pts"),
+                                             min_rounded_pts = getParam(x@param, "min_rounded_pts"))
     
     # check that the current peak was detected
     if (x@rawProcResults$current_peak < 0)
