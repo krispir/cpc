@@ -177,7 +177,15 @@ rbind(Original = table(chromPeaks(xdOrig)[, "sample"]),
 
 ```
 
-So 52-71 peaks per sample were removed by the algorithm in each file. Let's have a look at some of these removed peaks. We will randomly select 2 peaks from each reson for removal.
+As mentioned, in the *note* column of the cpc peak table, the outcome of the peak is defined.
+
+```{r}
+
+table(cpcPeaktable$note)
+
+```
+
+To get a vector of the removed peaks, the method *getRemovedPeaks()* can be used which returns a character vector containing the peak IDs of the removed peaks. These can be matched to the row names in the peak table returned by *chromPeaks()*.
 
 ```{r}
 
@@ -192,7 +200,10 @@ removedPeaksId <- match(removedPeaks, row.names(cpc::getPeaklist(cpc)))
 # (1) Not detected as a peak
 # (2) Too low signal-to-noise
 # (3) Too narrow
+table(cpcPeaktable$note[removedPeaksId])
+
 which(cpcPeaktable$note[removedPeaksId] == "not_detected")
+which(cpcPeaktable$note[removedPeaksId] == "too_narrow")
 
 # select 5 of the removed peaks at random
 set.seed(seed); (randomRemoved <- sample(x = removedPeaks, size = 5, replace = F))
