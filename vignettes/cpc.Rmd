@@ -97,7 +97,7 @@ cpc <- filter_xcms_peaklist(xd = xd, return_type = "cpc",
 
 ```
 
-With this data set the processing times are very fast (<10 seconds per file), but that is due to the heavy filtering that has been done. More realistic processing times, when working with full LC/MS data sets, range from a 2-10 minutes per file, depending on the number of peaks.
+Processing times will depend heavily on the computer hardware used. With this data set the processing times are very fast (<10 seconds per file), but that is due to the heavy filtering that has been done. More realistic processing times, when working with full LC/MS data sets, range from a 2-10 minutes per file, depending on the number of peaks.
 
 After processing we can get the original peak table from the XCMS object and the characterized peak table from the CPC object using the methods *cpt* and *getPeaklist*.
 
@@ -198,7 +198,7 @@ To get a vector of the removed peaks, the method *getRemovedPeaks()* can be used
 ```{r}
 
 # set a seed for sample()
-seed <- 123
+seed <- 1234
 
 # get all removed peaks
 removedPeaks <- cpc::getRemovedPeaks(cpc)
@@ -297,10 +297,73 @@ points(x = cpcPeaktable$apex[removedPeaksId],
 
 ```
 
+# Example of EMG deconvolution
+
+The processing engine used in the CPC package includes EMG deconvolution of peak clusters to achieve better estimates of the peak boundaries. This can be included in the processing by setting the argument *fit_emg = TRUE* in the *cpcProcParam* object.
+
+To illustrate this, we first need to find a few peaks to perform EMG deconvolution on.
+
+```{r}
+
+(selection <- c(34, 138, 106, 165, 179, 217))
+
+(peakIdx <- row.names(cpcPeaktable[selection, ]))
+
+(selection <- cpcPeaktable$id[selection])
+
+plotPeaks(cpc, peakIdx = selection)
+
+```
+
+```{r}
+
+cpcParam <- cpcProcParam(fit_emg = TRUE, sel_peaks = selection, plot = F)
+cpcDeconv <- characterize_xcms_peaklist(xd = xd, param = cpcParam)
+
+plotPeaks(cpc = cpcDeconv, peakIdx = peakIdx, plotEMG = T)
+
+```
+
+```{r}
+
+seed <- c(78, 3.48167, -2.30259, 14.0392, 
+          98, 6.55711, -2.30259, 15.6597, 
+          112, 2.525, -2.30259, 14.3057, 
+          127, 1.90602, -2.30259, 12.5534, 
+          140, 4.37691, -2.30259, 13.5071)
+
+lbounds <- c(58, 1.74084, -9.21034, 13.3461, 
+             78, 3.27856, -9.21034, 14.9666, 
+             92, 1.2625, -9.21034, 13.6125, 
+             107, 0.953009, -9.21034, 11.8602, 
+             120, 2.18846, -9.21034, 12.8139)
+
+ubounds <- c(98, 5.22251, 2.99573, 14.4447, 
+             118, 9.83567, 2.99573, 16.0652, 
+             132, 3.7875, 2.99573, 14.7111, 
+             147, 2.85903, 2.99573, 12.9588, 
+             160, 6.56537, 2.99573, 13.9126)
+
+
+
+```
+
 # Session info
 
 ```{r}
 
 sessionInfo()
+
+```
+
+
+```{r}
+
+# sink(file = paste0(getwd(), "/loc_data/210523_deconv_example_3.txt"),
+#      type = "output", split = T)
+# cpcParam <- cpcProcParam(fit_emg = TRUE, sel_peaks = 34, plot = F,
+#                          verbose_output = T)
+# cpcDeconv <- characterize_xcms_peaklist(xd = xd, param = cpcParam)
+# sink(file = NULL)
 
 ```
