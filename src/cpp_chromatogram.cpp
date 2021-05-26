@@ -57,17 +57,21 @@ vec_i LinearSpacedArray(int a, int b, int N)
     } else
     {
         Nout = N;
-        h = (b - a) / N-1;
+        h = (b - a) / (N-1);
     }
     
     vec_i xs(Nout);
     vec_i::iterator x;
+    
     int val;
+    
     for (x = xs.begin(), val = a; x != xs.end(); ++x, val += h) {
         *x = val;
     }
+    
     if (xs.at(0) != a) xs.at(0) = a; // ensure first point is equal to a
     if (xs.at(Nout-1) != b) xs.at(Nout-1) = b; // ensure last point is equal to b
+    
     return xs;
 }
 
@@ -411,7 +415,7 @@ struct ChromatogramOptions
                         const int fit_only_vip_ = 1,
                         const int fit_hess_ = 0,
                         const double fit_rel_lim_ = 0.05,
-                        const int pts_per_peak_ = 20,
+                        const int pts_per_peak_ = 30,
                         const int min_shoulder_pts_ = 3,
                         const int min_rounded_pts_ = 3,
                         const double reltol_ = 1e-8,
@@ -1027,7 +1031,14 @@ void Minimizer<Derived>::nmmin(Derived &fn_)
     
     // calculate function vals for initial simplex
     for (auto &v : this->sim.verts) v.fval = fn_(v.par);
+    
     this->ceval += this->sim.npar + 1;
+    
+    // calculate ftol based on seed val
+    // Note: This value becomes very large in some cases and may not be the
+    //       best way terminate due to this.
+    this->control.ftol = this->control.reltol * 
+        (this->sim.verts.at(0).fval + this->control.reltol);
     
     // sort the simplex in ascending based on fval
     this->sim.sort();
@@ -1036,11 +1047,6 @@ void Minimizer<Derived>::nmmin(Derived &fn_)
     /***********************************
      * Calculate termination tolerances
      ***********************************/
-    
-    
-    // calculate ftol based on seed val
-    this->control.ftol = this->control.reltol * (this->sim.verts.at(0).fval + 
-    this->control.reltol);
     
     // calculate ptol based on initial simplex
     this->control.ptol = 1.0e-6; // made up value for now...
@@ -1135,7 +1141,8 @@ void Minimizer<Derived>::nmmin(Derived &fn_)
         (abs(this->sim.verts.at(this->sim.npar).fval) + 
         abs(this->sim.verts.at(0).fval) + this->control.eps);
         
-        if (this->rfdiff < this->control.ftol || 
+        // if (this->sim.verts.at(0).fval < this->control.abstol)
+        if (this->rfdiff < this->control.ftol ||
             this->sim.verts.at(0).fval < this->control.abstol)
         {
             // set fval convergence flag to true
@@ -1392,6 +1399,9 @@ public:
     {
         this->emgval = std::exp(std::log(l)+l*(u+((l*s*s)/2)-this->x.at(i)) +
             R::pnorm((u+l*s*s-this->x.at(i))/(s), 0.0, 1.0, false, true));
+        
+        // this->emgval = (l/2)*std::exp((l/2)*(2*u+l*s*s-2*this->x.at(i))) * 
+        //     2 * R::pnorm((u+l*s*s-this->x.at(i))/s, 0.0, 1.0, false, true);
     }
     
     // objective function
@@ -2098,7 +2108,7 @@ void PeakTable::summary()
     //       << std::endl;
     
     const char filler = ' ';
-    const int outwidth = 8;
+    const int outwidth = 10;
     
     // header
     Rcout << left << setw(3) << setfill(filler) << "#";
@@ -2112,11 +2122,11 @@ void PeakTable::summary()
     Rcout << left << setw(5) << setfill(filler) << "tblb";
     Rcout << left << setw(5) << setfill(filler) << "fpkb";
     Rcout << left << setw(5) << setfill(filler) << "tpkb";
-    Rcout << left << setw(5) << setfill(filler) << "area";
+    Rcout << left << setw(outwidth) << setfill(filler) << "area";
     Rcout << left << setw(outwidth) << setfill(filler) << "emu";
     Rcout << left << setw(outwidth) << setfill(filler) << "esigma";
     Rcout << left << setw(outwidth) << setfill(filler) << "elambda";
-    Rcout << left << setw(10) << setfill(filler) << "earea";
+    Rcout << left << setw(outwidth) << setfill(filler) << "earea";
     Rcout << left << setw(5) << setfill(filler) << "econv";
     Rcout << left << setw(5) << setfill(filler) << "vip";
     Rcout << std::endl;
@@ -2143,17 +2153,17 @@ void PeakTable::summary()
         default: code.append("U");
         }
         Rcout << left << setw(5) << setfill(filler) << code;
-        Rcout << left << setw(outwidth) << setfill(filler) << this->finf.at(i);
-        Rcout << left << setw(outwidth) << setfill(filler) << this->tinf.at(i);
+        Rcout << left << setw(outwidth) << setfill(filler) << std::setprecision(6) << this->finf.at(i);
+        Rcout << left << setw(outwidth) << setfill(filler) << std::setprecision(6) << this->tinf.at(i);
         Rcout << left << setw(5) << setfill(filler) << this->fblb.at(i);
         Rcout << left << setw(5) << setfill(filler) << this->tblb.at(i);
         Rcout << left << setw(5) << setfill(filler) << this->fpkb.at(i);
         Rcout << left << setw(5) << setfill(filler) << this->tpkb.at(i);
-        Rcout << left << setw(5) << setfill(filler) << this->area.at(i);
-        Rcout << left << setw(outwidth) << setfill(filler) << this->emg_mu.at(i);
-        Rcout << left << setw(outwidth) << setfill(filler) << this->emg_sigma.at(i);
-        Rcout << left << setw(outwidth) << setfill(filler) << this->emg_lambda.at(i);
-        Rcout << left << setw(10) << setfill(filler) << this->emg_area.at(i);
+        Rcout << left << setw(outwidth) << setfill(filler) << this->area.at(i);
+        Rcout << left << setw(outwidth) << setfill(filler) << std::setprecision(6) << this->emg_mu.at(i);
+        Rcout << left << setw(outwidth) << setfill(filler) << std::setprecision(6) << this->emg_sigma.at(i);
+        Rcout << left << setw(outwidth) << setfill(filler) << std::setprecision(6) << this->emg_lambda.at(i);
+        Rcout << left << setw(outwidth) << setfill(filler) << std::setprecision(6) << this->emg_area.at(i);
         Rcout << left << setw(5) << setfill(filler) << this->emg_conv.at(i);
         if (this->vip == i)
         {
@@ -4498,9 +4508,10 @@ void Chromatogram::fit_emg()
                 // check if resolution to vip is > 1.2
                 // experiments have shown that this is a suitable limit to 
                 // ensure no loss of information
-                if (cur_rs <= 1.2 && 
-                    this->d0.at(this->pt.adj_apex.at(j)) >= 
-                    this->options.fit_rel_lim * this->d0.at(this->pt.adj_apex.at(this->get_vip())))
+                // if (cur_rs <= 1.5 && 
+                //     this->d0.at(this->pt.adj_apex.at(j)) >= 
+                //     this->options.fit_rel_lim * this->d0.at(this->pt.adj_apex.at(this->get_vip())))
+                if (cur_rs <= 1.5)
                 {
                     if (this->options.output) Rcout << "added; ";
                     
@@ -5785,7 +5796,7 @@ Rcpp::List process_chromatogram(vec_d &d0,
                                 int fit_only_vip = 1,
                                 int fit_hess = 0,
                                 double fit_rel_lim = 0.05,
-                                int pts_per_peak = 10,
+                                int pts_per_peak = 30,
                                 int min_shoulder_pts = 3,
                                 int min_rounded_pts = 3,
                                 const double reltol = 1.0e-8,
