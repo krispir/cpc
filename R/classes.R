@@ -1317,7 +1317,7 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
     #                                 int fit_only_vip = 1,
     #                                 int fit_hess = 0,
     #                                 double fit_rel_lim = 0.05,
-    #                                 int pts_per_peak = 10,
+    #                                 int pts_per_peak = 30,
     #                                 const double reltol = 1.0e-8,
     #                                 const double abstol = -1.0e35,
     #                                 const double alpha = 1.0,
@@ -2236,6 +2236,16 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
     ## filter width for smoothing
     # if (is.null(getParam(x@param, "max_sigma")))
     
+    # check that max_sigma is calculated - otherwise, calculate it
+    if (is.null(getParam(x@param, "max_sigma")))
+    {
+        setParam(x@param) <- 
+            list(max_sigma = 
+                     as.numeric(quantile(x@pt$rtmax - x@pt$rtmin,
+                                         probs = 0.75, na.rm = T)) * 
+                     raw@scanrate / 4)
+    }
+    
     cur_s <- ifelse(as.numeric(x@pt$rtmax[id] - x@pt$rtmin[id])*0.25 >
                         getParam(x@param, "max_sigma"),
                     as.numeric(getParam(x@param, "max_sigma")),
@@ -2374,6 +2384,7 @@ setMethod("processPeaks", signature("cpc"), function(x)
         }
         
         # (pd <- x@pt[i_idx[18717], ]) # - tryptophan 210402
+        # (pd <- x@pt[i_idx, ])
         df <- do.call("rbind", apply(x@pt[i_idx, ], 1, FUN = function(pd)
         {
             # start timer
@@ -2482,6 +2493,10 @@ setMethod("processPeaks", signature("cpc"), function(x)
             # return the data.frame row for the current peak
             # row.names are added from the original peak table for matching
             # purposes later on
+            # return(list(res = chrom@rawProcResults,
+            #             df = data.frame(id = chrom@id, getResults(chrom),
+            #                        row.names = row.names(pd)[1])))
+            
             return(data.frame(id = chrom@id, getResults(chrom),
                               row.names = row.names(pd)[1]))
         }))
