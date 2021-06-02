@@ -2466,12 +2466,21 @@ setMethod("processPeaks", signature("cpc"), function(x)
                 cur_p <- binsearch_closest(x = raw@scantime, val = pd["rt"])
                 
                 ## filter width for smoothing
-                cur_s <- (pd["rtmax"] - pd["rtmin"])/4
+                cur_rtmin <- binsearch_closest(x = raw@scantime, 
+                                               val = pd["rtmax"])
+                cur_rtmax <- binsearch_closest(x = raw@scantime, 
+                                               val = pd["rtmin"])
+                
+                cur_s <- (cur_rtmax - cur_rtmin)/4
+                
                 if (is.na(cur_s) || 
                     is.null(cur_s) || 
                     cur_s > getParam(x@param, "max_sigma"))
                 {
                     cur_s <- floor(getParam(x@param, "max_sigma")+0.5)
+                } else if (cur_s < 3)
+                {
+                    cur_s <- 3
                 }
                 
                 ## mz range for extracting ion traces
