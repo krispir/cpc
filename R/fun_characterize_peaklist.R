@@ -27,9 +27,7 @@ characterize_xcms_peaklist <- function(xd, param = cpcProcParam())
     if (class(xd) != "XCMSnExp") stop("'xd' must be an XCMS object of type 'XCMSnExp'.")
     
     # create cpc object
-    cpc <- new("cpc", 
-               xd = xd,
-               param = param)
+    cpc <- new("cpc", xd = xd, param = param)
     
     # parse peaklist from XCMS object
     cpc <- parsePeaklist(cpc)
