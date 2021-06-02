@@ -59,7 +59,7 @@ testApexFinder <- function(v, w) {
 #' smvec <- signal::sgolayfilt(nvec, n = 5) # smooth the vector using Savitzky-Golay
 #' ddsmvec <- signal::sgolayfilt(nvec, n = 5, m = 2) # get the second derivative of the smoothed vector
 #' cpc::process_chromatogram(d0 = smvec, d2 = ddsmvec, apex_thresh = 10)
-process_chromatogram <- function(d0, d2, apex_thresh = 0.0, w = 5L, p = -1L, liftoff = 0.0, touchdown = 0.5, output = 0L, fit_emg = 1L, fit_only_vip = 1L, fit_hess = 0L, fit_rel_lim = 0.05, pts_per_peak = 10L, min_shoulder_pts = 3L, min_rounded_pts = 3L, reltol = 1.0e-8, abstol = -1.0e35, alpha = 1.0, gamma = 2.1, rho = 0.75, sigma = 0.75, maxit = 2000L, maxeval = 2000L) {
+process_chromatogram <- function(d0, d2, apex_thresh = 0.0, w = 5L, p = -1L, liftoff = 0.0, touchdown = 0.5, output = 0L, fit_emg = 1L, fit_only_vip = 1L, fit_hess = 0L, fit_rel_lim = 0.05, pts_per_peak = 30L, min_shoulder_pts = 3L, min_rounded_pts = 3L, reltol = 1.0e-8, abstol = -1.0e35, alpha = 1.0, gamma = 2.1, rho = 0.75, sigma = 0.75, maxit = 2000L, maxeval = 2000L) {
     .Call(`_cpc_process_chromatogram`, d0, d2, apex_thresh, w, p, liftoff, touchdown, output, fit_emg, fit_only_vip, fit_hess, fit_rel_lim, pts_per_peak, min_shoulder_pts, min_rounded_pts, reltol, abstol, alpha, gamma, rho, sigma, maxit, maxeval)
 }
 
