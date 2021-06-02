@@ -573,6 +573,8 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
     
     ## d0 points
     points(x@d0, pch = 20, cex = 0.9)
+    
+    ## unsmoothed XIC
     lines(x@xic, col = "#00000075", lty = "dashed")
     
     ## d0 apex point
@@ -625,13 +627,49 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
     # d0 emg fit
     if (plotEMG && !is.null(x@results$emu) && x@results$emu >= 0)
     {
-        lines(x = x@results$fblb:x@results$tblb,
-              y = c_emgfun(x = x@results$fblb:x@results$tblb, 
-                           pars = c(x@results$emu,
-                                    x@results$esigma,
-                                    x@results$elambda,
-                                    x@results$earea), 
-                           npeaks = 1), col = "red", type = "o", pch = 20)
+        fittedPeaks <- which(x@rawProcResults$emg_mu > 0)
+        
+        if(any(fittedPeaks == x@rawProcResults$current_peak[1]+1))
+        {
+            fittedVIP <- which(fittedPeaks == x@rawProcResults$current_peak[1]+1)
+        }
+        
+        fittedPars <- vector(mode = "numeric", length = 4*length(fittedPeaks))
+        
+        # populate fittedPars
+        for (i in 1:length(fittedPeaks))
+        {
+            fittedPars[(i-1)*4+1] <- x@rawProcResults$emg_mu[fittedPeaks[i]]+1
+            fittedPars[(i-1)*4+2] <- x@rawProcResults$emg_sigma[fittedPeaks[i]]
+            fittedPars[(i-1)*4+3] <- x@rawProcResults$emg_lambda[fittedPeaks[i]]
+            fittedPars[(i-1)*4+4] <- x@rawProcResults$emg_area[fittedPeaks[i]]
+        }
+        
+        # plot fitted combined trace
+        points(x = x@results$fblb:x@results$tblb,
+               y = c_emgfun(x = x@results$fblb:x@results$tblb, 
+                            pars = fittedPars, 
+                            npeaks = length(fittedPeaks)),
+               col = "red")
+        
+        # plot each peak separately
+        for (i in 1:length(fittedPeaks))
+        {
+            lines(x = x@results$fblb:x@results$tblb,
+                  y = c_emgfun(x = x@results$fblb:x@results$tblb, 
+                               pars = fittedPars[(i-1)*4+(1:4)], 
+                               npeaks = 1), 
+                  col = ifelse(i == fittedVIP, "red", "blue"), 
+                  type = "o", pch = 20)
+        }
+        
+        # lines(x = x@results$fblb:x@results$tblb,
+        #       y = c_emgfun(x = x@results$fblb:x@results$tblb, 
+        #                    pars = c(x@results$emu,
+        #                             x@results$esigma,
+        #                             x@results$elambda,
+        #                             x@results$earea), 
+        #                    npeaks = 1), col = "red", type = "o", pch = 20)
         
         char_ann <- paste0(char_ann,
                            "fit_emg: yes")
@@ -1577,6 +1615,7 @@ setMethod("scantime", signature("cpc_raw"), function(x)
 #' 
 #' @slot xd Original \code{XCMSnExp} object.
 #' @slot xdFilt Filtered \code{XCMSnExp} object.
+#' @slot rawResults A list of \code{data.frame}s with back-end results from the processing.
 #' @slot pt \code{data.frame} containing the original peak table from \code{xd}.
 #' @slot cpt \code{data.frame} containing the determined peak characteristics.
 #' @slot fdef Feature definitions (not used currently).
@@ -1591,6 +1630,7 @@ setClass("cpc",
          representation(
              xd = "XCMSnExp",
              xdFilt = "XCMSnExp",
+             rawResults = "list",
              pt = "data.frame",
              cpt = "data.frame",
              fdef = "data.frame",
@@ -1603,6 +1643,7 @@ setClass("cpc",
          prototype(
              xd = new("XCMSnExp"),
              xdFilt = new("XCMSnExp"),
+             rawResults = list(),
              pt = data.frame(),
              cpt = data.frame(),
              fdef = data.frame(),
@@ -2198,9 +2239,11 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
     if (nrow(cpt(x)) > 0 && !is.na(match(id, cpc::cpt(x)$id)))
     {
         results <- x@cpt[match(id, cpc::cpt(x)$id), ]
+        rawResults <- as.list(x@rawResults[[match(id, cpc::cpt(x)$id)]])
     } else
     {
         results <- data.frame()
+        rawResults <- list()
     }
     
     # load raw data
@@ -2265,7 +2308,8 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
                                                              as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"))),
                  mzMeta = list(runInfo = raw@runInfo,
                                header = raw@header),
-                 results = results)
+                 results = results,
+                 rawProcResults = rawResults)
     
     # new param methodology with a cpcParam object
     setParam(chrom@param) <- x@param
@@ -2383,9 +2427,10 @@ setMethod("processPeaks", signature("cpc"), function(x)
             }
         }
         
-        # (pd <- x@pt[i_idx[18717], ]) # - tryptophan 210402
+        # (pd <- x@pt[i_idx[247], ]) # - tryptophan 210402
+        # (pd <- x@pt[i_idx[1], ])
         # (pd <- x@pt[i_idx, ])
-        df <- do.call("rbind", apply(x@pt[i_idx, ], 1, FUN = function(pd)
+        res <- do.call("list", apply(x@pt[i_idx, ], 1, FUN = function(pd)
         {
             # start timer
             proc_timer <- Sys.time()
@@ -2497,9 +2542,14 @@ setMethod("processPeaks", signature("cpc"), function(x)
             #             df = data.frame(id = chrom@id, getResults(chrom),
             #                        row.names = row.names(pd)[1])))
             
-            return(data.frame(id = chrom@id, getResults(chrom),
-                              row.names = row.names(pd)[1]))
+            return(list(data.frame(id = chrom@id, getResults(chrom),
+                                   row.names = row.names(pd)[1]),
+                        data.frame(chrom@rawProcResults)))
         }))
+        
+        df <- do.call("rbind", lapply(res, function(x) return(x[[1]])))
+        rawResults <- do.call("list", 
+                              lapply(res, function(x) return(x[[2]])))
         
         # end output
         if (getParam(x@param, "verbose_output"))
@@ -2510,6 +2560,8 @@ setMethod("processPeaks", signature("cpc"), function(x)
             cat(paste("Done!\n", sep  = ""))
         }
         
+        x@rawResults <- c(x@rawResults, rawResults)
+        
         cpt(x) <- rbind(cpt(x), df)
         
         # output timer
@@ -2519,6 +2571,214 @@ setMethod("processPeaks", signature("cpc"), function(x)
     # return object
     return(x)
 })
+
+# Method: processPeaks BACKUP ####
+# setMethod("processPeaks", signature("cpc"), function(x)
+# {
+#     # initialize empty cpt data.frame
+#     cpt(x) <- data.frame()
+#     
+#     # check to ensure that all data needed is present
+#     if (nrow(x@pt) < 1)
+#     {
+#         x <- parsePeaklist(x)
+#         
+#         if (nrow(x@pt) < 1) stop("No peak information in object")
+#     }
+#     
+#     # loop over files
+#     # (i <- getParam(x@param, "sel_files")[1])
+#     for (i in getParam(x@param, "sel_files"))
+#     {
+#         # start timer
+#         full_timer <- Sys.time()
+#         
+#         i_idx <- getParam(x@param, "sel_peaks")[
+#             which(x@pt$sample[getParam(x@param, "sel_peaks")] == i)
+#         ]
+#         i_npeaks <- length(i_idx)
+#         
+#         # output
+#         cat(paste("Processing file:", x@procData$file_paths[i], "\n"))
+#         
+#         # load raw data
+#         raw <- new("cpc_raw", file_path = x@procData$file_paths[i])
+#         raw <- parseMz(raw)
+#         
+#         # output
+#         cat(paste("Found ", i_npeaks, " peak(s).\n", sep = ""))
+#         
+#         i_counter = 1
+#         
+#         if (getParam(x@param, "verbose_output"))
+#         {
+#             cat(paste("[debug] starting peak processing...\n"))
+#         } else
+#         {
+#             cat("% complete: ")
+#             i_progress <- floor(floor(i_counter/i_npeaks*100)/10)*10
+#             cat(paste(i_progress, " ", sep=""))
+#             i_lastprogress <- i_progress
+#         }
+#         
+#         # calculate filter window max threshold for smoother
+#         # first checks so that it hasnt been calculated already - assuming that
+#         # the files have the same scanrate it shouldnt change but if it does
+#         # it is good to recalculate it for each file
+#         if (is.null(getParam(x@param, "max_sigma")) ||
+#             !is.numeric(getParam(x@param, "max_sigma")))
+#         {
+#             setParam(x@param) <- 
+#                 list(max_sigma = 
+#                          as.numeric(quantile(x@pt$rtmax - x@pt$rtmin,
+#                                              probs = 0.75, na.rm = T)) * 
+#                          raw@scanrate / 4)
+#             
+#             if (is.na(getParam(x@param, "max_sigma")) ||
+#                 is.null(getParam(x@param, "max_sigma")) ||
+#                 !is.numeric(getParam(x@param, "max_sigma")))
+#             {
+#                 stop(paste0("Could not determine filter width threshold ", 
+#                             "the smoother..."))
+#             }
+#         }
+#         
+#         # (pd <- x@pt[i_idx[18717], ]) # - tryptophan 210402
+#         # (pd <- x@pt[i_idx, ])
+#         df <- do.call("rbind", apply(x@pt[i_idx, ], 1, FUN = function(pd)
+#         {
+#             # start timer
+#             proc_timer <- Sys.time()
+#             
+#             # output
+#             if (getParam(x@param, "verbose_output")) 
+#             {
+#                 cat(paste("[debug] peak: ", pd["id"], "; ", sep = ""))
+#             } else
+#             {
+#                 # <<- is dangerous... should probably find another
+#                 # way to deal with the progress output
+#                 i_progress <<- floor(floor(i_counter/i_npeaks*100)/10)*10
+#                 i_counter <<- i_counter + 1
+#                 
+#                 if (i_progress > i_lastprogress)
+#                 {
+#                     cat(paste(i_progress, " ", sep=""))
+#                     i_lastprogress <<- i_progress
+#                 }
+#             }
+#             
+#             # check if xcms data is missing
+#             if (!is.numeric(unlist(pd[c("mz", "rt", "rtmin", "rtmax")])))
+#             {
+#                 if (getParam(x@param, "verbose_output")) cat("missing xcms data")
+#                 
+#                 setResults(chrom) <- list(note = "xcms_missing", file = i)
+#             } else # if xcms data exist
+#             {
+#                 # determine params for processing
+#                 ## peak location
+#                 cur_p <- binsearch_closest(x = raw@scantime, val = pd["rt"])
+#                 
+#                 ## filter width for smoothing
+#                 cur_s <- (pd["rtmax"] - pd["rtmin"])/4
+#                 if (is.na(cur_s) || 
+#                     is.null(cur_s) || 
+#                     cur_s > getParam(x@param, "max_sigma"))
+#                 {
+#                     cur_s <- floor(getParam(x@param, "max_sigma")+0.5)
+#                 }
+#                 
+#                 ## mz range for extracting ion traces
+#                 cur_mzrange <- 
+#                     c(as.numeric(pd["mz"]) -
+#                           as.numeric(pd["mz"])/1e6*getParam(x@param, "ppm"),
+#                       as.numeric(pd["mz"]) +
+#                           as.numeric(pd["mz"])/1e6*getParam(x@param, "ppm"))
+#                 
+#                 # create chrom object
+#                 chrom <- 
+#                     new("cpc_chrom",
+#                         id = as.integer(pd["id"]),
+#                         param = cpcChromParam(mz = as.numeric(pd["mz"]),
+#                                               p = cur_p,
+#                                               s = cur_s,
+#                                               mz_range = cur_mzrange))
+#                 
+#                 # chrom <- 
+#                 #     new("cpc_chrom",
+#                 #         id = as.integer(pd["id"]),
+#                 #         param = cpcChromParam(mz = as.numeric(pd["mz"]),
+#                 #                               p = cur_p,
+#                 #                               s = cur_s,
+#                 #                               mz_range = cur_mzrange),
+#                 #         procParams = list(mz = as.numeric(pd["mz"]),
+#                 #                           p = binsearch_closest(x = raw$scantime,
+#                 #                                                 val = pd["rt"]),
+#                 #                           s = ifelse((is.na(pd["sigma"]) || as.numeric(pd["sigma"]) >
+#                 #                                           as.numeric(getProcData(x, "max_sigma")[i])),
+#                 #                                      as.numeric(getProcData(x, "max_sigma")[i]),
+#                 #                                      as.numeric(pd["sigma"])),
+#                 #                           mz_range = c(as.numeric(pd["mz"]) -
+#                 #                                            as.numeric(pd["mz"])/1e6*getParam(x@param, "ppm"),
+#                 #                                        as.numeric(pd["mz"]) +
+#                 #                                            as.numeric(pd["mz"])/1e6*getParam(x@param, "ppm"))))
+#                 
+#                 # old param methodlogy with a list() holding the params
+#                 # setProcParams(chrom) <- getProcParams(x)
+#                 
+#                 # new param methodology with a cpcParam object holding the params
+#                 # for better control
+#                 # add params from cpc object
+#                 setParam(chrom@param) <- x@param
+#                 
+#                 setProcData(chrom) <- list(pd = pd)
+#                 
+#                 # get XIC
+#                 setXIC(chrom) <- getXIC(raw, mzrange = getParam(chrom@param, "mz_range"))
+#                 
+#                 # process chromatogram
+#                 chrom <- processChromatogram(chrom)
+#                 
+#                 setResults(chrom) <- list(file = i)
+#                 
+#             }
+#             
+#             setResults(chrom) <- list(exectime = as.numeric(difftime(Sys.time(), proc_timer,
+#                                                                      units = "secs")))
+#             
+#             # end output line
+#             if (getParam(x@param, "verbose_output")) cat("\n")
+#             
+#             # return the data.frame row for the current peak
+#             # row.names are added from the original peak table for matching
+#             # purposes later on
+#             # return(list(res = chrom@rawProcResults,
+#             #             df = data.frame(id = chrom@id, getResults(chrom),
+#             #                        row.names = row.names(pd)[1])))
+#             
+#             return(data.frame(id = chrom@id, getResults(chrom),
+#                               row.names = row.names(pd)[1]))
+#         }))
+#         
+#         # end output
+#         if (getParam(x@param, "verbose_output"))
+#         {
+#             cat("[debug] Done!\n\n")
+#         } else
+#         {
+#             cat(paste("Done!\n", sep  = ""))
+#         }
+#         
+#         cpt(x) <- rbind(cpt(x), df)
+#         
+#         # output timer
+#         output_formatted_time(full_timer, Sys.time())
+#     }
+#     
+#     # return object
+#     return(x)
+# })
 
 
 #### Method: checkPeaksAgainstCriteria ####
