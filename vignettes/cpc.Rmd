@@ -295,6 +295,63 @@ points(x = cpcPeaktable$apex[removedPeaksId],
        cex = log(pmax(0, xcmsPeaktableOrig$into[removedPeaksId]) / 
          median(pmax(0, xcmsPeaktableOrig$into[removedPeaksId]))))
 
+colorRampPalette(colors = c("#264653", "#2A9D8F", "#E9C46A", 
+                            "#F4A261", "#E76F51"))(16)
+
+plot(1:16, rep(1, 16), pch = 20, cex = 5, 
+     col = colorRampPalette(colors = c("#264653", "#2A9D8F", "#E9C46A", 
+                                       "#F4A261", "#E76F51"))(16))
+
+snVals <- cpcPeaktable$sn
+snVals[which(snVals == Inf)] <- max(snVals[which(snVals != Inf)])*2
+seq(from = 0, to = max(snVals), by = max(snVals)/16)
+quanBreaks <- quantile(snVals, probs = seq(0,1,length.out = 17))
+quanBreaks[1] <- 0
+
+colPalette <- colorRampPalette(colors = c("#264653", "#2A9D8F", "#E9C46A", 
+                                          "#F4A261", "#E76F51"))(16)
+
+colVec <- colPalette[as.integer(sapply(snVals, FUN = function(x) {
+  which(quanBreaks[1:(length(quanBreaks)-1)] < x &
+          quanBreaks[2:length(quanBreaks)] >= x)
+}))]
+
+# m/z ~ rt (xcms data) with separate panels for retained and removed peaks
+layout(mat = matrix(c(1,2), nrow = 1), widths = c(0.53,0.47))
+par(mar = c(5.1,4.1,2.1,0.1))
+plot(x = xcmsPeaktableOrig$rt[-removedPeaksId], 
+     y = xcmsPeaktableOrig$mz[-removedPeaksId], pch = 20, 
+     col = colVec[-removedPeaksId],
+     cex = log(pmax(0, xcmsPeaktableOrig$into[-removedPeaksId]) / 
+                 median(pmax(0, xcmsPeaktableOrig$into[-removedPeaksId]))),
+     xlab = "Retention time (sec)", ylab = "m/z", main = "Retained peaks")
+
+par(mar = c(5.1,0,2.1,2.1))
+plot(x = xcmsPeaktableOrig$rt[removedPeaksId], 
+     y = xcmsPeaktableOrig$mz[removedPeaksId], pch = 20, 
+     col = colVec[removedPeaksId],
+     cex = log(pmax(0, xcmsPeaktableOrig$into[removedPeaksId]) / 
+                 median(pmax(0, xcmsPeaktableOrig$into[removedPeaksId]))),
+     xlab = "Retention time (sec)", yaxt = "n", ylab = "", main = "Removed peaks")
+
+# m/z ~ rt (cpc data) with separate panels for retained and removed peaks
+layout(mat = matrix(c(1,2), nrow = 1), widths = c(0.53,0.47))
+par(mar = c(5.1,4.1,2.1,0.1))
+plot(x = cpcPeaktable$apex[-removedPeaksId], 
+     y = xcmsPeaktableOrig$mz[-removedPeaksId], pch = 20, 
+     col = colVec[-removedPeaksId],
+     cex = log(pmax(0, cpcPeaktable$area[-removedPeaksId]) / 
+                 median(pmax(0, cpcPeaktable$area[-removedPeaksId]))),
+     xlab = "Scan index", ylab = "m/z", main = "Retained peaks")
+
+par(mar = c(5.1,0,2.1,2.1))
+plot(x = cpcPeaktable$apex[removedPeaksId], 
+     y = xcmsPeaktableOrig$mz[removedPeaksId], pch = 20, 
+     col = colVec[removedPeaksId],
+     cex = log(pmax(0, cpcPeaktable$area[removedPeaksId]) / 
+                 median(pmax(0, cpcPeaktable$area[removedPeaksId]))),
+     xlab = "Scan index", yaxt = "n", ylab = "", main = "Removed peaks")
+
 ```
 
 # Example of EMG deconvolution
