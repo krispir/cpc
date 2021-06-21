@@ -10,6 +10,8 @@ setGeneric("cpt", function(x) standardGeneric("cpt"))
 setGeneric("cpt<-", function(x, value) standardGeneric("cpt<-"))
 
 # D ############################################################################
+setGeneric("determineMaxSigma", function(x, scantime, scanrate) standardGeneric("determineMaxSigma"))
+
 # E ############################################################################
 # F ############################################################################
 

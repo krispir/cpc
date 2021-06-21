@@ -625,7 +625,7 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
     # }
     
     # d0 emg fit
-    if (plotEMG && !is.null(x@results$emu) && x@results$emu >= 0)
+    if (plotEMG && !is.null(x@results$emu) && x@results$emu > 0)
     {
         fittedPeaks <- which(x@rawProcResults$emg_mu > 0)
         
@@ -1319,8 +1319,10 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
     # calculate noise
     setProcData(x) <- list(noise_sel = which(abs(x@d2) <= quantile(abs(x@d2), .95)))
     
-    if (length(x@procData$noise_sel) < floor(getParam(x@param, "nscan")/2)) 
+    if (length(x@procData$noise_sel) < floor(getParam(x@param, "nscan")/2))
+    {
         x@procData$noise_sel <- 1:getParam(x@param, "nscan")
+    }
     
     setProcData(x) <- list(xic_noise = c_peak_to_peak_noise(x = x@procData$noise_sel-1,
                                                             y = x@xic, w = 1),
@@ -2216,6 +2218,33 @@ setMethod("filePaths", signature("cpc"), function(x)
 })
 
 
+#### Method: determineMaxSigma ####
+setMethod("determineMaxSigma", signature("cpc"), function(x, scantime, scanrate)
+{
+    # ensure that the peaklist has been parsed
+    
+    # determine nearest scans for rtmin and rtmax
+    scmin <- sapply(x@pt$rtmin, binsearch_closest, 
+                    x = scantime, simplify = "array")
+    scpos <- sapply(x@pt$rt, binsearch_closest, 
+                    x = scantime, simplify = "array")
+    # scmax <- sapply(x@pt$rtmax, binsearch_closest,
+    #                 x = scantime, simplify = "array")
+    
+    # set max sigma value
+    setParam(x@param) <- 
+        list(max_sigma = 
+                 as.numeric(quantile(scpos - scmin,
+                                     probs = 0.75, na.rm = T)) * 
+                 scanrate / 2)
+    
+    return(x)
+    
+})
+
+
+
+
 #### Method: getChromatogram ####
 
 #' @title Method that generates a \code{cpc_chrom} object from a peak table entry
@@ -2282,34 +2311,60 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
     # check that max_sigma is calculated - otherwise, calculate it
     if (is.null(getParam(x@param, "max_sigma")))
     {
-        setParam(x@param) <- 
-            list(max_sigma = 
-                     as.numeric(quantile(x@pt$rtmax - x@pt$rtmin,
-                                         probs = 0.75, na.rm = T)) * 
-                     raw@scanrate / 4)
+        x <- determineMaxSigma(x, raw@scantime, raw@scanrate)
+        
+        # setParam(x@param) <- 
+        #     list(max_sigma = 
+        #              as.numeric(quantile(x@pt$rtmax - x@pt$rtmin,
+        #                                  probs = 0.75, na.rm = T)) * 
+        #              raw@scanrate / 4)
     }
     
-    cur_s <- ifelse(as.numeric(x@pt$rtmax[id] - x@pt$rtmin[id])*0.25 >
-                        getParam(x@param, "max_sigma"),
-                    as.numeric(getParam(x@param, "max_sigma")),
-                    as.numeric(x@pt$rtmax[id] - x@pt$rtmin[id])*0.25)
+    # cur_rtmin <- binsearch_closest(x = raw@scantime,
+    #                                val = x@pt$rtmin[id])
+    # cur_rtmax <- binsearch_closest(x = raw@scantime,
+    #                                val = x@pt$rtmax[id])
+    # 
+    # cur_s <- ifelse(as.numeric(cur_rtmax - cur_rtmin)*0.25 >
+    #                     getParam(x@param, "max_sigma"),
+    #                 as.numeric(getParam(x@param, "max_sigma")),
+    #                 as.numeric(cur_rtmax - cur_rtmin)*0.25)
+    
+    ## filter width for smoothing
+    cur_rtmin <- binsearch_closest(x = raw@scantime, 
+                                   val = x@pt$rtmin[id])
+    # cur_rtmax <- binsearch_closest(x = raw@scantime, 
+    #                                val = x@pt$rtmax[id])
+    
+    cur_s <- (cur_p - cur_rtmin)/2
+    
+    if (is.na(cur_s) || 
+        is.null(cur_s) || 
+        cur_s > getParam(x@param, "max_sigma"))
+    {
+        cur_s <- floor(getParam(x@param, "max_sigma")+0.5)
+    } else if (cur_s < 3)
+    {
+        cur_s <- 3
+    }
     
     ## mz range for extracting ion traces
     
     # create a cpc_chrom object for processing
-    chrom <- new("cpc_chrom",
-                 id = as.integer(id),
-                 param = cpc::cpcChromParam(mz = as.numeric(x@pt$mz[id]),
-                                            p = cur_p,
-                                            s = cur_s,
-                                            mz_range = c(as.numeric(x@pt$mz[id]) -
-                                                             as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"),
-                                                         as.numeric(x@pt$mz[id]) +
-                                                             as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"))),
-                 mzMeta = list(runInfo = raw@runInfo,
-                               header = raw@header),
-                 results = results,
-                 rawProcResults = rawResults)
+    chrom <- 
+        new("cpc_chrom",
+            id = as.integer(id),
+            param = cpc::cpcChromParam(mz = as.numeric(x@pt$mz[id]),
+                                       p = cur_p,
+                                       s = cur_s,
+                                       mz_range = c(as.numeric(x@pt$mz[id]) -
+                                                        as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"),
+                                                    as.numeric(x@pt$mz[id]) +
+                                                        as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"))),
+            mzMeta = list(runInfo = raw@runInfo,
+                          header = raw@header),
+            results = results,
+            rawProcResults = rawResults)
     
     # new param methodology with a cpcParam object
     setParam(chrom@param) <- x@param
@@ -2328,11 +2383,13 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
     # set plotrange
     if (is.na(match("plotrange", names(x@procData))))
     {
-        setProcData(chrom) <- list(plotrange = c(max(1, floor(getParam(chrom@param, "p") - 
-                                                                  20*getParam(chrom@param, "s"))),
-                                                 min(getParam(chrom@param, "nscan"), 
-                                                     floor(getParam(chrom@param, "p") + 
-                                                               20*getParam(chrom@param, "s")))))
+        setProcData(chrom) <- 
+            list(plotrange = 
+                     c(max(1, floor(getParam(chrom@param, "p") - 
+                                        20*getParam(chrom@param, "s"))),
+                       min(getParam(chrom@param, "nscan"), 
+                           floor(getParam(chrom@param, "p") + 
+                                     20*getParam(chrom@param, "s")))))
     }
     
     return(chrom)
@@ -2412,11 +2469,13 @@ setMethod("processPeaks", signature("cpc"), function(x)
         if (is.null(getParam(x@param, "max_sigma")) ||
             !is.numeric(getParam(x@param, "max_sigma")))
         {
-            setParam(x@param) <- 
-                list(max_sigma = 
-                         as.numeric(quantile(x@pt$rtmax - x@pt$rtmin,
-                                             probs = 0.75, na.rm = T)) * 
-                         raw@scanrate / 4)
+            # setParam(x@param) <- 
+            #     list(max_sigma = 
+            #              as.numeric(quantile(x@pt$rtmax - x@pt$rtmin,
+            #                                  probs = 0.75, na.rm = T)) * 
+            #              raw@scanrate / 4)
+            
+            x <- determineMaxSigma(x, raw@scantime, raw@scanrate)
             
             if (is.na(getParam(x@param, "max_sigma")) ||
                 is.null(getParam(x@param, "max_sigma")) ||
@@ -2427,9 +2486,7 @@ setMethod("processPeaks", signature("cpc"), function(x)
             }
         }
         
-        # (pd <- x@pt[i_idx[247], ]) # - tryptophan 210402
-        # (pd <- x@pt[i_idx[1], ])
-        # (pd <- x@pt[i_idx, ])
+        # (pd <- x@pt[i_idx[25509], ]) # - tryptophan 210518
         res <- do.call("list", apply(x@pt[i_idx, ], 1, FUN = function(pd)
         {
             # start timer
@@ -2456,7 +2513,10 @@ setMethod("processPeaks", signature("cpc"), function(x)
             # check if xcms data is missing
             if (!is.numeric(unlist(pd[c("mz", "rt", "rtmin", "rtmax")])))
             {
-                if (getParam(x@param, "verbose_output")) cat("missing xcms data")
+                if (getParam(x@param, "verbose_output"))
+                {
+                    cat("missing xcms data")
+                }
                 
                 setResults(chrom) <- list(note = "xcms_missing", file = i)
             } else # if xcms data exist
@@ -2466,12 +2526,12 @@ setMethod("processPeaks", signature("cpc"), function(x)
                 cur_p <- binsearch_closest(x = raw@scantime, val = pd["rt"])
                 
                 ## filter width for smoothing
+                # cur_rtmax <- binsearch_closest(x = raw@scantime, 
+                #                                val = pd["rtmax"])
                 cur_rtmin <- binsearch_closest(x = raw@scantime, 
-                                               val = pd["rtmax"])
-                cur_rtmax <- binsearch_closest(x = raw@scantime, 
                                                val = pd["rtmin"])
                 
-                cur_s <- (cur_rtmax - cur_rtmin)/4
+                cur_s <- (cur_p - cur_rtmin)/2
                 
                 if (is.na(cur_s) || 
                     is.null(cur_s) || 
@@ -2482,6 +2542,10 @@ setMethod("processPeaks", signature("cpc"), function(x)
                 {
                     cur_s <- 3
                 }
+                # } else
+                # {
+                #     cur_s <- floor(cur_s+0.5)
+                # }
                 
                 ## mz range for extracting ion traces
                 cur_mzrange <- 
@@ -2529,7 +2593,8 @@ setMethod("processPeaks", signature("cpc"), function(x)
                 setProcData(chrom) <- list(pd = pd)
                 
                 # get XIC
-                setXIC(chrom) <- getXIC(raw, mzrange = getParam(chrom@param, "mz_range"))
+                setXIC(chrom) <- getXIC(raw, mzrange = getParam(chrom@param, 
+                                                                "mz_range"))
                 
                 # process chromatogram
                 chrom <- processChromatogram(chrom)
@@ -2538,8 +2603,10 @@ setMethod("processPeaks", signature("cpc"), function(x)
                 
             }
             
-            setResults(chrom) <- list(exectime = as.numeric(difftime(Sys.time(), proc_timer,
-                                                                     units = "secs")))
+            setResults(chrom) <- list(exectime = 
+                                          as.numeric(difftime(Sys.time(), 
+                                                              proc_timer,
+                                                              units = "secs")))
             
             # end output line
             if (getParam(x@param, "verbose_output")) cat("\n")
