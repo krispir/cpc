@@ -176,6 +176,7 @@ plotPeaks <- function(cpc, peakIdx,
             # chrom@rawProcResults <- as.list(cpc@rawResults[[peaksFromCurFile[curPeak]]])
             
             # plot peak
+            # x <- chrom
             cpc::plotPeak(chrom, plotEMG = plotEMG, plotXCMS = plotXCMS, 
                           annotation = curAnnotation)
             
