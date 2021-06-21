@@ -36,6 +36,14 @@ library(cpc)
 
 ```
 
+# Background
+
+
+
+# Algorithm overview
+
+
+
 # XCMS processing
 
 The first step in this tutorial is to use XCMS to process the reduced data set. The parameters used here are the same as those used to process the full data set. For more information on how to use XCMS for processing LC/MS data, see XCMS documentation. Only the peak picking will be performed as the retention alignment will not work properly with this heavily filtered dataset, and is not important to illustrate the workflow.
@@ -198,7 +206,7 @@ To get a vector of the removed peaks, the method *getRemovedPeaks()* can be used
 ```{r}
 
 # set a seed for sample()
-seed <- 1234
+seed <- 1
 
 # get all removed peaks
 removedPeaks <- cpc::getRemovedPeaks(cpc)
@@ -209,9 +217,9 @@ removedPeaksId <- match(removedPeaks, row.names(cpc::getPeaklist(cpc)))
 # (2) Too low signal-to-noise
 # (3) Too narrow
 set.seed(seed); randomRemoved <- c(
-  sample(which(cpcPeaktable$note == "not_detected"), 2, FALSE),
-  sample(which(cpcPeaktable$note == "too_narrow"), 2, FALSE),
-  sample(which(cpcPeaktable$note == "low_sn"), 2, FALSE)
+  sample(which(cpcPeaktable$note == "not_detected"), 3, FALSE),
+  sample(which(cpcPeaktable$note == "too_narrow"), 3, FALSE),
+  sample(which(cpcPeaktable$note == "low_sn"), 3, FALSE)
 )
 
 ```
@@ -354,6 +362,14 @@ plot(x = cpcPeaktable$apex[removedPeaksId],
 
 ```
 
+# Peak cluster boundaries
+
+```{r}
+
+
+
+```
+
 # Example of EMG deconvolution
 
 The processing engine used in the CPC package includes EMG deconvolution of peak clusters to achieve better estimates of the peak boundaries. This can be included in the processing by setting the argument *fit_emg = TRUE* in the *cpcProcParam* object.
@@ -368,7 +384,7 @@ To illustrate this, we first need to find a few peaks to perform EMG deconvoluti
 
 (selection <- cpcPeaktable$id[selection])
 
-plotPeaks(cpc, peakIdx = selection)
+# plotPeaks(cpc, peakIdx = selection)
 
 ```
 
@@ -377,31 +393,11 @@ plotPeaks(cpc, peakIdx = selection)
 cpcParam <- cpcProcParam(fit_emg = TRUE, sel_peaks = selection, plot = F)
 cpcDeconv <- characterize_xcms_peaklist(xd = xd, param = cpcParam)
 
-plotPeaks(cpc = cpcDeconv, peakIdx = peakIdx, plotEMG = T)
-
 ```
 
 ```{r}
 
-seed <- c(78, 3.48167, -2.30259, 14.0392, 
-          98, 6.55711, -2.30259, 15.6597, 
-          112, 2.525, -2.30259, 14.3057, 
-          127, 1.90602, -2.30259, 12.5534, 
-          140, 4.37691, -2.30259, 13.5071)
-
-lbounds <- c(58, 1.74084, -9.21034, 13.3461, 
-             78, 3.27856, -9.21034, 14.9666, 
-             92, 1.2625, -9.21034, 13.6125, 
-             107, 0.953009, -9.21034, 11.8602, 
-             120, 2.18846, -9.21034, 12.8139)
-
-ubounds <- c(98, 5.22251, 2.99573, 14.4447, 
-             118, 9.83567, 2.99573, 16.0652, 
-             132, 3.7875, 2.99573, 14.7111, 
-             147, 2.85903, 2.99573, 12.9588, 
-             160, 6.56537, 2.99573, 13.9126)
-
-
+plotPeaks(cpc = cpcDeconv, peakIdx = peakIdx, plotEMG = T)
 
 ```
 
