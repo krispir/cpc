@@ -49,4 +49,5 @@ filter_xcms_peaklist <- function(xd, return_type = c("xcms", "cpc"),
         # return full cpc object
         return(cpc)
     }
+    
 }
