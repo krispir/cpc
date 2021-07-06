@@ -161,26 +161,25 @@ find_height_bounds <- function(y = NULL, apex = NULL,
     front_bound <- skim_to_val(y_adj,
                                threshold, 
                                apex-1,
-                               floor(peak_bounds[1])-1, 
+                               floor(peak_bounds[1])-2, 
                                -1) + 1 # returns first point below thresh
-    # OR the break point
+                                       # OR the break point
     
     tail_bound <- skim_to_val(y_adj,
                               threshold, 
                               apex-1,
                               floor(peak_bounds[2]), 
                               1) + 1 # returns first point below thresh
-    # OR the break point
+                                     # OR the break point
     
     output <- rep(-1, 2)
     
     if (exact) # if exact values
     {
         # front
-        if (front_bound == floor(peak_bounds[1])) # the skimmer stopped at peak_bound
-        {
-            output[1] <- peak_bounds[1]
-        } else
+        if (front_bound != floor(peak_bounds[1])-1 &&
+            y_adj[front_bound] <= threshold && 
+            y_adj[front_bound+1] >= threshold)
         {
             output[1] <- interpolate_x(x = c(front_bound,
                                              front_bound + 1),
@@ -189,13 +188,16 @@ find_height_bounds <- function(y = NULL, apex = NULL,
                                        yval = threshold)
             
             if (output[1] < peak_bounds[1]) output[1] <- peak_bounds[1]
+            
+        } else
+        {
+            output[1] <- peak_bounds[1]
         }
         
         # tail
-        if (tail_bound == floor(peak_bounds[2])+1) # the skimmer stopped at peak_bound
-        {
-            output[2] <- peak_bounds[2]
-        } else
+        if (tail_bound != floor(peak_bounds[2])+1 &&
+            y_adj[tail_bound-1] >= threshold && 
+            y_adj[tail_bound] <= threshold)
         {
             output[2] <- interpolate_x(x = c(tail_bound - 1,
                                              tail_bound),
@@ -204,7 +206,12 @@ find_height_bounds <- function(y = NULL, apex = NULL,
                                        yval = threshold)
             
             if (output[2] > peak_bounds[2]) output[2] <- peak_bounds[2]
+            
+        } else
+        {
+            output[2] <- peak_bounds[2]
         }
+        
     } else
     {
         output <- c(front_bound+1, tail_bound-1)
