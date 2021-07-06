@@ -163,10 +163,10 @@ plotPeaks <- function(cpc, peakIdx,
                            "_", peakNames[match(peaksFromCurFile[curPeak], peakIdx)], 
                            ".", device)
                 
-                # do.call(device, list(filename = outFileName, ...))
-                do.call(device, list(filename = outFileName,
-                                     width = 7, height = 7,
-                                     units = "in", res = 330))
+                do.call(device, list(filename = outFileName, ...))
+                # do.call(device, list(filename = outFileName,
+                #                      width = 8, height = 6,
+                #                      units = "in", res = 330))
             }
             
             # create a chromatogram object
