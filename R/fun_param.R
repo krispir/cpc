@@ -20,6 +20,7 @@
 #' @param sel_peaks \code{integer} vector indicating a subset of peak indices to be processed from the XCMSnExp object. If NULL all peaks are processed.
 #' @param sel_files \code{integer} vector indicating a subset of file indices to be processed from the XCMSnExp object. If NULL all files are processed.
 #' @param verbose_output \code{logical} value indicating if output is to be given during processing.
+#' @param save_all \code{logical} indicating if all processing data should be saved. Caution: This will result in a very large object!
 #' @param plot \code{logical} indicating if the results should be plotted for each peak
 #'
 #' @return A \code{cpcProcParam} object
@@ -29,9 +30,10 @@ cpcProcParam <- function(ppm = 50.0,
                          min_inf_width = 3.0,
                          min_sn = 10.0,
                          min_frac = 0.5,
-                         min_intensity = 1000L,
                          min_shoulder_pts = 3L,
                          min_rounded_pts = 3L,
+                         min_intensity = NULL,
+                         interval_tf = NULL,
                          min_w = 5L,
                          max_w = 21L,
                          smooth_method = "savgol",
@@ -42,6 +44,7 @@ cpcProcParam <- function(ppm = 50.0,
                          sel_peaks = NULL,
                          sel_files = NULL,
                          verbose_output = FALSE,
+                         save_all = FALSE,
                          plot = FALSE)
 {
   # check params
@@ -66,6 +69,8 @@ cpcProcParam <- function(ppm = 50.0,
   if (!is.numeric(min_sn)) stop("'min_sn' has to be an integer value.")
   if (!is.null(min_intensity) && !is.numeric(min_intensity))
     stop("'min_intensity' has to be a numeric value.")
+  if (!is.null(interval_tf) && !is.numeric(interval_tf))
+    stop("'interval_tf' has to be a numeric vector of length 2.")
   if (!is.numeric(smooth_times)) stop("'smooth_times' has to be an integer value.")
   if (!is.null(smooth_win) && !is.numeric(smooth_win))
     stop("'smooth_win' has to be an integer value.")
@@ -77,6 +82,7 @@ cpcProcParam <- function(ppm = 50.0,
       min_shoulder_pts = min_shoulder_pts,
       min_rounded_pts = min_rounded_pts,
       min_w = min_w, max_w = max_w,
+      interval_tf = interval_tf,
       smooth_method = smooth_method,
       smooth_times = smooth_times,
       smooth_win = smooth_win,
@@ -85,6 +91,7 @@ cpcProcParam <- function(ppm = 50.0,
       sel_peaks = sel_peaks,
       sel_files = sel_files,
       verbose_output = verbose_output,
+      save_all = save_all,
       plot = plot)
 }
 
@@ -126,7 +133,8 @@ cpcChromParam <- function(mz = NULL,
                           min_inf_width = 3.0,
                           min_sn = 10.0,
                           min_frac = 0.5,
-                          min_intensity = 1000L,
+                          min_intensity = NULL,
+                          interval_tf = NULL,
                           min_w = 5L,
                           max_w = 21L,
                           smooth_method = "savgol",
@@ -137,14 +145,28 @@ cpcChromParam <- function(mz = NULL,
                           sel_peaks = NULL,
                           sel_files = NULL,
                           verbose_output = FALSE,
+                          save_all = FALSE,
                           plot = FALSE)
 {
+  ## check values of params
+  if (!is.numeric(min_pts)) stop("'min_pts' has to be an integer value.")
+  if (!is.numeric(min_inf_width)) stop("'min_inf_width' has to be an integer value.")
+  if (!is.numeric(min_sn)) stop("'min_sn' has to be an integer value.")
+  if (!is.null(min_intensity) && !is.numeric(min_intensity))
+    stop("'min_intensity' has to be a numeric value.")
+  if (!is.null(interval_tf) && !is.numeric(interval_tf))
+    stop("'interval_tf' has to be a numeric vector of length 2.")
+  if (!is.numeric(smooth_times)) stop("'smooth_times' has to be an integer value.")
+  if (!is.null(smooth_win) && !is.numeric(smooth_win))
+    stop("'smooth_win' has to be an integer value.")
+  
   new("cpcChromParam", 
       mz = mz, p = p, s = s, mz_range = mz_range,
       ppm = ppm, min_pts = min_pts, 
       min_inf_width = min_inf_width, min_sn = min_sn,
       min_frac = min_frac,
       min_intensity = min_intensity,
+      interval_tf = interval_tf,
       min_w = min_w, max_w = max_w,
       smooth_method = smooth_method,
       smooth_times = smooth_times,
@@ -154,5 +176,6 @@ cpcChromParam <- function(mz = NULL,
       sel_peaks = sel_peaks,
       sel_files = sel_files,
       verbose_output = verbose_output,
+      save_all = save_all,
       plot = plot)
 }

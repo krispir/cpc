@@ -15,6 +15,7 @@ setClass("cpcProcParam",
                         min_intensity = "numericOrNULL",
                         min_shoulder_pts = "numericOrNULL",
                         min_rounded_pts = "numericOrNULL",
+                        interval_tf = "numericOrNULL",
                         min_w = "numericOrNULL",
                         max_w = "numericOrNULL",
                         smooth_method = "character",
@@ -25,15 +26,17 @@ setClass("cpcProcParam",
                         sel_peaks = "numericOrNULL",
                         sel_files = "numericOrNULL",
                         verbose_output = "logical",
+                        save_all = "logical",
                         plot = "logical"),
          prototype(ppm = 50.0, 
                    min_pts = 7L,
                    min_inf_width = 3.0,
                    min_sn = 10.0,
                    min_frac = 0.5,
-                   min_intensity = 0L,
+                   min_intensity = NULL,
                    min_shoulder_pts = 3L,
                    min_rounded_pts = 3L,
+                   interval_tf = NULL,
                    min_w = 5L,
                    max_w = 21L,
                    smooth_method = "savgol",
@@ -44,6 +47,7 @@ setClass("cpcProcParam",
                    sel_peaks = NULL,
                    sel_files = NULL,
                    verbose_output = FALSE,
+                   save_all = FALSE,
                    plot = FALSE))
 
 setClass("cpcChromParam",
@@ -63,6 +67,7 @@ setClassUnion("cpcParam",
               members = c("cpcProcParam", "cpcChromParam"))
 
 #### Method: setParam<- ####
+#' @export
 setMethod("setParam<-", signature("cpcParam"), function(x, value) 
 {
     if (class(value) == "list")
@@ -114,30 +119,6 @@ setMethod("setParam<-", signature("cpcParam"), function(x, value)
     
     x
 })
-
-# setMethod("getProcParam", signature("cpcParam"), function(x, param)
-# {
-#     # find which params exist
-#     matchedNames <- which(!is.na(match(param, slotNames(x))))
-#     
-#     # check if there are unmatched params and give a message
-#     if (length(matchedNames) < length(param))
-#     {
-#         message(paste0("Missing slots in object: ", 
-#                        paste0(param[-matchedNames], collapse = ", ")))
-#     }
-#     
-#     # if length > 1 -> return matched params as a list
-#     paramList <- vector(mode = "list", length = length(matchedNames))
-#     names(paramList) <- param[matchedNames]
-#     
-#     for (i in 1:length(matchedNames))
-#     {
-#         paramList[param[matchedNames[i]]] <- slot(x, param[matchedNames[i]])
-#     }
-#     
-#     
-# })
 
 #### Method: getParam ####
 setMethod("getParam", signature("cpcParam"), function(x, param)
@@ -625,7 +606,8 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
     # }
     
     # d0 emg fit
-    if (plotEMG && !is.null(x@results$emu) && x@results$emu > 0)
+    if (plotEMG && !is.null(x@results$emu) && x@results$emu > 0 &&
+        length(x@rawProcResults) > 0)
     {
         fittedPeaks <- which(x@rawProcResults$emg_mu > 0)
         
@@ -1450,14 +1432,14 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
     }
     
     # check peak width
-    if (x@results$tpkb - x@results$fpkb < getParam(x@param, "min_pts"))
-    {
-        setResults(x) <- list(note = "too_narrow")
-        
-        if (getParam(x@param, "plot")) plotPeak(x)
-        
-        return(x)
-    }
+    # if (x@results$tpkb - x@results$fpkb < getParam(x@param, "min_pts"))
+    # {
+    #     setResults(x) <- list(note = "too_narrow")
+    # 
+    #     if (getParam(x@param, "plot")) plotPeak(x)
+    # 
+    #     return(x)
+    # }
     
     # calculate peak characteristics
     x <- calculatePeakCharacteristics(x)
@@ -1635,6 +1617,7 @@ setClass("cpc",
              rawResults = "list",
              pt = "data.frame",
              cpt = "data.frame",
+             outcomes = "data.frame",
              fdef = "data.frame",
              fpeaks = "list",
              param = "cpcParam",
@@ -1648,6 +1631,7 @@ setClass("cpc",
              rawResults = list(),
              pt = data.frame(),
              cpt = data.frame(),
+             outcomes = data.frame(),
              fdef = data.frame(),
              fpeaks = list(),
              param = cpcProcParam(),
@@ -2037,6 +2021,56 @@ setMethod("setProcParams<-", signature("cpc"), function(x, value)
     return(x)
 })
 
+#### Method: getParam ####
+#' @title Getter method for the process parameter object contained in the cpc
+#' object.
+#' 
+#' @description 
+#' 
+#' Takes a \code{cpc} object and a single character vector indicating a slot in 
+#' the \code{cpcParam} object.
+#' 
+#' @param x A \code{cpc} object.
+#' @param value A \code{character} vector indicating a parameter slot in the
+#' \code{cpcParam} object.
+#' 
+#' @return The parameter value.
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+setMethod("getParam", signature("cpc"), function(x, param)
+{
+    return(getParam(x@param, param))
+    
+})
+
+#### Method: setParam<- ####
+#' @title Setter method for the process parameter object contained in the cpc
+#' object.
+#' 
+#' @description 
+#' 
+#' Takes a named \code{list} of parameters or another \code{cpcParam} object as 
+#' argument. The element names in the \code{list} must correspond to a slot name in the 
+#' cpcProcParam object.
+#' 
+#' @param x A \code{cpc} object.
+#' @param value A named \code{list} of parameters.
+#' 
+#' @return A \code{cpc} object.
+#' 
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+setMethod("setParam<-", signature("cpc"), function(x, value) 
+{
+    x@param <- setParam(x@param, value)
+    
+    return(x)
+    
+})
+
 
 #### Method: parsePeaklist ####
 
@@ -2067,6 +2101,14 @@ setMethod("parsePeaklist", signature("cpc"), function(x)
                       "processing."))
         
         x@xd <- dropFeatureDefinitions(x@xd)
+        
+    }
+    
+    # check if there are filled peaks and remove them
+    if (xcms::hasFilledChromPeaks(x@xd))
+    {
+        message(paste0("Removing filled peak data from the XCMS object. "))
+        
         
     }
     
@@ -2268,7 +2310,14 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
     if (nrow(cpt(x)) > 0 && !is.na(match(id, cpc::cpt(x)$id)))
     {
         results <- x@cpt[match(id, cpc::cpt(x)$id), ]
-        rawResults <- as.list(x@rawResults[[match(id, cpc::cpt(x)$id)]])
+        if (length(x@rawResults) > 0)
+        {
+            rawResults <- as.list(x@rawResults[[match(id, cpc::cpt(x)$id)]])
+        } else
+        {
+            rawResults <- list()
+        }
+        
     } else
     {
         results <- data.frame()
@@ -2624,8 +2673,12 @@ setMethod("processPeaks", signature("cpc"), function(x)
         }))
         
         df <- do.call("rbind", lapply(res, function(x) return(x[[1]])))
-        rawResults <- do.call("list", 
-                              lapply(res, function(x) return(x[[2]])))
+        
+        if (getParam(x@param, "save_all"))
+        {
+            rawResults <- do.call("list", 
+                                  lapply(res, function(x) return(x[[2]])))
+        }
         
         # end output
         if (getParam(x@param, "verbose_output"))
@@ -2636,7 +2689,10 @@ setMethod("processPeaks", signature("cpc"), function(x)
             cat(paste("Done!\n", sep  = ""))
         }
         
-        x@rawResults <- c(x@rawResults, rawResults)
+        if (getParam(x@param, "save_all"))
+        {
+            x@rawResults <- c(x@rawResults, rawResults)
+        }
         
         cpt(x) <- rbind(cpt(x), df)
         
@@ -2885,6 +2941,8 @@ setMethod("checkPeaksAgainstCriteria", signature("cpc"), function(x) {
     
     for (i in 1:nrow(x@cpt))
     {
+        # TODO: Parallell testing here instead and save result of each test.
+        # TODO: Add tailing factor filter.
         if (x@cpt$note[i] == "detected")
         {
             if (x@cpt$sn[i] < getParam(x@param, "min_sn"))
@@ -2915,6 +2973,98 @@ setMethod("checkPeaksAgainstCriteria", signature("cpc"), function(x) {
     
     # return object
     return(x)
+})
+
+
+#### Method: setFilterOutcomes ####
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+setMethod("setFilterOutcomes<-", signature("cpc"), function(x, value) {
+    # ensure that value is a data frame with the same number of rows as cpt
+    if (class(value) != "data.frame")
+    {
+        stop("Incorrect format on filter outcomes. It should be a data.frame.")
+    } else if (nrow(value) != nrow(x@cpt))
+    {
+        stop(paste0("Incorrect number of rows in outcomes. It should be a a ",
+                    "data.frame with the same number of rows as the cpt ",
+                    "data.frame..."))
+    }
+    
+    x@outcomes <- value
+    
+    return(x)
+})
+
+#### Method: determineFilterOutcomes ####
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+setMethod("determineFilterOutcomes", signature("cpc"), function(x) {
+    # check that the peak processing has been performed
+    if (!hasCharacterizedPeakTable(x))
+    {
+        stop("Please run peak characterization first!")
+    }
+    
+    res <- data.frame(
+        # checks if a peak is detected by the algorithm
+        detected = x@cpt$note != "not_detected",
+        # checks if a peak has a higher than specified signal-to-noise ratio
+        sn = if(!(is.null(getParam(x@param, "min_sn")))) {
+            ((x@cpt$sn >= getParam(x@param, "min_sn") & 
+                  x@cpt$note != "not_detected"))
+        } else {
+            rep(TRUE, nrow(x@cpt))
+        },
+        # checks if a peak is as wide or wider than the specified minimum width
+        width = if(!(is.null(getParam(x@param, "min_pts")))) {
+            (x@cpt$tpkb - x@cpt$fpkb + 1 >= 
+                 getParam(x@param, "min_pts") & 
+                 x@cpt$note != "not_detected")
+        } else {
+            rep(TRUE, nrow(x@cpt))
+        },
+        # TODO: Lägg till FWHM som ett filter
+        tf = if(!(is.null(getParam(x@param, "interval_tf")))) {
+            (x@cpt$tf >= 
+                 getParam(x@param, "interval_tf")[1] & 
+                 x@cpt$tf <= 
+                 getParam(x@param, "interval_tf")[2] & 
+                 x@cpt$note != "not_detected")
+        } else {
+            rep(TRUE, nrow(x@cpt))
+        },
+        # checks if a peak is as intense or more intense than specified minimum
+        # intensity
+        intensity = if(!(is.null(getParam(x@param, "min_intensity")))) {
+            (x@cpt$area >= getParam(x@param, "min_intensity") & 
+                 x@cpt$note != "not_detected")
+        } else {
+            rep(TRUE, nrow(x@cpt))
+        }
+    )
+    
+    row.names(res) <- row.names(x@cpt)
+    
+    setFilterOutcomes(x) <- res
+    
+    return(x)
+})
+
+#### Method: getFilterOutcomes ####
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+setMethod("getFilterOutcomes", signature("cpc"), function(x) {
+    if (nrow(x@outcomes) <= 0)
+    {
+        warning(paste0("No filter outcomes appears to be present. ",
+                       "Run determineFilterOutcomes()."))
+    }
+    
+    return(x@outcomes)
 })
 
 
@@ -2984,14 +3134,15 @@ setMethod("filterPeaks", signature("cpc"), function(x)
     ncp <- xcms::chromPeaks(x@xdFilt)
     
     # check all peaks against the specified criteria in the params object
-    x <- checkPeaksAgainstCriteria(x)
+    # x <- checkPeaksAgainstCriteria(x)
+    x <- determineFilterOutcomes(x)
     
     # create a vector of peaks to remove based on params
     # keep will be which peaks in the cpt slot that will be kept (NOT which
     # peaks in the XCMS object that will be kept!)
     # keep <- peaksToKeep(x)
     cpt <- cpc::cpt(x)
-    keep <- which(cpt$note == "detected")
+    keep <- which(apply(getFilterOutcomes(x), 1, FUN=function(z) all(z)))
     
     # if the XCMSnExp has filled peaks they will be removed when running
     # xcms::dropFeatureDefinitions() and so if this is the case, then I will 

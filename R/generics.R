@@ -11,6 +11,7 @@ setGeneric("cpt<-", function(x, value) standardGeneric("cpt<-"))
 
 # D ############################################################################
 setGeneric("determineMaxSigma", function(x, scantime, scanrate) standardGeneric("determineMaxSigma"))
+setGeneric("determineFilterOutcomes", function(x) standardGeneric("determineFilterOutcomes"))
 
 # E ############################################################################
 # F ############################################################################
@@ -33,6 +34,8 @@ setGeneric("getParam", function(x, param) standardGeneric("getParam"))
 setGeneric("getRemovedPeaks", function(x) standardGeneric("getRemovedPeaks"))
 setGeneric("getResults", function(x) standardGeneric("getResults"))
 setGeneric("getXIC", function(x, mzrange, scanrange = NULL, method = 1) standardGeneric("getXIC"))
+setGeneric("getFilterOutcomes", function(x) standardGeneric("getFilterOutcomes"))
+
 
 # H ############################################################################
 
@@ -67,6 +70,7 @@ setGeneric("setProcData<-", function(x, value) standardGeneric("setProcData<-"))
 setGeneric("setProcParams<-", function(x, value) standardGeneric("setProcParams<-"))
 setGeneric("setParam<-", function(x, value) standardGeneric("setParam<-"))
 setGeneric("setResults<-", function(x, value) standardGeneric("setResults<-"))
+setGeneric("setFilterOutcomes<-", function(x, value) standardGeneric("setFilterOutcomes<-"))
 setGeneric("setXIC<-", function(x, value) standardGeneric("setXIC<-"))
 setGeneric("show", function(x) standardGeneric("show"))
 setGeneric("smoothChromatogram", function(x) standardGeneric("smoothChromatogram"))
