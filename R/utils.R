@@ -63,27 +63,43 @@ binsearch_closest <- function(x, val, l = NULL, r = NULL)
     
     if (l > r) stop("l should be an integer value less than r.")
     
-    while (l < r)
+    # recursive calling if a vector is supplied
+    if (length(val) > 1)
     {
-        mid <- floor((l+r)/2)
+        out <- vector(mode = "integer", length = length(val))
         
-        if (x[mid] > val)
+        for (i in 1:length(val))
         {
-            r <- mid
+            out[i] <- binsearch_closest(x, val[i], l = l, r = r)
+        }
+        
+        return(out)
+    } else
+    {
+        while (l < r)
+        {
+            mid <- floor((l+r)/2)
+            
+            if (x[mid] > val)
+            {
+                r <- mid
+            } else
+            {
+                l <- mid + 1
+            }
+        }
+        
+        if (r == 1 || 
+            abs(x[r-1] - val) > abs(x[r] - val))
+        {
+            out <- r
         } else
         {
-            l <- mid + 1
+            out <- r-1
         }
     }
     
-    if (r == 1 || 
-        abs(x[r-1] - val) > abs(x[r] - val))
-    {
-        return(r)
-    } else
-    {
-        return(r-1)
-    }
+    return(out)
 }
 
 output_formatted_time <- function(start, end)
