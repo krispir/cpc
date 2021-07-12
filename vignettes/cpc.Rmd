@@ -206,7 +206,7 @@ To get a vector of the removed peaks, the method *getRemovedPeaks()* can be used
 ```{r}
 
 # set a seed for sample()
-seed <- 1
+seed <- 123
 
 # get all removed peaks
 removedPeaks <- cpc::getRemovedPeaks(cpc)
@@ -218,7 +218,7 @@ removedPeaksId <- match(removedPeaks, row.names(cpc::getPeaklist(cpc)))
 # (3) Too narrow
 set.seed(seed); randomRemoved <- c(
   sample(which(cpcPeaktable$note == "not_detected"), 3, FALSE),
-  sample(which(cpcPeaktable$note == "too_narrow"), 3, FALSE),
+  # sample(which(cpcPeaktable$note == "too_narrow"), 3, FALSE),
   sample(which(cpcPeaktable$note == "low_sn"), 3, FALSE)
 )
 
@@ -364,9 +364,15 @@ plot(x = cpcPeaktable$apex[removedPeaksId],
 
 # Peak cluster boundaries
 
+Overlapping peak clusters can be detected by the algorithm as their baseline boundaries after expansion will overlap. Consequently the boundaries between peaks in clusters need to be determined and updated. This is handled differently depending on the degree of overlap. Valley boundaries between peaks are set to the lowest point between the peak apices along the ion trace. Shoulder boundaries are set to the maxima between the peak apices along the second derivative of the ion trace. When two similarily sized peaks overlap sufficiently much, it can lead to a rounded peak shape. This is detected as two peak apices that share inflection points along the second derivative which a negative valued maxima in between the apice points. The boundary is then set to the negative maxima point between the apices.
+
 ```{r}
 
+# Valley boundary example
+plotPeaks(cpc, 931)
 
+# Shoulder boundary example
+plotPeaks(cpc, 500)
 
 ```
 
@@ -384,13 +390,14 @@ To illustrate this, we first need to find a few peaks to perform EMG deconvoluti
 
 (selection <- cpcPeaktable$id[selection])
 
-# plotPeaks(cpc, peakIdx = selection)
+plotPeaks(cpc, peakIdx = selection)
 
 ```
 
 ```{r}
 
-cpcParam <- cpcProcParam(fit_emg = TRUE, sel_peaks = selection, plot = F)
+cpcParam <- cpcProcParam(fit_emg = TRUE, sel_peaks = selection, plot = F,
+                         save_all = TRUE)
 cpcDeconv <- characterize_xcms_peaklist(xd = xd, param = cpcParam)
 
 ```
