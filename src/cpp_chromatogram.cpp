@@ -1970,6 +1970,7 @@ private:
 public:
     Chromatogram(const vec_d &_d0, 
                  const vec_d &_d2, 
+                 const vec_d &_st,
                  const double _apex_thresh, 
                  const int _w, 
                  const int _p,
@@ -1996,6 +1997,7 @@ public:
         
         this->d0 = _d0;
         this->d2 = _d2;
+        this->st = _st;
         this->d0_res = vec_d(nscans, 0.0);
         
         // process options
@@ -5786,6 +5788,7 @@ void Chromatogram::process_chromatogram()
 // [[Rcpp::export]]
 Rcpp::List process_chromatogram(vec_d &d0, 
                                 vec_d &d2,
+                                vec_d &st,
                                 double apex_thresh = 0.0, 
                                 int w = 5, 
                                 int p = -1,
@@ -5808,30 +5811,9 @@ Rcpp::List process_chromatogram(vec_d &d0,
                                 const int maxit = 2000,
                                 const int maxeval = 2000)
 {
-    // initialize Chromatogram class
-    // Chromatogram(const vec_d &_d0, 
-    //              const vec_d &_d2, 
-    //              const double _apex_thresh, 
-    //              const int _w, 
-    //              const int _p,
-    //              const double _liftoff = 0.0, 
-    //              const double _touchdown = 0.5, 
-    //              const int _output = 0,
-    //              const int _fit_emg = 1, 
-    //              const int _fit_only_vip = 1, 
-    //              const int _fit_hess = 0,
-    //              const double _fit_rel_lim = 0.05,
-    //              const int _pts_per_peak = 10,
-    //              const double _reltol = 1.0e-8,
-    //              const double _abstol = -1.0e35,
-    //              const double _alpha = 1.0,
-    //              const double _gamma = 2.1,
-    //              const double _rho = 0.75,
-    //              const double _sigma = 0.5,
-    //              const int _maxit = 2000,
-    //              const int _maxeval = 2000)
     Chromatogram chrom(d0,              // Smoothed XIC
                        d2,              // Smoothed second derivative
+                       st,              // Scantimes
                        apex_thresh,     // Apex intensity threshold
                        w,               // Apex search window width
                        p,               // VIP apex location (for directed search)
