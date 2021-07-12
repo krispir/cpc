@@ -46,13 +46,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // process_chromatogram
-Rcpp::List process_chromatogram(vec_d& d0, vec_d& d2, double apex_thresh, int w, int p, double liftoff, double touchdown, int output, int fit_emg, int fit_only_vip, int fit_hess, double fit_rel_lim, int pts_per_peak, int min_shoulder_pts, int min_rounded_pts, const double reltol, const double abstol, const double alpha, const double gamma, const double rho, const double sigma, const int maxit, const int maxeval);
-RcppExport SEXP _cpc_process_chromatogram(SEXP d0SEXP, SEXP d2SEXP, SEXP apex_threshSEXP, SEXP wSEXP, SEXP pSEXP, SEXP liftoffSEXP, SEXP touchdownSEXP, SEXP outputSEXP, SEXP fit_emgSEXP, SEXP fit_only_vipSEXP, SEXP fit_hessSEXP, SEXP fit_rel_limSEXP, SEXP pts_per_peakSEXP, SEXP min_shoulder_ptsSEXP, SEXP min_rounded_ptsSEXP, SEXP reltolSEXP, SEXP abstolSEXP, SEXP alphaSEXP, SEXP gammaSEXP, SEXP rhoSEXP, SEXP sigmaSEXP, SEXP maxitSEXP, SEXP maxevalSEXP) {
+Rcpp::List process_chromatogram(vec_d& d0, vec_d& d2, vec_d& st, double apex_thresh, int w, int p, double liftoff, double touchdown, int output, int fit_emg, int fit_only_vip, int fit_hess, double fit_rel_lim, int pts_per_peak, int min_shoulder_pts, int min_rounded_pts, const double reltol, const double abstol, const double alpha, const double gamma, const double rho, const double sigma, const int maxit, const int maxeval);
+RcppExport SEXP _cpc_process_chromatogram(SEXP d0SEXP, SEXP d2SEXP, SEXP stSEXP, SEXP apex_threshSEXP, SEXP wSEXP, SEXP pSEXP, SEXP liftoffSEXP, SEXP touchdownSEXP, SEXP outputSEXP, SEXP fit_emgSEXP, SEXP fit_only_vipSEXP, SEXP fit_hessSEXP, SEXP fit_rel_limSEXP, SEXP pts_per_peakSEXP, SEXP min_shoulder_ptsSEXP, SEXP min_rounded_ptsSEXP, SEXP reltolSEXP, SEXP abstolSEXP, SEXP alphaSEXP, SEXP gammaSEXP, SEXP rhoSEXP, SEXP sigmaSEXP, SEXP maxitSEXP, SEXP maxevalSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< vec_d& >::type d0(d0SEXP);
     Rcpp::traits::input_parameter< vec_d& >::type d2(d2SEXP);
+    Rcpp::traits::input_parameter< vec_d& >::type st(stSEXP);
     Rcpp::traits::input_parameter< double >::type apex_thresh(apex_threshSEXP);
     Rcpp::traits::input_parameter< int >::type w(wSEXP);
     Rcpp::traits::input_parameter< int >::type p(pSEXP);
@@ -74,7 +75,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const double >::type sigma(sigmaSEXP);
     Rcpp::traits::input_parameter< const int >::type maxit(maxitSEXP);
     Rcpp::traits::input_parameter< const int >::type maxeval(maxevalSEXP);
-    rcpp_result_gen = Rcpp::wrap(process_chromatogram(d0, d2, apex_thresh, w, p, liftoff, touchdown, output, fit_emg, fit_only_vip, fit_hess, fit_rel_lim, pts_per_peak, min_shoulder_pts, min_rounded_pts, reltol, abstol, alpha, gamma, rho, sigma, maxit, maxeval));
+    rcpp_result_gen = Rcpp::wrap(process_chromatogram(d0, d2, st, apex_thresh, w, p, liftoff, touchdown, output, fit_emg, fit_only_vip, fit_hess, fit_rel_lim, pts_per_peak, min_shoulder_pts, min_rounded_pts, reltol, abstol, alpha, gamma, rho, sigma, maxit, maxeval));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -350,7 +351,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cpc_LinearSpacedArray", (DL_FUNC) &_cpc_LinearSpacedArray, 3},
     {"_cpc_c_emgfun", (DL_FUNC) &_cpc_c_emgfun, 3},
     {"_cpc_testApexFinder", (DL_FUNC) &_cpc_testApexFinder, 2},
-    {"_cpc_process_chromatogram", (DL_FUNC) &_cpc_process_chromatogram, 23},
+    {"_cpc_process_chromatogram", (DL_FUNC) &_cpc_process_chromatogram, 24},
     {"_cpc_test_emgfit", (DL_FUNC) &_cpc_test_emgfit, 23},
     {"_cpc_getEIC_min", (DL_FUNC) &_cpc_getEIC_min, 5},
     {"_cpc_getEIC_Rcpp", (DL_FUNC) &_cpc_getEIC_Rcpp, 5},
