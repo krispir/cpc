@@ -685,13 +685,18 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
                       cur_bl[rev(cpc_pkbounds[1]:cpc_pkbounds[2])]), 
                 col = "#FF000050", border = NA)
         
-        # peak bounds
+        # peak bound lines to baseline
         lines(x = rep(x@st[cpc_pkbounds[1]], 2),
               y = c(x@d0[cpc_pkbounds[1]],
                     cur_bl[cpc_pkbounds[1]]), col = "red")
         lines(x = rep(x@st[cpc_pkbounds[2]], 2),
               y = c(x@d0[cpc_pkbounds[2]],
                     cur_bl[cpc_pkbounds[2]]), col = "red")
+        
+        # peak bound points
+        points(x = x@st[cpc_pkbounds],
+               y = x@d0[cpc_pkbounds],
+               col = "red", pch = 20, cex = 0.9)
         
         
         # ## bottom
