@@ -16,6 +16,7 @@ setClass("cpcProcParam",
                         min_shoulder_pts = "numericOrNULL",
                         min_rounded_pts = "numericOrNULL",
                         interval_tf = "numericOrNULL",
+                        min_fwhm = "numericOrNULL",
                         min_w = "numericOrNULL",
                         max_w = "numericOrNULL",
                         smooth_method = "character",
@@ -37,6 +38,7 @@ setClass("cpcProcParam",
                    min_shoulder_pts = 3L,
                    min_rounded_pts = 3L,
                    interval_tf = NULL,
+                   min_fwhm = NULL,
                    min_w = 5L,
                    max_w = 21L,
                    smooth_method = "savgol",
@@ -187,6 +189,7 @@ setClass("cpc_chrom",
              xic = "numeric",
              d0 = "numeric",
              d2 = "numeric",
+             st = "numeric",
              param = "cpcParam",
              mzMeta = "list",
              procParams = "list",
@@ -201,6 +204,7 @@ setClass("cpc_chrom",
              xic = NA_real_,
              d0 = NA_real_,
              d2 = NA_real_,
+             st = NA_real_,
              param = cpcChromParam(),
              mzMeta = list(),
              procParams = list(mz = -1,
@@ -215,7 +219,26 @@ setClass("cpc_chrom",
                              mz_range = c(-1,-1)),
              rawProcResults = list(),
              procResults = list(),
-             results = list(apex = -1L,
+             results = list(rt = -1.0,
+                            rtmin = -1.0,
+                            rtmax = -1.0,
+                            rtf1b = -1.0, 
+                            rtt1b = -1.0, 
+                            rtf5b = -1.0, 
+                            rtt5b = -1.0, 
+                            rtf10b = -1.0, 
+                            rtt10b = -1.0, 
+                            rtf50b = -1.0, 
+                            rtt50b = -1.0, 
+                            wb = -1.0,
+                            fwhm = -1.0,
+                            area = -1.0,
+                            height = -1.0,
+                            a = -1.0,
+                            b = -1.0,
+                            tf = -1.0,
+                            sn = -1.0,
+                            apex = -1L,
                             finf = -1.0,
                             tinf = -1.0,
                             fblb = -1L,
@@ -230,46 +253,17 @@ setClass("cpc_chrom",
                             elambda = -1.0,
                             earea = -1.0,
                             econv = -1L,
-                            note = "",
-                            height = -1.0,
                             fh1b = -1L,
                             th1b = -1L,
                             fh5b = -1L,
                             th5b = -1L,
+                            fh10b = -1L,
+                            th10b = -1L,
                             fh50b = -1L,
                             th50b = -1L,
-                            wb = -1.0,
-                            fwhm = -1.0,
-                            area = -1.0,
-                            a = -1.0,
-                            b = -1.0,
-                            tf = -1.0,
-                            sn = Inf,
                             file = -1L,
+                            note = "",
                             exectime = -1.0)
-             # results = list(apex = -1,
-             #                bl_front_bound = -1,
-             #                bl_tail_bound = -1,
-             #                front_bound = -1,
-             #                tail_bound = -1,
-             #                h1_front_bound = -1,
-             #                h1_tail_bound = -1,
-             #                h5_front_bound = -1,
-             #                h5_tail_bound = -1,
-             #                h50_front_bound = -1,
-             #                h50_tail_bound = -1,
-             #                fwhm = -1,
-             #                wb = -1,
-             #                a = -1,
-             #                b = -1,
-             #                tf = -1,
-             #                height = -1,
-             #                area = -1,
-             #                sn = -1,
-             #                code = "",
-             #                note = "",
-             #                exectime = -1,
-             #                file = -1)
          ))
 
 #### Method: getProcParams ####
@@ -545,23 +539,26 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
     
     # d0 main plot 
     par(mar = c(1,4.1,1,1))
-    plot(x@d0, type = "l", 
-         xlim = x@procData$plotrange,
+    plot(x = x@st,
+         y = x@d0, type = "l", 
+         xlim = x@st[x@procData$plotrange],
          ylim = ylim,
-         ylab = "XIC",
+         ylab = "",
          xlab = "",
          xaxt = "n")
+    title(ylab = "XIC", line = 2.5)
     
     ## d0 points
-    points(x@d0, pch = 20, cex = 0.9)
+    points(x = x@st, y = x@d0, pch = 20, cex = 0.9)
     
     ## unsmoothed XIC
-    lines(x@xic, col = "#00000075", lty = "dashed")
+    lines(x = x@st, y = x@xic, col = "#00000075", lty = "dashed")
     
     ## d0 apex point
     if (results)
     {
-        points(x = x@results$apex, y = x@d0[x@results$apex], col = "red", pch = 20)
+        points(x = x@st[x@results$apex], y = x@d0[x@results$apex], 
+               col = "red", pch = 20)
     }
     
     ## d0 current vars
@@ -578,9 +575,11 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
     {
         char_ann <- paste0(char_ann,
                            "bl_bound ", paste(c(x@results$fblb,
-                                                x@results$tblb), collapse = "->"), "\n",
+                                                x@results$tblb), 
+                                              collapse = "->"), "\n",
                            "peak_bound ", paste(c(x@results$fpkb,
-                                                  x@results$tpkb), collapse = "->"), "\n",
+                                                  x@results$tpkb), 
+                                                collapse = "->"), "\n",
                            "code ", paste0(x@results$fcode, x@results$tcode), "\n",
                            "SN ", round(x@results$sn, 3), "\n",
                            "fwhm ", round(x@results$fwhm, 3), "\n",
@@ -589,9 +588,11 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
     }
     
     ## metadata textbox
-    text(x = x@procData$plotrange[2], y = 0.95*ylim[2],
-         labels = paste0("m/z ", round(getParam(x@param, "mz_range")[1], 3), " : ", 
-                         round(getParam(x@param, "mz_range")[2], 3)), adj = c(1,1), cex = 0.75)
+    text(x = x@st[x@procData$plotrange[2]], y = 0.95*ylim[2],
+         labels = paste0("m/z ", round(getParam(x@param, "mz_range")[1], 3), 
+                         " : ", 
+                         round(getParam(x@param, "mz_range")[2], 3)), 
+         adj = c(1,1), cex = 0.75)
     
     ## d0 emg fit
     # if (!is.null(cpc_xic$emg))
@@ -628,7 +629,7 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
         }
         
         # plot fitted combined trace
-        points(x = x@results$fblb:x@results$tblb,
+        points(x = x@st[x@results$fblb:x@results$tblb],
                y = c_emgfun(x = x@results$fblb:x@results$tblb, 
                             pars = fittedPars, 
                             npeaks = length(fittedPeaks)),
@@ -637,7 +638,7 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
         # plot each peak separately
         for (i in 1:length(fittedPeaks))
         {
-            lines(x = x@results$fblb:x@results$tblb,
+            lines(x = x@st[x@results$fblb:x@results$tblb],
                   y = c_emgfun(x = x@results$fblb:x@results$tblb, 
                                pars = fittedPars[(i-1)*4+(1:4)], 
                                npeaks = 1), 
@@ -662,48 +663,71 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
     if (results)
     {
         # d0 baseline
-        points(x = c(x@results$fblb,
-                     x@results$tblb),
-               y = x@d0[c(x@results$fblb, x@results$tblb)],
-               col = "red", pch = 20, cex = 1.1)
-        lines(x = c(x@results$fblb, x@results$tblb),
-              y = x@d0[c(x@results$fblb, x@results$tblb)],
+        cur_bl <- x@d0[x@results$fblb] + 
+            (1:length(x@d0)-x@results$fblb) * x@results$blslp
+        lines(x = x@st[x@results$fblb:x@results$tblb],
+              y = cur_bl[x@results$fblb:x@results$tblb], 
               col = "red", lty = "dashed")
+        # points(x = c(x@results$fblb,
+        #              x@results$tblb),
+        #        y = x@d0[c(x@results$fblb, x@results$tblb)],
+        #        col = "red", pch = 20, cex = 1.1)
+        # lines(x = c(x@results$fblb, x@results$tblb),
+        #       y = x@d0[c(x@results$fblb, x@results$tblb)],
+        #       col = "red", lty = "dashed")
         
-        ## bottom
-        tmp_x <- unlist(x@results[c("fpkb", "tpkb")])
-        tmp_y <- c(interpolate_y(x = unlist(x@results[c("fblb", "tblb")]),
-                                 y = x@d0[unlist(x@results[c("fblb", "tblb")])],
-                                 xval = unlist(x@results$fpkb)),
-                   interpolate_y(x = unlist(x@results[c("fblb", "tblb")]),
-                                 y = x@d0[unlist(x@results[c("fblb", "tblb")])],
-                                 xval = unlist(x@results$tpkb)))
+        # polygon
+        cpc_pkbounds <- c(x@results$fpkb,
+                          x@results$tpkb)
+        polygon(x = c(x@st[cpc_pkbounds[1]:cpc_pkbounds[2]],
+                      x@st[rev(cpc_pkbounds[1]:cpc_pkbounds[2])]),
+                y = c(x@d0[cpc_pkbounds[1]:cpc_pkbounds[2]],
+                      cur_bl[rev(cpc_pkbounds[1]:cpc_pkbounds[2])]), 
+                col = "#FF000050", border = NA)
         
-        lines(x = tmp_x, y = tmp_y, col = "red")
+        # peak bounds
+        lines(x = rep(x@st[cpc_pkbounds[1]], 2),
+              y = c(x@d0[cpc_pkbounds[1]],
+                    cur_bl[cpc_pkbounds[1]]), col = "red")
+        lines(x = rep(x@st[cpc_pkbounds[2]], 2),
+              y = c(x@d0[cpc_pkbounds[2]],
+                    cur_bl[cpc_pkbounds[2]]), col = "red")
         
-        ## left
-        tmp_x <- rep(x@results$fpkb, 2)
-        tmp_y <- c(interpolate_y(x = unlist(x@results[c("fblb", "tblb")]),
-                                 y = x@d0[unlist(x@results[c("fblb", "tblb")])],
-                                 xval = unlist(x@results$fpkb)),
-                   max(x@d0[floor(x@results$fpkb):floor(x@results$tpkb)]))
         
-        lines(x = tmp_x, y = tmp_y, col = "red")
-        
-        ## top
-        tmp_x <- unlist(x@results[c("fpkb", "tpkb")])
-        tmp_y <- rep(max(x@d0[floor(x@results$fpkb):floor(x@results$tpkb)]), 2)
-        
-        lines(x = tmp_x, y = tmp_y, col = "red")
-        
-        ## right
-        tmp_x <- rep(x@results$tpkb, 2)
-        tmp_y <- c(interpolate_y(x = unlist(x@results[c("fblb", "tblb")]),
-                                 y = x@d0[unlist(x@results[c("fblb", "tblb")])],
-                                 xval = unlist(x@results$tpkb)),
-                   max(x@d0[floor(x@results$fpkb):floor(x@results$tpkb)]))
-        
-        lines(x = tmp_x, y = tmp_y, col = "red")
+        # ## bottom
+        # tmp_x <- unlist(x@results[c("fpkb", "tpkb")])
+        # tmp_y <- c(interpolate_y(x = unlist(x@results[c("fblb", "tblb")]),
+        #                          y = x@d0[unlist(x@results[c("fblb", "tblb")])],
+        #                          xval = unlist(x@results$fpkb)),
+        #            interpolate_y(x = unlist(x@results[c("fblb", "tblb")]),
+        #                          y = x@d0[unlist(x@results[c("fblb", "tblb")])],
+        #                          xval = unlist(x@results$tpkb)))
+        # 
+        # lines(x = tmp_x, y = tmp_y, col = "red")
+        # 
+        # ## left
+        # tmp_x <- rep(x@results$fpkb, 2)
+        # tmp_y <- c(interpolate_y(x = unlist(x@results[c("fblb", "tblb")]),
+        #                          y = x@d0[unlist(x@results[c("fblb", "tblb")])],
+        #                          xval = unlist(x@results$fpkb)),
+        #            max(x@d0[floor(x@results$fpkb):floor(x@results$tpkb)]))
+        # 
+        # lines(x = tmp_x, y = tmp_y, col = "red")
+        # 
+        # ## top
+        # tmp_x <- unlist(x@results[c("fpkb", "tpkb")])
+        # tmp_y <- rep(max(x@d0[floor(x@results$fpkb):floor(x@results$tpkb)]), 2)
+        # 
+        # lines(x = tmp_x, y = tmp_y, col = "red")
+        # 
+        # ## right
+        # tmp_x <- rep(x@results$tpkb, 2)
+        # tmp_y <- c(interpolate_y(x = unlist(x@results[c("fblb", "tblb")]),
+        #                          y = x@d0[unlist(x@results[c("fblb", "tblb")])],
+        #                          xval = unlist(x@results$tpkb)),
+        #            max(x@d0[floor(x@results$fpkb):floor(x@results$tpkb)]))
+        # 
+        # lines(x = tmp_x, y = tmp_y, col = "red")
     }
     
     # plot XCMS bounds if plotXCMS == TRUE and XCMS data exist for the peak
@@ -719,29 +743,32 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
                                      val = x@procData$pd$rtmax)
         xcms_apex <- binsearch_closest(x = x@mzMeta$header$retentionTime,
                                        val = x@procData$pd$rt)
-        points(x = c(xcms_fb, xcms_apex, xcms_tb),
+        points(x = x@st[c(xcms_fb, xcms_apex, xcms_tb)],
                y = x@d0[c(xcms_fb, xcms_apex, xcms_tb)],
                col = "#0000FF", cex = 1.5, lwd = 2)
     }
     
     # data box in main plot
-    text(x = x@procData$plotrange[1], y = 0.95*ylim[2], 
+    text(x = x@st[x@procData$plotrange[1]], y = 0.95*ylim[2], 
          labels = char_ann, adj = c(0,1), cex = 0.6)
     
     
     # d2 main plot
-    par(mar = c(5.1,4.1,0,1))
-    plot(x@d2, type = "l", col = "#000000", 
-         xlim = x@procData$plotrange,
+    par(mar = c(4.1,4.1,0,1))
+    plot(x = x@st,
+         y = x@d2, type = "l", col = "#000000", 
+         xlim = x@st[x@procData$plotrange],
          ylim = c(min(x@d2[x@procData$plotrange[1]:x@procData$plotrange[2]]),
                   max(x@d2[x@procData$plotrange[1]:x@procData$plotrange[2]])),
-         ylab = "2nd derivative",
-         xlab = "scan")
-    points(x@d2, pch = 20, cex = 0.9)
+         ylab = "",
+         xlab = "")
+    title(xlab = "Time (sec)",
+          ylab = "2nd derivative", line = 2.5)
+    points(x = x@st, y = x@d2, pch = 20, cex = 0.9)
     # d2 peak bounds
     if (results)
     {
-        points(x = unlist(x@results[c("fpkb", "tpkb")]), 
+        points(x = x@st[unlist(x@results[c("fpkb", "tpkb")])], 
                y = x@d2[unlist(x@results[c("fpkb", "tpkb")])],
                col = "red", pch = 20)
     }
@@ -775,81 +802,175 @@ setMethod("calculatePeakCharacteristics", signature("cpc_chrom"), function(x)
     
     # peak height
     setResults(x) <- list(height = x@d0[x@results$apex] - 
-                              interpolate_y(x = c(x@results$fblb, x@results$tblb), 
-                                            y = x@d0[c(x@results$fblb, x@results$tblb)], 
+                              interpolate_y(x = c(x@results$fblb, 
+                                                  x@results$tblb), 
+                                            y = x@d0[c(x@results$fblb, 
+                                                       x@results$tblb)], 
                                             xval = x@results$apex))
+    
+    # retention time in @st units
+    setResults(x) <- list(rt = x@st[x@results$apex])
+    
+    # peak bounds in @st units
+    setResults(x) <- list(rtmin = x@st[x@results$fpkb])
+    setResults(x) <- list(rtmax = x@st[x@results$tpkb])
     
     # height bounds
     ## 1% peak height
-    tmp <- find_height_bounds(y = x@d0, apex = x@results$apex,
-                              bl_bounds = c(x@results$fblb, x@results$tblb),
-                              peak_bounds = c(x@results$fpkb, x@results$tpkb),
-                              frac = 0.01, id = x@id,
-                              debug = getParam(x@param, "verbose_output"), 
-                              plot = getParam(x@param, "plot"))
-    setResults(x) <- list(fh1b = tmp[1],
-                          th1b = tmp[2])
+    fh1bidx <- find_height_bounds(y = x@d0, apex = x@results$apex,
+                                  bl_bounds = c(x@results$fblb, 
+                                                x@results$tblb),
+                                  peak_bounds = c(x@results$fpkb, 
+                                                  x@results$tpkb),
+                                  frac = 0.01, id = x@id,
+                                  debug = getParam(x@param, "verbose_output"), 
+                                  plot = getParam(x@param, "plot"))
+    setResults(x) <- list(fh1b = fh1bidx[1],
+                          th1b = fh1bidx[2])
+    setResults(x) <- list(rtf1b = interpolate_y(x = c(floor(fh1bidx[1]),
+                                                      floor(fh1bidx[1])+1),
+                                                y = x@st[c(floor(fh1bidx[1]),
+                                                           floor(fh1bidx[1])+1)],
+                                                xval = fh1bidx[1]),
+                          rtt1b = interpolate_y(x = c(floor(fh1bidx[2]),
+                                                      floor(fh1bidx[2])+1),
+                                                y = x@st[c(floor(fh1bidx[2]),
+                                                           floor(fh1bidx[2])+1)],
+                                                xval = fh1bidx[2]))
     
     ## 5% peak height
-    tmp <- find_height_bounds(y = x@d0, apex = x@results$apex,
-                              bl_bounds = c(x@results$fblb, x@results$tblb),
-                              peak_bounds = c(x@results$fpkb, x@results$tpkb),
-                              frac = 0.05, id = x@id,
-                              debug = getParam(x@param, "verbose_output"), 
-                              plot = getParam(x@param, "plot"))
-    setResults(x) <- list(fh5b = tmp[1],
-                          th5b = tmp[2])
+    fh5bidx <- find_height_bounds(y = x@d0, apex = x@results$apex,
+                                  bl_bounds = c(x@results$fblb, 
+                                                x@results$tblb),
+                                  peak_bounds = c(x@results$fpkb, 
+                                                  x@results$tpkb),
+                                  frac = 0.05, id = x@id,
+                                  debug = getParam(x@param, "verbose_output"), 
+                                  plot = getParam(x@param, "plot"))
+    setResults(x) <- list(fh5b = fh5bidx[1],
+                          th5b = fh5bidx[2])
+    setResults(x) <- list(rtf5b = interpolate_y(x = c(floor(fh5bidx[1]),
+                                                      floor(fh5bidx[1])+1),
+                                                y = x@st[c(floor(fh5bidx[1]),
+                                                           floor(fh5bidx[1])+1)],
+                                                xval = fh5bidx[1]),
+                          rtt5b = interpolate_y(x = c(floor(fh5bidx[2]),
+                                                      floor(fh5bidx[2])+1),
+                                                y = x@st[c(floor(fh5bidx[2]),
+                                                           floor(fh5bidx[2])+1)],
+                                                xval = fh5bidx[2]))
+    
+    ## 10% peak height
+    fh10bidx <- find_height_bounds(y = x@d0, apex = x@results$apex,
+                                   bl_bounds = c(x@results$fblb, 
+                                                 x@results$tblb),
+                                   peak_bounds = c(x@results$fpkb, 
+                                                   x@results$tpkb),
+                                   frac = 0.10, id = x@id,
+                                   debug = getParam(x@param, "verbose_output"), 
+                                   plot = getParam(x@param, "plot"))
+    setResults(x) <- list(fh10b = fh10bidx[1],
+                          th10b = fh10bidx[2])
+    setResults(x) <- list(rtf10b = interpolate_y(x = c(floor(fh10bidx[1]),
+                                                      floor(fh10bidx[1])+1),
+                                                y = x@st[c(floor(fh10bidx[1]),
+                                                           floor(fh10bidx[1])+1)],
+                                                xval = fh10bidx[1]),
+                          rtt10b = interpolate_y(x = c(floor(fh10bidx[2]),
+                                                      floor(fh10bidx[2])+1),
+                                                y = x@st[c(floor(fh10bidx[2]),
+                                                           floor(fh10bidx[2])+1)],
+                                                xval = fh10bidx[2]))
     
     ## 50% peak height
-    tmp <- find_height_bounds(y = x@d0, apex = x@results$apex,
-                              bl_bounds = c(x@results$fblb, x@results$tblb),
-                              peak_bounds = c(x@results$fpkb, x@results$tpkb),
-                              frac = 0.5, id = x@id,
-                              debug = getParam(x@param, "verbose_output"), 
-                              plot = getParam(x@param, "plot"))
-    setResults(x) <- list(fh50b = tmp[1],
-                          th50b = tmp[2])
+    fh50bidx <- find_height_bounds(y = x@d0, apex = x@results$apex,
+                                   bl_bounds = c(x@results$fblb, 
+                                                 x@results$tblb),
+                                   peak_bounds = c(x@results$fpkb, 
+                                                   x@results$tpkb),
+                                   frac = 0.5, id = x@id,
+                                   debug = getParam(x@param, "verbose_output"), 
+                                   plot = getParam(x@param, "plot"))
+    setResults(x) <- list(fh50b = fh50bidx[1],
+                          th50b = fh50bidx[2])
+    setResults(x) <- list(rtf50b = interpolate_y(x = c(floor(fh50bidx[1]),
+                                                       floor(fh50bidx[1])+1),
+                                                 y = x@st[c(floor(fh50bidx[1]),
+                                                            floor(fh50bidx[1])+1)],
+                                                 xval = fh50bidx[1]),
+                          rtt50b = interpolate_y(x = c(floor(fh50bidx[2]),
+                                                       floor(fh50bidx[2])+1),
+                                                 y = x@st[c(floor(fh50bidx[2]),
+                                                            floor(fh50bidx[2])+1)],
+                                                 xval = fh50bidx[2]))
     
-    # base width
-    setResults(x) <- list(wb = x@results$th5b - x@results$fh5b)
+    # base width in @st units
+    setResults(x) <- list(wb = x@results$rtt1b - x@results$rtf1b)
     
-    # fwhm
-    setResults(x) <- list(fwhm = x@results$th50b - x@results$fh50b)
+    # fwhm in @st units
+    setResults(x) <- list(fwhm = x@results$rtt50b - x@results$rtf50b)
     
-    # peak integral
-    integral_x <- floor(x@results$fh1b):floor(x@results$th1b)
-    integral_y <- x@d0[integral_x]
+    # peak integral in @st units
+    ## Build an idx vector of all points between the height bounds
+    integral_idx <- (max(1, floor(fh1bidx[1])+1)):min(length(x@d0), 
+                                                      floor(fh1bidx[2]))
     
-    if (floor(x@results$fh1b) < x@results$fh1b)
+    ## Build a y vector of all points between the height bounds
+    integral_y <- x@d0[integral_idx]
+    
+    ## Build an st vector of all points between the height bounds
+    integral_x <- x@st[integral_idx]
+    
+    ## Add the interpolated idx, st and y values of the height bounds to the st 
+    ## and y vectors, respectively
+    integral_idx <- c(fh1bidx[1], integral_idx)
+    
+    integral_x <- c(interpolate_y(x = c(floor(fh1bidx[1]),
+                                        floor(fh1bidx[1])+1),
+                                  y = x@st[c(floor(fh1bidx[1]),
+                                             floor(fh1bidx[1])+1)],
+                                  xval = fh1bidx[1]), 
+                    integral_x)
+    
+    integral_y <- c(interpolate_y(x = c(floor(fh1bidx[1]),
+                                        floor(fh1bidx[1])+1),
+                                  y = x@d0[c(floor(fh1bidx[1]),
+                                             floor(fh1bidx[1])+1)],
+                                  xval = fh1bidx[1]), 
+                    integral_y)
+    
+    if (floor(fh1bidx[2]) < fh1bidx[2])
     {
-        integral_x <- c(x@results$fh1b, integral_x)
-        integral_y <- c(interpolate_y(x = c(floor(x@results$fh1b),
-                                            floor(x@results$fh1b)+1),
-                                      y = x@d0[c(floor(x@results$fh1b),
-                                                 floor(x@results$fh1b)+1)],
-                                      xval = x@results$fh1b),
-                        integral_y)
-    }
-    
-    if (floor(x@results$th1b) < x@results$th1b)
-    {
-        integral_x <- c(integral_x, x@results$th1b)
+        integral_idx <- c(integral_idx, fh1bidx[2])
+        
+        intergral_x <- c(integral_x,
+                         interpolate_y(x = c(floor(fh1bidx[2]),
+                                             floor(fh1bidx[2])+1),
+                                       y = x@st[c(floor(fh1bidx[2]),
+                                                  floor(fh1bidx[2])+1)],
+                                       xval = fh1bidx[2]))
+        
         integral_y <- c(integral_y,
-                        interpolate_y(x = c(floor(x@results$th1b),
-                                            floor(x@results$th1b)+1),
-                                      y = x@d0[c(floor(x@results$th1b),
-                                                 floor(x@results$th1b)+1)],
-                                      xval = x@results$th1b))
+                        interpolate_y(x = c(floor(fh1bidx[2]),
+                                            floor(fh1bidx[2])+1),
+                                      y = x@d0[c(floor(fh1bidx[2]),
+                                                 floor(fh1bidx[2])+1)],
+                                      xval = fh1bidx[2]))
     }
     
-    integral_bl <- ((integral_x - x@results$fblb) * x@results$blslp) + 
+    ## TODO: Ensure I am properly handling few points
+    ## TODO: Ensure I am not moving out of bounds
+    integral_bl <- ((integral_idx - x@results$fblb) * x@results$blslp) + 
         x@d0[x@results$fblb]
     
-    setResults(x) <- list(area = peak_integral(x = integral_x, y = integral_y - integral_bl)) # ~5 µsecs for 25509
+    setResults(x) <- 
+        list(area = peak_integral(x = integral_x, 
+                                  y = integral_y - integral_bl)) 
+    # ~5 µsecs for 25509
     
-    # asymmetry
-    setResults(x) <- list(a = x@results$apex - x@results$fh50b,
-                          b = x@results$th50b - x@results$apex)
+    # front and tail width as well as asymmetry in @st units
+    setResults(x) <- list(a = x@results$rt - x@results$rtf10b,
+                          b = x@results$rtt10b - x@results$rt)
     
     setResults(x) <- list(tf = x@results$b / x@results$a)
     
@@ -1327,29 +1448,9 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
     }
     
     # process chromatogram (C++ function)
-    # Rcpp::List process_chromatogram(vec_d &d0, 
-    #                                 vec_d &d2,
-    #                                 double apex_thresh = 0.0, 
-    #                                 int w = 5, 
-    #                                 int p = -1,
-    #                                 double liftoff = 0.0, 
-    #                                 double touchdown = 0.5, 
-    #                                 int output = 0,
-    #                                 int fit_emg = 1,
-    #                                 int fit_only_vip = 1,
-    #                                 int fit_hess = 0,
-    #                                 double fit_rel_lim = 0.05,
-    #                                 int pts_per_peak = 30,
-    #                                 const double reltol = 1.0e-8,
-    #                                 const double abstol = -1.0e35,
-    #                                 const double alpha = 1.0,
-    #                                 const double gamma = 2.1,
-    #                                 const double rho = 0.75,
-    #                                 const double sigma = 0.75,
-    #                                 const int maxit = 2000,
-    #                                 const int maxeval = 2000)
     x@rawProcResults <- process_chromatogram(d0 = x@d0, 
                                              d2 = x@d2, 
+                                             st = x@st,
                                              apex_thresh = 0L,
                                              w = floor(getParam(x@param, "smooth_win")/2L), 
                                              p = getParam(x@param, "p")-1L,
@@ -2403,6 +2504,7 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
     chrom <- 
         new("cpc_chrom",
             id = as.integer(id),
+            st = raw@scantime,
             param = cpc::cpcChromParam(mz = as.numeric(x@pt$mz[id]),
                                        p = cur_p,
                                        s = cur_s,
@@ -2536,6 +2638,7 @@ setMethod("processPeaks", signature("cpc"), function(x)
         }
         
         # (pd <- x@pt[i_idx[25509], ]) # - tryptophan 210518
+        # (pd <- x@pt[i_idx[1], ])
         res <- do.call("list", apply(x@pt[i_idx, ], 1, FUN = function(pd)
         {
             # start timer
@@ -2591,10 +2694,6 @@ setMethod("processPeaks", signature("cpc"), function(x)
                 {
                     cur_s <- 3
                 }
-                # } else
-                # {
-                #     cur_s <- floor(cur_s+0.5)
-                # }
                 
                 ## mz range for extracting ion traces
                 cur_mzrange <- 
@@ -2607,6 +2706,7 @@ setMethod("processPeaks", signature("cpc"), function(x)
                 chrom <- 
                     new("cpc_chrom",
                         id = as.integer(pd["id"]),
+                        st = raw@scantime,
                         param = cpcChromParam(mz = as.numeric(pd["mz"]),
                                               p = cur_p,
                                               s = cur_s,
@@ -3026,7 +3126,12 @@ setMethod("determineFilterOutcomes", signature("cpc"), function(x) {
         } else {
             rep(TRUE, nrow(x@cpt))
         },
-        # TODO: Lägg till FWHM som ett filter
+        fwhm = if(!(is.null(getParam(x@param, "min_fwhm")))) {
+            ((x@cpt$fwhm >= getParam(x@param, "min_fwhm") & 
+                  x@cpt$note != "not_detected"))
+        } else {
+            rep(TRUE, nrow(x@cpt))
+        }, 
         tf = if(!(is.null(getParam(x@param, "interval_tf")))) {
             (x@cpt$tf >= 
                  getParam(x@param, "interval_tf")[1] & 
@@ -3045,6 +3150,8 @@ setMethod("determineFilterOutcomes", signature("cpc"), function(x) {
             rep(TRUE, nrow(x@cpt))
         }
     )
+    
+    # TODO: Add custom filters
     
     row.names(res) <- row.names(x@cpt)
     
