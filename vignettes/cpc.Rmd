@@ -323,7 +323,7 @@ set.seed(seed); randomRetained <- list(
       cpcPeaktable$sn[allRetainedPeakIdx] < quarts[5]
   ], noPeakFromEachQuartile, FALSE)) # 75% <= SN < 100%
 
-randomDetected
+randomRetained
 
 ```
 
