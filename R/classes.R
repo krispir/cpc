@@ -3156,6 +3156,16 @@ setMethod("determineFilterOutcomes", signature("cpc"), function(x) {
         }
     )
     
+    # set all filter outcomes to TRUE for those not detected
+    res <- as.data.frame(t(apply(res, 1, FUN = function(x){
+        if (!x[1])
+        {
+            x[2:ncol(res)] <- rep(TRUE, ncol(res)-1)
+        }
+        
+        return(x)
+    })))
+    
     # TODO: Add custom filters
     
     row.names(res) <- row.names(x@cpt)
@@ -3299,10 +3309,20 @@ setMethod("getFilteredXCMS", signature("cpc"), function(x) {
 #' @docType methods
 #' @rdname cpc-methods
 setMethod("getRemovedPeaks", signature("cpc"), function(x) {
-    all_peaks <- row.names(chromPeaks(cpc@xd))
-    retained_peaks <- row.names(chromPeaks(cpc@xdFilt))
+    allPeaks <- row.names(chromPeaks(x@xd))
+    retainedPeaks <- row.names(chromPeaks(x@xdFilt))
     
-    return(all_peaks[which(!(all_peaks %in% retained_peaks))])
+    return(allPeaks[which(!(allPeaks %in% retainedPeaks))])
+    
+})
+
+#### Method: getRetainedPeaks ####
+#' @export
+#' @docType methods
+#' @rdname cpc-methods
+setMethod("getRetainedPeaks", signature("cpc"), function(x) {
+    return(row.names(chromPeaks(x@xdFilt)))
+    
 })
 
 
