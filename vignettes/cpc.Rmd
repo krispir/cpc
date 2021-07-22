@@ -33,6 +33,7 @@ This tutorial will describe the CPC package functionality using an example data 
 
 library(xcms)
 library(cpc)
+library(ggvenn)
 
 ```
 
@@ -101,7 +102,9 @@ The *cpcProcParam* object holds processing parameters for both peak characteriza
 ```{r}
 
 cpc <- filter_xcms_peaklist(xd = xd, return_type = "cpc", 
-                            param = cpcProcParam())
+                            param = cpcProcParam(min_sn = 10, 
+                                                 min_pts = 10,
+                                                 min_intensity = 2000))
 
 ```
 
@@ -188,84 +191,139 @@ To see how many peaks were removed in a file-by-file basis you can use the table
 
 rbind(Original = table(xcmsPeaktableOrig[, "sample"]),
       Filtered = table(xcmsPeaktableFilt[, "sample"]),
-      Difference = table(chromPeaks(xdOrig)[, "sample"]) - 
-        table(chromPeaks(xdFilt)[, "sample"]))
+      PercentKept = round(100*table(chromPeaks(xdFilt)[, "sample"]) / 
+        table(chromPeaks(xdOrig)[, "sample"]), 1))
 
 ```
 
-As mentioned, in the *note* column of the cpc peak table, the outcome of the peak is defined. To see the distribution of outcomes, we can again use the table function.
+The filtering outcomes can be extracted from the object using the *getFilterOutcomes()* method. This returns a data.frame indicating if a peak passed the filter criteria or not for the different filter characteristics.
 
 ```{r}
 
-table(cpcPeaktable$note)
+outcomes <- getFilterOutcomes(cpc)
+
+head(outcomes)
 
 ```
 
-To get a vector of the removed peaks, the method *getRemovedPeaks()* can be used which returns a character vector containing the peak IDs of the removed peaks. These can be matched to the row names in the peak table returned by *chromPeaks()*.
+In the example presented here we have the peak width, peak area, and signal-to-noise ratio filters active. For that reason the other filters just show TRUE for all peaks as they were not filtered based on this.
+
+To check which peaks are retained and which are removed, the outcomes data.frame can be used. A character vector of removed and retained peak IDs can also be obtained using the *getRemovedPeaks()* and *getRetainedPeaks()* methods, respectively. We can visualize the filtering outcomes using a Venn diagram.
 
 ```{r}
 
-# set a seed for sample()
-seed <- 123
+# setup a list for the Venn diagram
+outcomesList <- lapply(outcomes, function(x) which(!x))
 
-# get all removed peaks
-removedPeaks <- cpc::getRemovedPeaks(cpc)
-removedPeaksId <- match(removedPeaks, row.names(cpc::getPeaklist(cpc)))
+# output a Venn diagram for the used filters
+ggvenn(data = outcomesList[c(1, 2, 3, 6)], show_percentage = F,
+       stroke_size = 0.5, set_name_size = 4, text_size = 2.8,
+       fill_color = c("#868686FF", "#0073C2FF", "#CD534CFF",
+                      "#EFC000FF", "#073b4c"), show_outside = "none")
 
-# select 2 each from each of the three categories of peaks removed:
-# (1) Not detected as a peak
-# (2) Too low signal-to-noise
-# (3) Too narrow
-set.seed(seed); randomRemoved <- c(
-  sample(which(cpcPeaktable$note == "not_detected"), 3, FALSE),
-  # sample(which(cpcPeaktable$note == "too_narrow"), 3, FALSE),
-  sample(which(cpcPeaktable$note == "low_sn"), 3, FALSE)
+```
+
+We can see that 8 peaks were not detected at all, ie. did not exhibit the characteristic pattern in the second derivative. Apart from those, the majority of peaks were removed due to their signal-to-noise being too low (SN<10).
+
+```{r}
+
+# set a seed for sample() to make it reproducible
+seed <- 12345
+
+# as an example we will select 2 peaks from each filter outcome
+# (1) Not detected as a peak,
+# (2) Too low signal-to-noise,
+# (3) Too low intensity (only 1 peak here)
+# (4) Too narrow
+set.seed(seed); randomRemoved <- list(
+  nd = sample(which(apply(outcomes, 1, function(x) { # (1)
+    return(!x[1] & 
+             x[2] &
+             x[3] &
+             x[4] &
+             x[5] &
+             x[6])
+  })), 2),
+  lowsn = sample(which(apply(outcomes, 1, function(x) { # (2)
+    return(x[1] & 
+             !x[2] &
+             x[3] &
+             x[4] &
+             x[5] &
+             x[6])
+  })), 2),
+  lowint = which(apply(outcomes, 1, function(x) { # (3)
+    return(x[1] & 
+             !x[2] &
+             x[3] &
+             x[4] &
+             x[5] &
+             !x[6])
+  })),
+  toonarrow = sample(which(apply(outcomes, 1, function(x) { # (4)
+    return(x[1] & 
+             x[2] &
+             !x[3] &
+             x[4] &
+             x[5] &
+             x[6])
+  })), 2)
 )
 
+randomRemoved
+
 ```
 
-And then we can plot these peaks using the plotPeaks function...
+And then we can plot these peaks using the *plotPeaks()* function. This function takes a *cpc* object as well as a list of peak IDs as argument. The peak IDs can be supplied as indices in the full peak list (ie. not the filtered peak list) or as a character vector with peak IDs (row names in the peak tables). In the present example they are the same and we can use either the names of randomRemoved or the values.
 
 ```{r fig.width = 7, fig.height = 5}
 
-cpc::plotPeaks(cpc, peakIdx = randomRemoved)
+cpc::plotPeaks(cpc, peakIdx = randomRemoved[[1]])
+cpc::plotPeaks(cpc, peakIdx = randomRemoved[[2]])
+cpc::plotPeaks(cpc, peakIdx = randomRemoved[[3]])
+cpc::plotPeaks(cpc, peakIdx = randomRemoved[[4]])
 
 ```
 
-In the above plots the original XIC trace is plotted as a gray dashed line with the smoothed chromatogram overlaid on top in black. The black dots are the actual scan points. The blue circles represent the front boundar, apex location, and tail boundary, as determined by XCMS. The red box is the peak boundaries determined by CPC with the red dot representing the apex. The red dashed line is the baseline of the peak, as estimated by CPC.
+In the above plots the original XIC trace is plotted as a gray dashed line with the smoothed chromatogram overlaid on top in black. The black dots are the actual scan points. The blue circles represent the front boundary, apex location, and tail boundary, as determined by XCMS. The red fill indicates the peak boundaries determined by CPC with the red dot representing the apex point. The red dashed line is the baseline of the peak, as estimated by CPC.
 
 We can also plot some of the retained peaks in the same way. Here we will randomly select one peak from each quartile of the signal-to-noise range.
 
 ```{r}
 
 # get a vector of all detected peaks
-allDetectedPeaks <- which(cpcPeaktable$note == "detected")
+allRetainedPeaks <- cpc::getRetainedPeaks(cpc)
+allRetainedPeakIdx <- match(allRetainedPeaks, row.names(cpcPeaktable))
 
 # determine the quartile break points
-quarts <- quantile(cpcPeaktable$sn[allDetectedPeaks])
+quarts <- quantile(cpcPeaktable$sn[allRetainedPeakIdx])
 quarts[1] <- 0 # set the first boundary to be 0
+
+quarts
 
 # randomly select peaks in each quartile
 noPeakFromEachQuartile <- 2
 
 # randomly select the specified number of peaks from each quartile
-set.seed(seed); randomDetected <- c(
-  sample(allDetectedPeaks[
-    cpcPeaktable$sn[allDetectedPeaks] >= quarts[1] & 
-      cpcPeaktable$sn[allDetectedPeaks] < quarts[2]
+set.seed(seed); randomRetained <- list(
+  low <- sample(allRetainedPeaks[
+    cpcPeaktable$sn[allRetainedPeakIdx] >= quarts[1] & 
+      cpcPeaktable$sn[allRetainedPeakIdx] < quarts[2]
   ], noPeakFromEachQuartile, FALSE), # 0% <= SN < 25%
-  sample(allDetectedPeaks[
-    cpcPeaktable$sn[allDetectedPeaks] >= quarts[2] & 
-      cpcPeaktable$sn[allDetectedPeaks] < quarts[3]
+  lowmed <- sample(allRetainedPeaks[
+    cpcPeaktable$sn[allRetainedPeakIdx] >= quarts[2] & 
+      cpcPeaktable$sn[allRetainedPeakIdx] < quarts[3]
   ], noPeakFromEachQuartile, FALSE), # 25% <= SN < 50%
-  sample(allDetectedPeaks[
-    cpcPeaktable$sn[allDetectedPeaks] >= quarts[3] & 
-      cpcPeaktable$sn[allDetectedPeaks] < quarts[4]
+  medhigh <- sample(allRetainedPeaks[
+    cpcPeaktable$sn[allRetainedPeakIdx] >= quarts[3] & 
+      cpcPeaktable$sn[allRetainedPeakIdx] < quarts[4]
   ], noPeakFromEachQuartile, FALSE), # 50% <= SN < 75%
-  sample(allDetectedPeaks[
-    cpcPeaktable$sn[allDetectedPeaks] >= quarts[4] & 
-      cpcPeaktable$sn[allDetectedPeaks] < quarts[5]
+  high <- sample(allRetainedPeaks[
+    cpcPeaktable$sn[allRetainedPeakIdx] >= quarts[4] & 
+      cpcPeaktable$sn[allRetainedPeakIdx] < quarts[5]
   ], noPeakFromEachQuartile, FALSE)) # 75% <= SN < 100%
+
+randomDetected
 
 ```
 
@@ -273,46 +331,20 @@ And then we can plot all these peaks in the same way as with the removed peaks.
 
 ```{r fig.width = 7, fig.height = 5}
 
-cpc::plotPeaks(cpc, peakIdx = randomDetected)
+cpc::plotPeaks(cpc, peakIdx = randomRetained[[1]])
+cpc::plotPeaks(cpc, peakIdx = randomRetained[[2]])
+cpc::plotPeaks(cpc, peakIdx = randomRetained[[3]])
+cpc::plotPeaks(cpc, peakIdx = randomRetained[[4]])
 
 ```
 
 ```{r}
 
-# m/z ~ apex scan number with point size indicating cpc determined peak area
-plot(x = cpcPeaktableFilt$apex, y = xcmsPeaktableFilt$mz, pch = 20, col = "#00000000",
-     xlab = "Apex scan number", ylab = "m/z")
-points(x = cpcPeaktable$apex[allDetectedPeaks],
-       y = xcmsPeaktableOrig$mz[allDetectedPeaks], pch = 20, col = "#55BB0075",
-       cex = log(cpcPeaktable$area[allDetectedPeaks] / 
-         median(cpcPeaktable$area[allDetectedPeaks])))
-points(x = cpcPeaktable$apex[removedPeaksId],
-       y = xcmsPeaktableOrig$mz[removedPeaksId], pch = 20, col = "#FF440075",
-       cex = log(pmax(0, cpcPeaktable$area[removedPeaksId]) / 
-         median(pmax(0, cpcPeaktable$area[removedPeaksId]))))
-
-# m/z ~ apex scan number with point size indicating xcms determined intensity
-plot(x = cpcPeaktableFilt$apex, y = xcmsPeaktableFilt$mz, pch = 20, col = "#00000000",
-     xlab = "Apex scan number", ylab = "m/z")
-points(x = cpcPeaktable$apex[allDetectedPeaks],
-       y = xcmsPeaktableOrig$mz[allDetectedPeaks], pch = 20, col = "#55BB0075",
-       cex = log(xcmsPeaktableOrig$into[allDetectedPeaks] / 
-         median(xcmsPeaktableOrig$into[allDetectedPeaks])))
-points(x = cpcPeaktable$apex[removedPeaksId],
-       y = xcmsPeaktableOrig$mz[removedPeaksId], pch = 20, col = "#FF440075",
-       cex = log(pmax(0, xcmsPeaktableOrig$into[removedPeaksId]) / 
-         median(pmax(0, xcmsPeaktableOrig$into[removedPeaksId]))))
-
-colorRampPalette(colors = c("#264653", "#2A9D8F", "#E9C46A", 
-                            "#F4A261", "#E76F51"))(16)
-
-plot(1:16, rep(1, 16), pch = 20, cex = 5, 
-     col = colorRampPalette(colors = c("#264653", "#2A9D8F", "#E9C46A", 
-                                       "#F4A261", "#E76F51"))(16))
+# get a vector of all removed peak numeric IDs
+removedPeaksIdx <- match(cpc::getRemovedPeaks(cpc), row.names(cpcPeaktable))
 
 snVals <- cpcPeaktable$sn
 snVals[which(snVals == Inf)] <- max(snVals[which(snVals != Inf)])*2
-seq(from = 0, to = max(snVals), by = max(snVals)/16)
 quanBreaks <- quantile(snVals, probs = seq(0,1,length.out = 17))
 quanBreaks[1] <- 0
 
@@ -327,38 +359,38 @@ colVec <- colPalette[as.integer(sapply(snVals, FUN = function(x) {
 # m/z ~ rt (xcms data) with separate panels for retained and removed peaks
 layout(mat = matrix(c(1,2), nrow = 1), widths = c(0.53,0.47))
 par(mar = c(5.1,4.1,2.1,0.1))
-plot(x = xcmsPeaktableOrig$rt[-removedPeaksId], 
-     y = xcmsPeaktableOrig$mz[-removedPeaksId], pch = 20, 
-     col = colVec[-removedPeaksId],
-     cex = log(pmax(0, xcmsPeaktableOrig$into[-removedPeaksId]) / 
-                 median(pmax(0, xcmsPeaktableOrig$into[-removedPeaksId]))),
+plot(x = xcmsPeaktableOrig$rt[-removedPeaksIdx], 
+     y = xcmsPeaktableOrig$mz[-removedPeaksIdx], pch = 20, 
+     col = colVec[-removedPeaksIdx],
+     cex = log(pmax(0, xcmsPeaktableOrig$into[-removedPeaksIdx]) / 
+                 median(pmax(0, xcmsPeaktableOrig$into[-removedPeaksIdx]))),
      xlab = "Retention time (sec)", ylab = "m/z", main = "Retained peaks")
 
 par(mar = c(5.1,0,2.1,2.1))
-plot(x = xcmsPeaktableOrig$rt[removedPeaksId], 
-     y = xcmsPeaktableOrig$mz[removedPeaksId], pch = 20, 
-     col = colVec[removedPeaksId],
-     cex = log(pmax(0, xcmsPeaktableOrig$into[removedPeaksId]) / 
-                 median(pmax(0, xcmsPeaktableOrig$into[removedPeaksId]))),
+plot(x = xcmsPeaktableOrig$rt[removedPeaksIdx], 
+     y = xcmsPeaktableOrig$mz[removedPeaksIdx], pch = 20, 
+     col = colVec[removedPeaksIdx],
+     cex = log(pmax(0, xcmsPeaktableOrig$into[removedPeaksIdx]) / 
+                 median(pmax(0, xcmsPeaktableOrig$into[removedPeaksIdx]))),
      xlab = "Retention time (sec)", yaxt = "n", ylab = "", main = "Removed peaks")
 
 # m/z ~ rt (cpc data) with separate panels for retained and removed peaks
 layout(mat = matrix(c(1,2), nrow = 1), widths = c(0.53,0.47))
 par(mar = c(5.1,4.1,2.1,0.1))
-plot(x = cpcPeaktable$apex[-removedPeaksId], 
-     y = xcmsPeaktableOrig$mz[-removedPeaksId], pch = 20, 
-     col = colVec[-removedPeaksId],
-     cex = log(pmax(0, cpcPeaktable$area[-removedPeaksId]) / 
-                 median(pmax(0, cpcPeaktable$area[-removedPeaksId]))),
-     xlab = "Scan index", ylab = "m/z", main = "Retained peaks")
+plot(x = cpcPeaktable$rt[-removedPeaksIdx], 
+     y = xcmsPeaktableOrig$mz[-removedPeaksIdx], pch = 20, 
+     col = colVec[-removedPeaksIdx],
+     cex = log(pmax(0, cpcPeaktable$area[-removedPeaksIdx]) / 
+                 median(pmax(0, cpcPeaktable$area[-removedPeaksIdx]))),
+     xlab = "Retention time (sec)", ylab = "m/z", main = "Retained peaks")
 
 par(mar = c(5.1,0,2.1,2.1))
-plot(x = cpcPeaktable$apex[removedPeaksId], 
-     y = xcmsPeaktableOrig$mz[removedPeaksId], pch = 20, 
-     col = colVec[removedPeaksId],
-     cex = log(pmax(0, cpcPeaktable$area[removedPeaksId]) / 
-                 median(pmax(0, cpcPeaktable$area[removedPeaksId]))),
-     xlab = "Scan index", yaxt = "n", ylab = "", main = "Removed peaks")
+plot(x = cpcPeaktable$rt[removedPeaksIdx], 
+     y = xcmsPeaktableOrig$mz[removedPeaksIdx], pch = 20, 
+     col = colVec[removedPeaksIdx],
+     cex = log(pmax(0, cpcPeaktable$area[removedPeaksIdx]) / 
+                 median(pmax(0, cpcPeaktable$area[removedPeaksIdx]))),
+     xlab = "Retention time (sec)", yaxt = "n", ylab = "", main = "Removed peaks")
 
 ```
 
@@ -413,17 +445,5 @@ plotPeaks(cpc = cpcDeconv, peakIdx = peakIdx, plotEMG = T)
 ```{r}
 
 sessionInfo()
-
-```
-
-
-```{r}
-
-# sink(file = paste0(getwd(), "/loc_data/210523_deconv_example_3.txt"),
-#      type = "output", split = T)
-# cpcParam <- cpcProcParam(fit_emg = TRUE, sel_peaks = 34, plot = F,
-#                          verbose_output = T)
-# cpcDeconv <- characterize_xcms_peaklist(xd = xd, param = cpcParam)
-# sink(file = NULL)
 
 ```
