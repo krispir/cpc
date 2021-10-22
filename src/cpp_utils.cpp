@@ -954,3 +954,5 @@ vec_i c_get_directional_inflection_points(std::vector<double> &x, int b = 0)
     
     return p;
 }
+
+
