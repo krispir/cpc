@@ -75,6 +75,10 @@ getEIC_Rcpp <- function(mz, intensity, scan_idx, mz_range, scan_range) {
     .Call(`_cpc_getEIC_Rcpp`, mz, intensity, scan_idx, mz_range, scan_range)
 }
 
+c_combine_spectra <- function(mz, intensity, scan_idx, scan_range, mz_bins) {
+    .Call(`_cpc_c_combine_spectra`, mz, intensity, scan_idx, scan_range, mz_bins)
+}
+
 fast_match <- function(v1, v2) {
     .Call(`_cpc_fast_match`, v1, v2)
 }

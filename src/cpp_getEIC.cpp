@@ -96,6 +96,7 @@ int binary_search_leftmost(NumericVector &A, int n, double val, int L = -1, int 
   if (L < 0) L = 0;
   
   // R := n
+  // should be R = n-1 I think.
   if (R < 0) R = n;
   
   int m; // midpoint
@@ -299,4 +300,74 @@ NumericVector getEIC_Rcpp(NumericVector &mz,
   }
   
   return eic;
+}
+
+
+// [[Rcpp::export]]
+NumericVector c_combine_spectra(NumericVector &mz, 
+                                NumericVector &intensity, 
+                                IntegerVector &scan_idx, 
+                                IntegerVector &scan_range, 
+                                NumericVector &mz_bins)
+{
+  // data checks
+  
+  
+  // vars
+  int i, j, k;
+  int first_peak, last_peak;
+  NumericVector n_peaks_in_bin(mz_bins.size()-1, 0);
+  
+  // create output variables
+  NumericMatrix out(mz_bins.size()-1, 2);
+  NumericVector out_intensity(mz_bins.size()-1);
+  
+  // loop over scans
+  for (i = scan_range.at(0); i <= scan_range.at(1); i++)
+  {
+    // loop over the bins
+    for (j = 0; j < mz_bins.size()-1; j++)
+    {
+      // find the first and last peak that belongs in the current bin
+      if (i == 0)
+      {
+        first_peak = binary_search_leftmost(mz, 0, mz_bins.at(j), 
+                                            0, scan_idx.at(i));
+        last_peak = binary_search_rightmost(mz, 0, mz_bins.at(j+1), 
+                                           0, scan_idx.at(i));
+        
+      } else
+      {
+        first_peak = binary_search_leftmost(mz, 0, mz_bins.at(j), 
+                                            scan_idx.at(i-1)+1, scan_idx.at(i));
+        last_peak = binary_search_rightmost(mz, 0, mz_bins.at(j+1), 
+                                           scan_idx.at(i-1)+1, scan_idx.at(i));
+        
+      }
+      
+      // check that peaks were found
+      
+      
+      // sum the mz and intensity of the peaks
+      for (k = first_peak; k <= last_peak; k++)
+      {
+        out(j, 0) += mz.at(k);
+        out(j, 1) += intensity.at(k);
+        n_peaks_in_bin(j)++;
+        
+      }
+      
+    }
+    
+  }
+  
+  // convert mz sum to mz mean
+  for (j = 0; j < mz_bins.size()-1; j++)
+  {
+    out(j, 0) = out(j, 0) / n_peaks_in_bin(j);
+  }
+  
+  colnames(out) = Rcpp::CharacterVector {"mz", "intensity"};
+  
+  return out;
 }
