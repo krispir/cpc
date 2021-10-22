@@ -1621,7 +1621,8 @@ setClass("cpc_raw",
 #' @export
 #' @docType methods
 #' @rdname cpc_raw-methods
-setMethod("getXIC", signature("cpc_raw"), function(x, mzrange, scanrange = NULL, method = 1)
+setMethod("getXIC", signature("cpc_raw"), function(x, mzrange, scanrange = NULL, 
+                                                   method = 1)
 {
     if (is.null(scanrange)) scanrange <- c(0, x@runInfo$scanCount-1)
     
@@ -2227,7 +2228,7 @@ setMethod("parsePeaklist", signature("cpc"), function(x)
     # in the peak table - this way I will always reference the right peak, even
     # if the ordering is off - might be slower tho...
     x@pt <- data.frame(id = as.numeric(sub("CP", "", rownames(x@pt))), x@pt)
-    x@pt
+    # x@pt
     
     # parse sel_peaks and sel_files
     if (!is.null(getParam(x@param, "sel_peaks")) &&
@@ -3281,6 +3282,11 @@ setMethod("filterPeaks", signature("cpc"), function(x)
     
     # remove peaks from xcms object
     xcms::chromPeaks(x@xdFilt) <- ncp[keep, ]
+    
+    # output
+    cat("Keeping ", length(keep), " of ", nrow(cpt), " (",
+        round(length(keep)/nrow(cpt)*100, 2),
+        "%) peaks.\n")
     
     # return cpc object
     return(x)
