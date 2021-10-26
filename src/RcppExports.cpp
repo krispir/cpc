@@ -142,21 +142,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// c_combine_spectra
-NumericVector c_combine_spectra(NumericVector& mz, NumericVector& intensity, IntegerVector& scan_idx, IntegerVector& scan_range, NumericVector& mz_bins);
-RcppExport SEXP _cpc_c_combine_spectra(SEXP mzSEXP, SEXP intensitySEXP, SEXP scan_idxSEXP, SEXP scan_rangeSEXP, SEXP mz_binsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector& >::type mz(mzSEXP);
-    Rcpp::traits::input_parameter< NumericVector& >::type intensity(intensitySEXP);
-    Rcpp::traits::input_parameter< IntegerVector& >::type scan_idx(scan_idxSEXP);
-    Rcpp::traits::input_parameter< IntegerVector& >::type scan_range(scan_rangeSEXP);
-    Rcpp::traits::input_parameter< NumericVector& >::type mz_bins(mz_binsSEXP);
-    rcpp_result_gen = Rcpp::wrap(c_combine_spectra(mz, intensity, scan_idx, scan_range, mz_bins));
-    return rcpp_result_gen;
-END_RCPP
-}
 // fast_match
 vec_i fast_match(vec_i& v1, vec_i& v2);
 RcppExport SEXP _cpc_fast_match(SEXP v1SEXP, SEXP v2SEXP) {
@@ -370,7 +355,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_cpc_test_emgfit", (DL_FUNC) &_cpc_test_emgfit, 23},
     {"_cpc_getEIC_min", (DL_FUNC) &_cpc_getEIC_min, 5},
     {"_cpc_getEIC_Rcpp", (DL_FUNC) &_cpc_getEIC_Rcpp, 5},
-    {"_cpc_c_combine_spectra", (DL_FUNC) &_cpc_c_combine_spectra, 5},
     {"_cpc_fast_match", (DL_FUNC) &_cpc_fast_match, 2},
     {"_cpc_match_to_range", (DL_FUNC) &_cpc_match_to_range, 3},
     {"_cpc_skim_to_val", (DL_FUNC) &_cpc_skim_to_val, 5},
