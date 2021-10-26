@@ -6,7 +6,6 @@ output:
   html_document:
     toc: true
     toc_depth: 3
-    toc_float: true
 vignette: >
   %\VignetteIndexEntry{Filtering of chromatographic peaks in an XCMS object}
   %\VignetteEngine{knitr::rmarkdown}
@@ -23,9 +22,20 @@ knitr::opts_chunk$set(
 )
 ```
 
+```{r init, message = FALSE, echo = FALSE, results = "hide"}
+
+library(pander)
+library(xcms)
+library(cpc)
+library(ggvenn)
+
+```
+
 # Introduction
 
-This tutorial will describe the CPC package functionality using an example data set composed of 4 replicate injections of protein precipitated plasma on a HILIC platform. The example data is heavily filtered in order to keep package size and processing times to a minimum. The filtering is made in two steps: (1) The full data set was processed using XCMS and CPC in the same way described below. A subset of 100 peaks was randomly selected from those that were retained in the filtering step, based on the calculated signal-to-noise of the peaks (25 from each quartile). Similarily 100 peaks were randomly selected from those removed in the filtering step (33-34 each from those removed due to not being detected, having too low signal to noise, or having too few data points along the peak range). (2) The data set was then filtered to (i) only include scan indices 1-1200, (ii) only include mass peaks with intensity > 2.225*median intensity (removes a lot of noise peaks), and (iii) include only mass peaks whose m/z value coincide with one of the selected peaks in step (1) within a ppm value of 50 and a retention window of +/- 120 seconds.
+This tutorial describes the CPC package functionality on an example data set included with the package. We will load the example dataset, perform peak picking using XCMS and apply the CPC algorithm to filter the peaks detected. Furthermore, we will showcase the data extraction methods and visualize the results.
+
+The data originates from 4 replicate injections of protein precipitated plasma on a HILIC platform. The example data is heavily filtered in order to keep package size and processing times to a minimum. The filtering is made in two steps: (1) The full data set was processed using XCMS and CPC in the same way described below. A subset of 100 peaks was randomly selected from those that were retained in the filtering step, based on the calculated signal-to-noise of the peaks (25 from each quartile). Similarily 100 peaks were randomly selected from those removed in the filtering step (33-34 each from those removed due to not being detected, having too low signal to noise, or having too few data points along the peak range). (2) The data set was then filtered to (i) only include scan indices 1-1200, (ii) only include mass peaks with intensity > 2.225*median intensity (removes a lot of noise peaks), and (iii) include only mass peaks whose m/z value coincide with one of the selected peaks in step (1) within a ppm value of 50 and a retention window of +/- 120 seconds.
 
 # Setup environment
 
@@ -39,7 +49,7 @@ library(ggvenn)
 
 # XCMS processing
 
-The first step in this tutorial is to use XCMS to process the reduced data set. For more information on how to use XCMS for processing LC/MS data, see XCMS documentation. Only the peak picking will be performed as the retention alignment will not work properly with this heavily filtered dataset, and is not important to illustrate the workflow.
+The first step in this tutorial is to use XCMS to process the reduced data set. This step normally takes a long time to run on a full dataset, however, thanks to the significant filtering made, it should run very fast on an average desktop PC. For more information on how to use XCMS for processing LC/MS data, see XCMS documentation. Only the peak picking will be performed as the retention alignment will not work properly with this heavily filtered dataset, and is not important to illustrate the workflow.
 
 ```{r}
 
@@ -55,24 +65,23 @@ register(bpstart(SnowParam()))
                   stringsAsFactors = F))
 
 # Create raw data object
-(msraw <- readMSData(files = fp_raw,
-                     pdata = new("NAnnotatedDataFrame", pd),
-                     mode = "onDisk", msLevel. = 1, centroided. = T))
+(msraw <- MSnbase::readMSData(files = fp_raw,
+                              pdata = new("NAnnotatedDataFrame", pd),
+                              mode = "onDisk", msLevel. = 1, centroided. = T))
 
 # --- PEAK DETECTION ---
-cat(paste0("Peak picking start at: ", Sys.time(), "\n"))
 
 # run peak detection
-xd <- findChromPeaks(msraw, 
-                     param = CentWaveParam(ppm = 60, 
-                                           peakwidth = c(5, 50), 
-                                           fitgauss = T, 
-                                           noise = 200,
-                                           integrate = 2, 
-                                           prefilter = c(5, 1000), 
-                                           verboseColumns = T, 
-                                           mzdiff = 0.01), 
-                     msLevel = 1L)
+xd <- xcms::findChromPeaks(msraw, 
+                           param = xcms::CentWaveParam(ppm = 60, 
+                                                       peakwidth = c(5, 50), 
+                                                       fitgauss = T, 
+                                                       noise = 200,
+                                                       integrate = 2, 
+                                                       prefilter = c(5, 1000), 
+                                                       verboseColumns = T, 
+                                                       mzdiff = 0.01), 
+                           msLevel = 1L)
 
 print(xd)
 
@@ -86,14 +95,14 @@ The *cpcProcParam* object holds processing parameters for both peak characteriza
 
 ```{r}
 
-cpc <- filter_xcms_peaklist(xd = xd, return_type = "cpc", 
-                            param = cpcProcParam(min_sn = 10, 
-                                                 min_pts = 10,
-                                                 min_intensity = 2000))
+cpc <- cpc::filter_xcms_peaklist(xd = xd, return_type = "cpc", 
+                                 param = cpc::cpcProcParam(min_sn = 10, 
+                                                           min_pts = 10,
+                                                           min_intensity = 2000))
 
 ```
 
-Processing times will depend heavily on the computer hardware used. With this data set the processing times are very fast (<10 seconds per file), but that is due to the heavy filtering that has been done. More realistic processing times, when working with full LC/MS data sets, range from a 2-10 minutes per file, depending on the number of peaks.
+Processing times will depend heavily on the computer hardware used. With this data set the processing times are very fast (<10 seconds per file), but that is due to the heavy filtering that has been done. More realistic processing times, when working with full LC/MS data sets, range from a 2-10 minutes per file, scaling linearly with the number of peaks detected by XCMS.
 
 After processing we can get the original peak table from the XCMS object and the characterized peak table from the CPC object using the methods *cpt* and *getPeaklist*.
 
@@ -108,6 +117,17 @@ The peak table that you get from the CPC package has a number of determined peak
 | Column | Description |
 |--------|-------------|
 | id | The row number of the peak in the original peak table from XCMS. |
+| rt | Peak retention time in seconds. |
+| rtmin | Peak front bound in seconds. |
+| rtmax | Peak tail bound in seconds. |
+| rtf1b | Peak front bound at 1% peak height. |
+| rtt1b | Peak tail bound at 1% peak height. |
+| rtf5b | Peak front bound at 5% peak height. |
+| rtt5b | Peak tail bound at 5% peak height. |
+| rtf10b | Peak front bound at 10% peak height. |
+| rtt10b | Peak tail bound at 10% peak height. |
+| rtf50b | Peak front bound at 50% peak height. |
+| rtt50b | Peak tail bound at 50% peak height. |
 | apex | The most intense scan point in the peak. |
 | finf | The interpolated front inflection point of the peak where the second derivative crosses zero. |
 | tinf | The interpolated tail inflection point of the peak where the second derivative crosses zero. |
@@ -176,8 +196,8 @@ To see how many peaks were removed in a file-by-file basis you can use the table
 
 rbind(Original = table(xcmsPeaktableOrig[, "sample"]),
       Filtered = table(xcmsPeaktableFilt[, "sample"]),
-      PercentKept = round(100*table(chromPeaks(xdFilt)[, "sample"]) / 
-        table(chromPeaks(xdOrig)[, "sample"]), 1))
+      PercentKept = round(100*table(xcms::chromPeaks(xdFilt)[, "sample"]) / 
+        table(xcms::chromPeaks(xdOrig)[, "sample"]), 1))
 
 ```
 
@@ -185,7 +205,7 @@ The filtering outcomes can be extracted from the object using the *getFilterOutc
 
 ```{r}
 
-outcomes <- getFilterOutcomes(cpc)
+outcomes <- cpc::getFilterOutcomes(cpc)
 
 head(outcomes)
 
@@ -201,10 +221,10 @@ To check which peaks are retained and which are removed, the outcomes data.frame
 outcomesList <- lapply(outcomes, function(x) which(!x))
 
 # output a Venn diagram for the used filters
-ggvenn(data = outcomesList[c(1, 2, 3, 6)], show_percentage = F,
-       stroke_size = 0.5, set_name_size = 4, text_size = 2.8,
-       fill_color = c("#868686FF", "#0073C2FF", "#CD534CFF",
-                      "#EFC000FF", "#073b4c"))
+ggvenn::ggvenn(data = outcomesList[c(1, 2, 3, 6)], show_percentage = F,
+               stroke_size = 0.5, set_name_size = 4, text_size = 2.8,
+               fill_color = c("#868686FF", "#0073C2FF", "#CD534CFF",
+                              "#EFC000FF", "#073b4c"))
 
 ```
 
@@ -386,10 +406,10 @@ Overlapping peak clusters can be detected by the algorithm as their baseline bou
 ```{r}
 
 # Valley boundary example
-plotPeaks(cpc, 931)
+cpc::plotPeaks(cpc, 931)
 
 # Shoulder boundary example
-plotPeaks(cpc, 500)
+cpc::plotPeaks(cpc, 500)
 
 ```
 
@@ -407,21 +427,21 @@ To illustrate this, we first need to find a few peaks to perform EMG deconvoluti
 
 (selection <- cpcPeaktable$id[selection])
 
-plotPeaks(cpc, peakIdx = selection)
+cpc::plotPeaks(cpc, peakIdx = selection)
 
 ```
 
 ```{r}
 
-cpcParam <- cpcProcParam(fit_emg = TRUE, sel_peaks = selection, plot = F,
+cpcParam <- cpc::cpcProcParam(fit_emg = TRUE, sel_peaks = selection, plot = F,
                          save_all = TRUE)
-cpcDeconv <- characterize_xcms_peaklist(xd = xd, param = cpcParam)
+cpcDeconv <- cpc::characterize_xcms_peaklist(xd = xd, param = cpcParam)
 
 ```
 
 ```{r}
 
-plotPeaks(cpc = cpcDeconv, peakIdx = peakIdx, plotEMG = T)
+cpc::plotPeaks(cpc = cpcDeconv, peakIdx = peakIdx, plotEMG = T)
 
 ```
 
