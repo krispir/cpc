@@ -8,6 +8,7 @@
 process_chromatogram(
   d0,
   d2,
+  st,
   apex_thresh = 0,
   w = 5L,
   p = -1L,
@@ -18,7 +19,7 @@ process_chromatogram(
   fit_only_vip = 1L,
   fit_hess = 0L,
   fit_rel_lim = 0.05,
-  pts_per_peak = 10L,
+  pts_per_peak = 30L,
   min_shoulder_pts = 3L,
   min_rounded_pts = 3L,
   reltol = 1e-08,

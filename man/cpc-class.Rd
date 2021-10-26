@@ -14,6 +14,8 @@ cpc class
 
 \item{\code{xdFilt}}{Filtered \code{XCMSnExp} object.}
 
+\item{\code{rawResults}}{A list of \code{data.frame}s with back-end results from the processing.}
+
 \item{\code{pt}}{\code{data.frame} containing the original peak table from \code{xd}.}
 
 \item{\code{cpt}}{\code{data.frame} containing the determined peak characteristics.}

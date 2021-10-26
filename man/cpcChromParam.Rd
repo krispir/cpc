@@ -14,7 +14,8 @@ cpcChromParam(
   min_inf_width = 3,
   min_sn = 10,
   min_frac = 0.5,
-  min_intensity = 1000L,
+  min_intensity = NULL,
+  interval_tf = NULL,
   min_w = 5L,
   max_w = 21L,
   smooth_method = "savgol",
@@ -25,6 +26,7 @@ cpcChromParam(
   sel_peaks = NULL,
   sel_files = NULL,
   verbose_output = FALSE,
+  save_all = FALSE,
   plot = FALSE
 )
 }

@@ -16,16 +16,22 @@
 \alias{setProcData<-,cpc-method}
 \alias{getProcParams,cpc-method}
 \alias{setProcParams<-,cpc-method}
+\alias{getParam,cpc-method}
+\alias{setParam<-,cpc-method}
 \alias{parsePeaklist,cpc-method}
 \alias{parseFeatures,cpc-method}
 \alias{filePaths,cpc-method}
 \alias{getChromatogram,cpc-method}
 \alias{processPeaks,cpc-method}
 \alias{checkPeaksAgainstCriteria,cpc-method}
+\alias{setFilterOutcomes<-,cpc-method}
+\alias{determineFilterOutcomes,cpc-method}
+\alias{getFilterOutcomes,cpc-method}
 \alias{filterPeaks,cpc-method}
 \alias{getOriginalXCMS,cpc-method}
 \alias{getFilteredXCMS,cpc-method}
 \alias{getRemovedPeaks,cpc-method}
+\alias{getRetainedPeaks,cpc-method}
 \alias{show,cpc-method}
 \alias{summary,cpc-method}
 \title{Method to check if a \code{cpc} object has a parsed peaktable}
@@ -60,6 +66,10 @@
 
 \S4method{setProcParams}{cpc}(x) <- value
 
+\S4method{getParam}{cpc}(x, param)
+
+\S4method{setParam}{cpc}(x) <- value
+
 \S4method{parsePeaklist}{cpc}(x)
 
 \S4method{parseFeatures}{cpc}(x)
@@ -72,6 +82,12 @@
 
 \S4method{checkPeaksAgainstCriteria}{cpc}(x)
 
+\S4method{setFilterOutcomes}{cpc}(x) <- value
+
+\S4method{determineFilterOutcomes}{cpc}(x)
+
+\S4method{getFilterOutcomes}{cpc}(x)
+
 \S4method{filterPeaks}{cpc}(x)
 
 \S4method{getOriginalXCMS}{cpc}(x)
@@ -79,6 +95,8 @@
 \S4method{getFilteredXCMS}{cpc}(x)
 
 \S4method{getRemovedPeaks}{cpc}(x)
+
+\S4method{getRetainedPeaks}{cpc}(x)
 
 \S4method{show}{cpc}(x)
 
@@ -122,6 +140,10 @@ A named \code{list} of process parameters.
 
 A \code{cpc} object.
 
+The parameter value.
+
+A \code{cpc} object.
+
 A \code{cpc} object
 
 A \code{cpc} object
@@ -140,6 +162,13 @@ A \code{cpc} object
 Takes a named \code{list} of parameters as argument. If a parameter name 
 already exists, it is updated with the new value and if it does not already
 exist, it is added.
+
+Takes a \code{cpc} object and a single character vector indicating a slot in 
+the \code{cpcParam} object.
+
+Takes a named \code{list} of parameters or another \code{cpcParam} object as 
+argument. The element names in the \code{list} must correspond to a slot name in the 
+cpcProcParam object.
 
 Parses the peak table contained in the \code{XCMSnExp} object and stores it 
 in the \code{pt} slot.

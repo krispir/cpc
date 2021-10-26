@@ -10,9 +10,10 @@ cpcProcParam(
   min_inf_width = 3,
   min_sn = 10,
   min_frac = 0.5,
-  min_intensity = 1000L,
   min_shoulder_pts = 3L,
   min_rounded_pts = 3L,
+  min_intensity = NULL,
+  interval_tf = NULL,
   min_w = 5L,
   max_w = 21L,
   smooth_method = "savgol",
@@ -23,6 +24,7 @@ cpcProcParam(
   sel_peaks = NULL,
   sel_files = NULL,
   verbose_output = FALSE,
+  save_all = FALSE,
   plot = FALSE
 )
 }
@@ -54,6 +56,8 @@ cpcProcParam(
 \item{sel_files}{\code{integer} vector indicating a subset of file indices to be processed from the XCMSnExp object. If NULL all files are processed.}
 
 \item{verbose_output}{\code{logical} value indicating if output is to be given during processing.}
+
+\item{save_all}{\code{logical} indicating if all processing data should be saved. Caution: This will result in a very large object!}
 
 \item{plot}{\code{logical} indicating if the results should be plotted for each peak}
 }
