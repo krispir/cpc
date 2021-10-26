@@ -10,3 +10,5 @@ src/*.dll
 loc_dev/
 loc_data/
 inst/doc
+/doc/
+/Meta/

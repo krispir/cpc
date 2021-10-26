@@ -1,7 +1,7 @@
 ---
 title: "Filtering of chromatographic peaks in an XCMS object"
 author: "Kristian Pirttilä"
-date: '2021-05-05'
+date: '2021-10-25'
 output:
   html_document:
     toc: true
