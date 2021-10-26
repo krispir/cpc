@@ -1321,7 +1321,7 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
     if (is.null(getParam(x@param, "p")))
     {
         if (getParam(x@param, "vebose_output"))
-            cat(paste("[debug] idx =", x@id, "missing xcms data.\n"))
+            message(paste0("[debug] idx =", x@id, "missing xcms data.\n"))
         
         setResults(x) <- list(id = x@id, note = "xcms_missing")
         
@@ -1330,7 +1330,7 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
     } else if (getParam(x@param, "p") < 1)
     {
         if (getParam(x@param, "vebose_output"))
-            cat(paste("[debug] idx =", x@id, "missing xcms data.\n"))
+            message(paste0("[debug] idx =", x@id, "missing xcms data.\n"))
         
         setResults(x) <- list(id = x@id, note = "xcms_missing")
         
@@ -2597,25 +2597,25 @@ setMethod("processPeaks", signature("cpc"), function(x)
         i_npeaks <- length(i_idx)
         
         # output
-        cat(paste("Processing file:", x@procData$file_paths[i], "\n"))
+        message(paste0("Processing file: ", x@procData$file_paths[i], "\n"))
         
         # load raw data
         raw <- new("cpc_raw", file_path = x@procData$file_paths[i])
         raw <- parseMz(raw)
         
         # output
-        cat(paste("Found ", i_npeaks, " peak(s).\n", sep = ""))
+        message(paste0("Found ", i_npeaks, " peak(s).\n"))
         
         i_counter = 1
         
         if (getParam(x@param, "verbose_output"))
         {
-            cat(paste("[debug] starting peak processing...\n"))
+            message(paste("[debug] starting peak processing...\n"))
         } else
         {
-            cat("% complete: ")
+            message("% complete: ")
             i_progress <- floor(floor(i_counter/i_npeaks*100)/10)*10
-            cat(paste(i_progress, " ", sep=""))
+            message(paste0(i_progress, " ", sep=""))
             i_lastprogress <- i_progress
         }
         
@@ -2653,7 +2653,7 @@ setMethod("processPeaks", signature("cpc"), function(x)
             # output
             if (getParam(x@param, "verbose_output")) 
             {
-                cat(paste("[debug] peak: ", pd["id"], "; ", sep = ""))
+                message(paste0("[debug] peak: ", pd["id"], "; ", sep = ""))
             } else
             {
                 # <<- is dangerous... should probably find another
@@ -2663,7 +2663,7 @@ setMethod("processPeaks", signature("cpc"), function(x)
                 
                 if (i_progress > i_lastprogress)
                 {
-                    cat(paste(i_progress, " ", sep=""))
+                    message(paste0(i_progress, " ", sep=""))
                     i_lastprogress <<- i_progress
                 }
             }
@@ -2673,7 +2673,7 @@ setMethod("processPeaks", signature("cpc"), function(x)
             {
                 if (getParam(x@param, "verbose_output"))
                 {
-                    cat("missing xcms data")
+                    message("missing xcms data")
                 }
                 
                 setResults(chrom) <- list(note = "xcms_missing", file = i)
@@ -2764,7 +2764,7 @@ setMethod("processPeaks", signature("cpc"), function(x)
                                                               units = "secs")))
             
             # end output line
-            if (getParam(x@param, "verbose_output")) cat("\n")
+            if (getParam(x@param, "verbose_output")) message("\n")
             
             # return the data.frame row for the current peak
             # row.names are added from the original peak table for matching
@@ -2789,10 +2789,10 @@ setMethod("processPeaks", signature("cpc"), function(x)
         # end output
         if (getParam(x@param, "verbose_output"))
         {
-            cat("[debug] Done!\n\n")
+            message("[debug] Done!\n\n")
         } else
         {
-            cat(paste("Done!\n", sep  = ""))
+            message(paste("Done!\n", sep  = ""))
         }
         
         if (getParam(x@param, "save_all"))
@@ -3284,9 +3284,9 @@ setMethod("filterPeaks", signature("cpc"), function(x)
     xcms::chromPeaks(x@xdFilt) <- ncp[keep, ]
     
     # output
-    cat("Keeping ", length(keep), " of ", nrow(cpt), " (",
-        round(length(keep)/nrow(cpt)*100, 2),
-        "%) peaks.\n")
+    message(paste0("Keeping ", length(keep), " of ", nrow(cpt), " (",
+                   round(length(keep)/nrow(cpt)*100, 2),
+                   "%) peaks.\n"))
     
     # return cpc object
     return(x)

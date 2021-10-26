@@ -117,13 +117,13 @@ output_formatted_time <- function(start, end)
         divisor <- 1
     }
     
-    cat("Finished in ", 
-        round(elapsed_time/divisor,3), " ",
-        switch(as.character(divisor), 
-               "3600" = "hours", 
-               "60" = "mins", 
-               "1" = "secs"), 
-        ".\n", sep = "")
+    message("Finished in ", 
+            round(elapsed_time/divisor,3), " ",
+            switch(as.character(divisor), 
+                   "3600" = "hours", 
+                   "60" = "mins", 
+                   "1" = "secs"), 
+            ".\n", sep="")
 }
 
 find_height_bounds <- function(y = NULL, apex = NULL, 
