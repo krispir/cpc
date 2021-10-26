@@ -3241,7 +3241,7 @@ setMethod("filterPeaks", signature("cpc"), function(x)
     }
     
     # copy the xcms object
-    x@xdFilt <- x@xd
+    # x@xdFilt <- x@xd
     
     # drop feature definitions if present
     if (hasFeatures(x@xdFilt)) {
@@ -3254,7 +3254,7 @@ setMethod("filterPeaks", signature("cpc"), function(x)
     }
     
     # get chromPeaks from the filtered object
-    ncp <- xcms::chromPeaks(x@xdFilt)
+    # ncp <- xcms::chromPeaks(x@xdFilt)
     
     # check all peaks against the specified criteria in the params object
     # x <- checkPeaksAgainstCriteria(x)
@@ -3281,7 +3281,8 @@ setMethod("filterPeaks", signature("cpc"), function(x)
     }
     
     # remove peaks from xcms object
-    xcms::chromPeaks(x@xdFilt) <- ncp[keep, ]
+    # xcms::chromPeaks(x@xdFilt) <- ncp[keep, ]
+    x@xdFilt <- xcms::filterChromPeaks(x@xd, keep = keep)
     
     # output
     message(paste0("Keeping ", length(keep), " of ", nrow(cpt), " (",
