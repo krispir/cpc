@@ -1,6 +1,5 @@
 // [[Rcpp::plugins(cpp11)]]
 
-#include <RcppArmadillo.h>
 #include <Rcpp.h>
 #include <vector>
 #include <algorithm>
@@ -158,17 +157,6 @@ int binary_search_rightmost(NumericVector &A, int n, double val, int L = -1, int
 }
 
 
-// int test_binary_search(vec_d &A, int n, double val, int leftmost = 1)
-// {
-//   if (leftmost)
-//   {
-//     return binary_search_leftmost<double>(A, n, val);
-//   } else
-//   {
-//     return binary_search_rightmost<double>(A, n, val);
-//   }
-// }
-
 // [[Rcpp::export]]
 vec_d getEIC_min(vec_d &mz, 
                  vec_d &intensity, 
@@ -246,7 +234,6 @@ NumericVector getEIC_Rcpp(NumericVector &mz,
   double total;
   
   // data checks
-  
   if (mz_range.size() != 2) return NumericVector(0);
   if (scan_range.size() != 2) return NumericVector(0);
   
@@ -264,36 +251,24 @@ NumericVector getEIC_Rcpp(NumericVector &mz,
     // reset sum
     total = 0;
     
-    // loop over current scan
-    // if (i == 0) i_first = 0; else i_first = scan_idx.at(i-1)+1;
-    
     if (i == 0)
     {
-      // i_first = lowerBound(mz, mz_range.at(0), 0, scan_idx.at(i));
-      // i_last = upperBound(mz, mz_range.at(1), 0, scan_idx.at(i));
-      
-      // int binary_search_leftmost(vector<T> &A, int n, T val, int L = -1, int R = -1)
-      // int binary_search_rightmost(vector<T> &A, int n, T val, int L = -1, int R = -1)
-      
       i_first = binary_search_leftmost(mz, 0, mz_range.at(0), 0, scan_idx.at(i));
       i_last = binary_search_rightmost(mz, 0, mz_range.at(1), 0, scan_idx.at(i));
+      
     } else
     {
-      // i_first = lowerBound(mz, mz_range.at(0), scan_idx.at(i-1)+1, 
-      //                      scan_idx.at(i) - scan_idx.at(i-1));
-      // i_last = upperBound(mz, mz_range.at(1), scan_idx.at(i-1)+1, 
-      //                     scan_idx.at(i)-scan_idx.at(i-1));
-      
       i_first = binary_search_leftmost(mz, 0, mz_range.at(0), scan_idx.at(i-1) + 1, scan_idx.at(i));
       i_last = binary_search_rightmost(mz, 0, mz_range.at(1), scan_idx.at(i-1) + 1, scan_idx.at(i));
+      
     }
     
     for (j = i_first; j <= i_last; j++)
     {
       // check if within mz range and add to total if it is
       if (mz.at(j) >= mz_range.at(0) && 
-          mz.at(j) <= mz_range.at(1)) 
-        total += intensity.at(j);
+          mz.at(j) <= mz_range.at(1)) total += intensity.at(j);
+      
     }
     
     eic.at(i-scan_range.at(0)) = total;
@@ -303,71 +278,3 @@ NumericVector getEIC_Rcpp(NumericVector &mz,
 }
 
 
-// [[Rcpp::export]]
-NumericVector c_combine_spectra(NumericVector &mz, 
-                                NumericVector &intensity, 
-                                IntegerVector &scan_idx, 
-                                IntegerVector &scan_range, 
-                                NumericVector &mz_bins)
-{
-  // data checks
-  
-  
-  // vars
-  int i, j, k;
-  int first_peak, last_peak;
-  NumericVector n_peaks_in_bin(mz_bins.size()-1, 0);
-  
-  // create output variables
-  NumericMatrix out(mz_bins.size()-1, 2);
-  NumericVector out_intensity(mz_bins.size()-1);
-  
-  // loop over scans
-  for (i = scan_range.at(0); i <= scan_range.at(1); i++)
-  {
-    // loop over the bins
-    for (j = 0; j < mz_bins.size()-1; j++)
-    {
-      // find the first and last peak that belongs in the current bin
-      if (i == 0)
-      {
-        first_peak = binary_search_leftmost(mz, 0, mz_bins.at(j), 
-                                            0, scan_idx.at(i));
-        last_peak = binary_search_rightmost(mz, 0, mz_bins.at(j+1), 
-                                           0, scan_idx.at(i));
-        
-      } else
-      {
-        first_peak = binary_search_leftmost(mz, 0, mz_bins.at(j), 
-                                            scan_idx.at(i-1)+1, scan_idx.at(i));
-        last_peak = binary_search_rightmost(mz, 0, mz_bins.at(j+1), 
-                                           scan_idx.at(i-1)+1, scan_idx.at(i));
-        
-      }
-      
-      // check that peaks were found
-      
-      
-      // sum the mz and intensity of the peaks
-      for (k = first_peak; k <= last_peak; k++)
-      {
-        out(j, 0) += mz.at(k);
-        out(j, 1) += intensity.at(k);
-        n_peaks_in_bin(j)++;
-        
-      }
-      
-    }
-    
-  }
-  
-  // convert mz sum to mz mean
-  for (j = 0; j < mz_bins.size()-1; j++)
-  {
-    out(j, 0) = out(j, 0) / n_peaks_in_bin(j);
-  }
-  
-  colnames(out) = Rcpp::CharacterVector {"mz", "intensity"};
-  
-  return out;
-}
