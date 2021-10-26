@@ -204,7 +204,7 @@ outcomesList <- lapply(outcomes, function(x) which(!x))
 ggvenn(data = outcomesList[c(1, 2, 3, 6)], show_percentage = F,
        stroke_size = 0.5, set_name_size = 4, text_size = 2.8,
        fill_color = c("#868686FF", "#0073C2FF", "#CD534CFF",
-                      "#EFC000FF", "#073b4c"), show_outside = "none")
+                      "#EFC000FF", "#073b4c"))
 
 ```
 
