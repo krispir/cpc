@@ -416,7 +416,8 @@ setMethod("setProcData<-", signature("cpc_chrom"), function(x, value)
 #' @export
 #' @docType methods
 #' @rdname cpc_chrom-methods
-setMethod("getMzRange", signature("cpc_chrom"), function(x) getParam(x@param, "mz_range"))
+setMethod("getMzRange", signature("cpc_chrom"), 
+          function(x) getParam(x@param, "mz_range"))
 
 
 #### Method: getResults ####
@@ -430,7 +431,8 @@ setMethod("getMzRange", signature("cpc_chrom"), function(x) getParam(x@param, "m
 #' @export
 #' @docType methods
 #' @rdname cpc_chrom-methods
-setMethod("getResults", signature("cpc_chrom"), function(x) x@results)
+setMethod("getResults", signature("cpc_chrom"), 
+          function(x) x@results)
 
 
 #### Method: setResults<- ####
@@ -534,31 +536,30 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
     }
     
     layout(mat = matrix(c(1,2), nrow = 2, ncol = 1, byrow = T))
-    par_bk <- par()
-    
+    par_bk <- graphics::par()
     
     # d0 main plot 
-    par(mar = c(1,4.1,1,1))
-    plot(x = x@st,
+    graphics::par(mar = c(1,4.1,1,1))
+    base::plot(x = x@st,
          y = x@d0, type = "l", 
          xlim = x@st[x@procData$plotrange],
          ylim = ylim,
          ylab = "",
          xlab = "",
          xaxt = "n")
-    title(ylab = "XIC", line = 2.5)
+    graphics::title(ylab = "XIC", line = 2.5)
     
     ## d0 points
-    points(x = x@st, y = x@d0, pch = 20, cex = 0.9)
+    graphics::points(x = x@st, y = x@d0, pch = 20, cex = 0.9)
     
     ## unsmoothed XIC
-    lines(x = x@st, y = x@xic, col = "#00000075", lty = "dashed")
+    graphics::lines(x = x@st, y = x@xic, col = "#00000075", lty = "dashed")
     
     ## d0 apex point
     if (results)
     {
-        points(x = x@st[x@results$apex], y = x@d0[x@results$apex], 
-               col = "red", pch = 20)
+        graphics::points(x = x@st[x@results$apex], y = x@d0[x@results$apex], 
+                         col = "red", pch = 20)
     }
     
     ## d0 current vars
@@ -588,11 +589,11 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
     }
     
     ## metadata textbox
-    text(x = x@st[x@procData$plotrange[2]], y = 0.95*ylim[2],
-         labels = paste0("m/z ", round(getParam(x@param, "mz_range")[1], 3), 
-                         " : ", 
-                         round(getParam(x@param, "mz_range")[2], 3)), 
-         adj = c(1,1), cex = 0.75)
+    graphics::text(x = x@st[x@procData$plotrange[2]], y = 0.95*ylim[2],
+                   labels = paste0("m/z ", round(getParam(x@param, "mz_range")[1], 3), 
+                                   " : ", 
+                                   round(getParam(x@param, "mz_range")[2], 3)), 
+                   adj = c(1,1), cex = 0.75)
     
     ## d0 emg fit
     # if (!is.null(cpc_xic$emg))
@@ -629,7 +630,7 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
         }
         
         # plot fitted combined trace
-        points(x = x@st[x@results$fblb:x@results$tblb],
+        graphics::points(x = x@st[x@results$fblb:x@results$tblb],
                y = c_emgfun(x = x@results$fblb:x@results$tblb, 
                             pars = fittedPars, 
                             npeaks = length(fittedPeaks)),
@@ -638,11 +639,11 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
         # plot each peak separately
         for (i in 1:length(fittedPeaks))
         {
-            lines(x = x@st[x@results$fblb:x@results$tblb],
+            graphics::lines(x = x@st[x@results$fblb:x@results$tblb],
                   y = c_emgfun(x = x@results$fblb:x@results$tblb, 
                                pars = fittedPars[(i-1)*4+(1:4)], 
                                npeaks = 1), 
-                  col = ifelse(i == fittedVIP, "red", "blue"), 
+                  col = base::ifelse(i == fittedVIP, "red", "blue"), 
                   type = "o", pch = 20)
         }
         
@@ -665,9 +666,9 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
         # d0 baseline
         cur_bl <- x@d0[x@results$fblb] + 
             (1:length(x@d0)-x@results$fblb) * x@results$blslp
-        lines(x = x@st[x@results$fblb:x@results$tblb],
-              y = cur_bl[x@results$fblb:x@results$tblb], 
-              col = "red", lty = "dashed")
+        graphics::lines(x = x@st[x@results$fblb:x@results$tblb],
+                        y = cur_bl[x@results$fblb:x@results$tblb], 
+                        col = "red", lty = "dashed")
         # points(x = c(x@results$fblb,
         #              x@results$tblb),
         #        y = x@d0[c(x@results$fblb, x@results$tblb)],
@@ -679,24 +680,24 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
         # polygon
         cpc_pkbounds <- c(x@results$fpkb,
                           x@results$tpkb)
-        polygon(x = c(x@st[cpc_pkbounds[1]:cpc_pkbounds[2]],
-                      x@st[rev(cpc_pkbounds[1]:cpc_pkbounds[2])]),
-                y = c(x@d0[cpc_pkbounds[1]:cpc_pkbounds[2]],
-                      cur_bl[rev(cpc_pkbounds[1]:cpc_pkbounds[2])]), 
-                col = "#FF000050", border = NA)
+        graphics::polygon(x = c(x@st[cpc_pkbounds[1]:cpc_pkbounds[2]],
+                                x@st[rev(cpc_pkbounds[1]:cpc_pkbounds[2])]),
+                          y = c(x@d0[cpc_pkbounds[1]:cpc_pkbounds[2]],
+                                cur_bl[rev(cpc_pkbounds[1]:cpc_pkbounds[2])]), 
+                          col = "#FF000050", border = NA)
         
         # peak bound lines to baseline
-        lines(x = rep(x@st[cpc_pkbounds[1]], 2),
-              y = c(x@d0[cpc_pkbounds[1]],
-                    cur_bl[cpc_pkbounds[1]]), col = "red")
-        lines(x = rep(x@st[cpc_pkbounds[2]], 2),
-              y = c(x@d0[cpc_pkbounds[2]],
-                    cur_bl[cpc_pkbounds[2]]), col = "red")
+        graphics::lines(x = rep(x@st[cpc_pkbounds[1]], 2),
+                        y = c(x@d0[cpc_pkbounds[1]],
+                              cur_bl[cpc_pkbounds[1]]), col = "red")
+        graphics::lines(x = rep(x@st[cpc_pkbounds[2]], 2),
+                        y = c(x@d0[cpc_pkbounds[2]],
+                              cur_bl[cpc_pkbounds[2]]), col = "red")
         
         # peak bound points
-        points(x = x@st[cpc_pkbounds],
-               y = x@d0[cpc_pkbounds],
-               col = "red", pch = 20, cex = 0.9)
+        graphics::points(x = x@st[cpc_pkbounds],
+                         y = x@d0[cpc_pkbounds],
+                         col = "red", pch = 20, cex = 0.9)
         
         
         # ## bottom
@@ -748,41 +749,42 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
                                      val = x@procData$pd$rtmax)
         xcms_apex <- binsearch_closest(x = x@mzMeta$header$retentionTime,
                                        val = x@procData$pd$rt)
-        points(x = x@st[c(xcms_fb, xcms_apex, xcms_tb)],
-               y = x@d0[c(xcms_fb, xcms_apex, xcms_tb)],
-               col = "#0000FF", cex = 1.5, lwd = 2)
+        graphics::points(x = x@st[c(xcms_fb, xcms_apex, xcms_tb)],
+                         y = x@d0[c(xcms_fb, xcms_apex, xcms_tb)],
+                         col = "#0000FF", cex = 1.5, lwd = 2)
     }
     
     # data box in main plot
-    text(x = x@st[x@procData$plotrange[1]], y = 0.95*ylim[2], 
-         labels = char_ann, adj = c(0,1), cex = 0.6)
+    graphics::text(x = x@st[x@procData$plotrange[1]], y = 0.95*ylim[2], 
+                   labels = char_ann, adj = c(0,1), cex = 0.6)
     
     
     # d2 main plot
-    par(mar = c(4.1,4.1,0,1))
-    plot(x = x@st,
-         y = x@d2, type = "l", col = "#000000", 
-         xlim = x@st[x@procData$plotrange],
-         ylim = c(min(x@d2[x@procData$plotrange[1]:x@procData$plotrange[2]]),
-                  max(x@d2[x@procData$plotrange[1]:x@procData$plotrange[2]])),
-         ylab = "",
-         xlab = "")
-    title(xlab = "Time (sec)",
-          ylab = "2nd derivative", line = 2.5)
-    points(x = x@st, y = x@d2, pch = 20, cex = 0.9)
+    graphics::par(mar = c(4.1,4.1,0,1))
+    graphics::plot(x = x@st,
+                   y = x@d2, type = "l", col = "#000000", 
+                   xlim = x@st[x@procData$plotrange],
+                   ylim = c(min(x@d2[x@procData$plotrange[1]:x@procData$plotrange[2]]),
+                            max(x@d2[x@procData$plotrange[1]:x@procData$plotrange[2]])),
+                   ylab = "",
+                   xlab = "")
+    graphics::title(xlab = "Time (sec)",
+                    ylab = "2nd derivative", line = 2.5)
+    graphics::points(x = x@st, y = x@d2, pch = 20, cex = 0.9)
     # d2 peak bounds
     if (results)
     {
-        points(x = x@st[unlist(x@results[c("fpkb", "tpkb")])], 
-               y = x@d2[unlist(x@results[c("fpkb", "tpkb")])],
-               col = "red", pch = 20)
+        graphics::points(x = x@st[unlist(x@results[c("fpkb", "tpkb")])], 
+                         y = x@d2[unlist(x@results[c("fpkb", "tpkb")])],
+                         col = "red", pch = 20)
     }
     
     # d2 0 line
-    abline(h = 0, col = "red")
+    graphics::abline(h = 0, col = "red")
     
-    layout(mat = matrix(c(1), nrow = 1, ncol = 1))
-    par(mar = par_bk$mar)
+    graphics::layout(mat = matrix(c(1), nrow = 1, ncol = 1))
+    graphics::par(mar = par_bk$mar)
+    
 })
 
 
@@ -1092,202 +1094,6 @@ setMethod("smoothChromatogram", signature("cpc_chrom"), function(x)
     return(x)
 })
 
-#' 
-#' #### Method: fitEMG ####
-#' 
-#' #' @title Method EMG deconvolution of a chromatogram
-#' #' 
-#' #' @description 
-#' #' 
-#' #' Internal method for fitting a series of EMG functions to the chromatogram for
-#' #' deconvolution of the peak shapes.
-#' #' 
-#' #' @param x A \code{cpc_chrom} object
-#' #' 
-#' #' @return A \code{cpc_chrom} object
-#' #' 
-#' #' @export
-#' #' @docType methods
-#' #' @rdname cpc_chrom-methods
-#' setMethod("fitEMG", signature("cpc_chrom"), function(x)
-#' {
-#'     # select peaks to use in the fitting
-#'     # to test: just use the VIP and the closest peaks before and after
-#'     sel <- x@rawProcResults$current_peak+1
-#'     
-#'     if (x@rawProcResults$front_code[x@rawProcResults$current_peak+1] != 0)
-#'     {
-#'         sel <- c(x@rawProcResults$current_peak, sel)
-#'     }
-#'     
-#'     if (x@rawProcResults$tail_code[x@rawProcResults$current_peak+1] != 0)
-#'     {
-#'         sel <- c(sel, x@rawProcResults$current_peak+2)
-#'     }
-#'     
-#'     # calculate sigma for selected peaks
-#'     sel_sigma <- (x@rawProcResults$tail_inf[sel] - x@rawProcResults$front_inf[sel])/2
-#'     
-#'     # determine points to fit: front bound of first peak -> tail bound of last peak
-#'     sel_bound_full <- c(x@rawProcResults$front_peak_bound[sel[1]]+1,
-#'                         x@rawProcResults$tail_peak_bound[sel[length(sel)]]+1)
-#'     
-#'     sel_bound_vip <- c(x@rawProcResults$front_peak_bound[x@rawProcResults$current_peak+1]+1,
-#'                        x@rawProcResults$tail_peak_bound[x@rawProcResults$current_peak+1]+1)
-#'     
-#'     # use only front inf, 3p around apex and tail inf of each selected peak
-#'     sel1_idx <- sort(unique(c(x@rawProcResults$front_inf[sel]+1,
-#'                               x@rawProcResults$adj_apex[sel],
-#'                               x@rawProcResults$adj_apex[sel]+1,
-#'                               x@rawProcResults$adj_apex[sel]+2,
-#'                               x@rawProcResults$tail_inf[sel]+1)))
-#'     
-#'     # fit peaks
-#'     (bfgs_full_xic <- fitemgs_bfgs(signal = x@xic[sel_bound_full[1]:sel_bound_full[2]], 
-#'                                   scantime = sel_bound_full[1]:sel_bound_full[2], 
-#'                                   seed = list(mu = x@rawProcResults$adj_apex[sel],
-#'                                               sigma = sel_sigma,
-#'                                               lambda = rep(10, length(sel))),
-#'                                   upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
-#'                                                sigma = sel_sigma*.75,
-#'                                                lambda = rep(1, length(sel))*.9),
-#'                                   lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
-#'                                                sigma = sel_sigma*1.25,
-#'                                                lambda = rep(30, length(sel))*1.1),
-#'                                   plot.fit = T))
-#'     (bfgs_vip_xic <- fitemgs_bfgs(signal = x@xic[sel_bound_vip[1]:sel_bound_vip[2]], 
-#'                                  scantime = sel_bound_vip[1]:sel_bound_vip[2], 
-#'                                  seed = list(mu = x@rawProcResults$adj_apex[sel],
-#'                                              sigma = sel_sigma,
-#'                                              lambda = rep(10, length(sel))),
-#'                                  lower = list(mu = x@rawProcResults$adj_apex[sel]-5,
-#'                                               sigma = sel_sigma*.75,
-#'                                               lambda = rep(1, length(sel))*.9),
-#'                                  upper = list(mu = x@rawProcResults$adj_apex[sel]+5,
-#'                                               sigma = sel_sigma*1.25,
-#'                                               lambda = rep(30, length(sel))*1.1),
-#'                                  plot.fit = T))
-#'     (bfgs_sel1_xic <- fitemgs_bfgs(signal = x@xic[sel1_idx], 
-#'                                   scantime = sel1_idx, 
-#'                                   seed = list(mu = x@rawProcResults$adj_apex[sel],
-#'                                               sigma = sel_sigma,
-#'                                               lambda = rep(10, length(sel))),
-#'                                   upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
-#'                                                sigma = sel_sigma*.75,
-#'                                                lambda = rep(1, length(sel))*.9),
-#'                                   lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
-#'                                                sigma = sel_sigma*1.25,
-#'                                                lambda = rep(30, length(sel))*1.1),
-#'                                   plot.fit = T))
-#'     
-#'     (bfgs2_full_xic <- fitemgs_bfgs_2(signal = x@xic[sel_bound_full[1]:sel_bound_full[2]], 
-#'                                      scantime = sel_bound_full[1]:sel_bound_full[2], 
-#'                                      seed = list(mu = x@rawProcResults$adj_apex[sel],
-#'                                                  sigma = sel_sigma,
-#'                                                  lambda = rep(10, length(sel))),
-#'                                      plot.fit = T))
-#'     (bfgs2_vip_xic <- fitemgs_bfgs_2(signal = x@xic[sel_bound_vip[1]:sel_bound_vip[2]], 
-#'                                     scantime = sel_bound_vip[1]:sel_bound_vip[2], 
-#'                                     seed = list(mu = x@rawProcResults$adj_apex[sel],
-#'                                                 sigma = sel_sigma,
-#'                                                 lambda = rep(10, length(sel))),
-#'                                     plot.fit = T))
-#'     (bfgs2_sel1_xic <- fitemgs_bfgs_2(signal = x@xic[sel1_idx], 
-#'                                     scantime = sel1_idx, 
-#'                                     seed = list(mu = x@rawProcResults$adj_apex[sel],
-#'                                                 sigma = sel_sigma,
-#'                                                 lambda = rep(10, length(sel))),
-#'                                     plot.fit = T))
-#'     
-#'     (bfgs_full_d0 <- fitemgs_bfgs(signal = x@d0[sel_bound_full[1]:sel_bound_full[2]], 
-#'                                    scantime = sel_bound_full[1]:sel_bound_full[2], 
-#'                                    seed = list(mu = x@rawProcResults$adj_apex[sel],
-#'                                                sigma = sel_sigma,
-#'                                                lambda = rep(10, length(sel))),
-#'                                    upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
-#'                                                 sigma = sel_sigma*.75,
-#'                                                 lambda = rep(1, length(sel))*.9),
-#'                                    lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
-#'                                                 sigma = sel_sigma*1.25,
-#'                                                 lambda = rep(30, length(sel))*1.1),
-#'                                    plot.fit = T))
-#'     (bfgs_vip_d0 <- fitemgs_bfgs(signal = x@d0[sel_bound_vip[1]:sel_bound_vip[2]], 
-#'                                   scantime = sel_bound_vip[1]:sel_bound_vip[2], 
-#'                                   seed = list(mu = x@rawProcResults$adj_apex[sel],
-#'                                               sigma = sel_sigma,
-#'                                               lambda = rep(10, length(sel))),
-#'                                   upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
-#'                                                sigma = sel_sigma*.75,
-#'                                                lambda = rep(1, length(sel))*.9),
-#'                                   lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
-#'                                                sigma = sel_sigma*1.25,
-#'                                                lambda = rep(30, length(sel))*1.1),
-#'                                   plot.fit = T))
-#'     (bfgs_sel1_d0 <- fitemgs_bfgs(signal = x@d0[sel1_idx], 
-#'                                    scantime = sel1_idx, 
-#'                                    seed = list(mu = x@rawProcResults$adj_apex[sel],
-#'                                                sigma = sel_sigma,
-#'                                                lambda = rep(10, length(sel))),
-#'                                    upper = list(mu = x@rawProcResults$adj_apex[sel]-5,
-#'                                                 sigma = sel_sigma*.75,
-#'                                                 lambda = rep(1, length(sel))*.9),
-#'                                    lower = list(mu = x@rawProcResults$adj_apex[sel]+5,
-#'                                                 sigma = sel_sigma*1.25,
-#'                                                 lambda = rep(30, length(sel))*1.1),
-#'                                    plot.fit = T))
-#'     
-#'     (bfgs2_full_d0 <- fitemgs_bfgs_2(signal = x@d0[sel_bound_full[1]:sel_bound_full[2]], 
-#'                                       scantime = sel_bound_full[1]:sel_bound_full[2], 
-#'                                       seed = list(mu = x@rawProcResults$adj_apex[sel],
-#'                                                   sigma = sel_sigma,
-#'                                                   lambda = rep(10, length(sel))),
-#'                                       plot.fit = T))
-#'     (bfgs2_vip_d0 <- fitemgs_bfgs_2(signal = x@d0[sel_bound_vip[1]:sel_bound_vip[2]], 
-#'                                      scantime = sel_bound_vip[1]:sel_bound_vip[2], 
-#'                                      seed = list(mu = x@rawProcResults$adj_apex[sel],
-#'                                                  sigma = sel_sigma,
-#'                                                  lambda = rep(10, length(sel))),
-#'                                      plot.fit = T))
-#'     (bfgs2_sel1_d0 <- fitemgs_bfgs_2(signal = x@d0[sel1_idx], 
-#'                                      scantime = sel1_idx, 
-#'                                      seed = list(mu = x@rawProcResults$adj_apex[sel],
-#'                                                  sigma = sel_sigma,
-#'                                                  lambda = rep(10, length(sel))),
-#'                                      plot.fit = T))
-#'     
-#'     fitemgs(signal = x@xic[sel_bound_full[1]:sel_bound_full[2]], 
-#'             scantime = sel_bound_full[1]:sel_bound_full[2], 
-#'             seed = list(mu = x@rawProcResults$adj_apex[sel]+1,
-#'                         sigma = sel_sigma,
-#'                         lambda = rep(10, length(sel))),
-#'             upper = list(mu = x@rawProcResults$adj_apex[sel]+10,
-#'                          sigma = sel_sigma*2,
-#'                          lambda = rep(1, length(sel))),
-#'             lower = list(mu = x@rawProcResults$adj_apex[sel]-10,
-#'                          sigma = sel_sigma*0.25,
-#'                          lambda = rep(100, length(sel))),
-#'             plot.fit = T)
-#'     
-#'     fitemgs(signal = x@d0[sel_bound_full[1]:sel_bound_full[2]], 
-#'             scantime = sel_bound_full[1]:sel_bound_full[2], 
-#'             seed = list(mu = x@rawProcResults$adj_apex[sel]+1,
-#'                         sigma = sel_sigma,
-#'                         lambda = rep(10, length(sel))),
-#'             upper = list(mu = c(70, 90, 110),
-#'                          sigma = c(5, 7, 6),
-#'                          lambda = rep(1, length(sel))),
-#'             lower = list(mu = c(50, 70, 90),
-#'                          sigma = c(1.5, 4, 3),
-#'                          lambda = rep(100, length(sel))),
-#'             plot.fit = T)
-#'     
-#'     
-#'     
-#'     # return result
-#'     return(x)
-#' })
-
-
 #### Method: processChromatogram ####
 
 #' @title Main method for processing a chromatogram
@@ -1307,7 +1113,7 @@ setMethod("smoothChromatogram", signature("cpc_chrom"), function(x)
 setMethod("processChromatogram", signature("cpc_chrom"), function(x)
 {
     # x <- chrom
-    if(!require(signal, quietly = T)) stop("Package: signal required...")
+    # if(!require(signal, quietly = T)) stop("Package: signal required...")
     
     if (is.null(x@xic) || length(x@xic) < 1)
     {
@@ -1425,7 +1231,9 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
     # x <- smoothChromatogram(x)
     
     # calculate noise
-    setProcData(x) <- list(noise_sel = which(abs(x@d2) <= quantile(abs(x@d2), .95)))
+    setProcData(x) <- 
+        list(noise_sel = which(abs(x@d2) <= 
+                                   stats::quantile(abs(x@d2), .95)))
     
     if (length(x@procData$noise_sel) < floor(getParam(x@param, "nscan")/2))
     {
@@ -1478,29 +1286,6 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
     }
     
     # record results from processing
-    # x@procResults <- list(
-    #     adj_apex = x@rawProcResults$adj_apex[x@rawProcResults$current_peak+1]+1,
-    #     bl_bounds = c(x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1,
-    #                   x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1),
-    #     bl_slope = (x@d0[(x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1)] - 
-    #                     x@d0[(x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1)]) / 
-    #         ((x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1) - 
-    #              (x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1)),
-    #     peak_bounds = c(x@rawProcResults$front_peak_bound[x@rawProcResults$current_peak+1]+1,
-    #                     x@rawProcResults$tail_peak_bound[x@rawProcResults$current_peak+1]+1),
-    #     code = c(switch(x@rawProcResults$front_code[x@rawProcResults$current_peak+1]+1, 
-    #                     "B", "V", "S", "R"),
-    #              switch(x@rawProcResults$tail_code[x@rawProcResults$current_peak+1]+1, 
-    #                     "B", "V", "S", "R")),
-    #     inf = c(x@rawProcResults$front_inf[x@rawProcResults$current_peak+1]+1,
-    #             x@rawProcResults$tail_inf[x@rawProcResults$current_peak+1]+1),
-    #     emg_mu = x@rawProcResults$emg_mu[x@rawProcResults$current_peak+1]+1,
-    #     emg_sigma = x@rawProcResults$emg_sigma[x@rawProcResults$current_peak+1],
-    #     emg_lambda = x@rawProcResults$emg_lambda[x@rawProcResults$current_peak+1],
-    #     emg_area = x@rawProcResults$emg_area[x@rawProcResults$current_peak+1],
-    #     emg_conv = x@rawProcResults$emg_conv[x@rawProcResults$current_peak+1]
-    # )
-    
     setResults(x) <- list(
         apex = x@rawProcResults$adj_apex[x@rawProcResults$current_peak+1]+1,
         finf = x@rawProcResults$front_inf[x@rawProcResults$current_peak+1]+1,
@@ -2198,16 +1983,16 @@ setMethod("setParam<-", signature("cpc"), function(x, value)
 setMethod("parsePeaklist", signature("cpc"), function(x)
 {
     # check that xd contain peak information
-    if (nrow(chromPeaks(x@xd)) < 1) 
+    if (nrow(xcms::chromPeaks(x@xd)) < 1) 
         stop("'xd' does not contain any peak information.")
     
     # check if there is feature data
-    if (hasFeatures(x@xd)) {
+    if (xcms::hasFeatures(x@xd)) {
         message(paste0("Removing existing feature definitions from XCMS object. ",
                       "Run retention alignment and peak filling again after ",
                       "processing."))
         
-        x@xd <- dropFeatureDefinitions(x@xd)
+        x@xd <- xcms::dropFeatureDefinitions(x@xd)
         
     }
     
@@ -2383,8 +2168,8 @@ setMethod("determineMaxSigma", signature("cpc"), function(x, scantime, scanrate)
     # set max sigma value
     setParam(x@param) <- 
         list(max_sigma = 
-                 as.numeric(quantile(scpos - scmin,
-                                     probs = 0.75, na.rm = T)) * 
+                 as.numeric(stats::quantile(scpos - scmin,
+                                            probs = 0.75, na.rm = T)) * 
                  scanrate / 2)
     
     return(x)
@@ -2511,13 +2296,13 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
         new("cpc_chrom",
             id = as.integer(id),
             st = raw@scantime,
-            param = cpc::cpcChromParam(mz = as.numeric(x@pt$mz[id]),
-                                       p = cur_p,
-                                       s = cur_s,
-                                       mz_range = c(as.numeric(x@pt$mz[id]) -
-                                                        as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"),
-                                                    as.numeric(x@pt$mz[id]) +
-                                                        as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"))),
+            param = cpcChromParam(mz = as.numeric(x@pt$mz[id]),
+                                  p = cur_p,
+                                  s = cur_s,
+                                  mz_range = c(as.numeric(x@pt$mz[id]) -
+                                                   as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"),
+                                               as.numeric(x@pt$mz[id]) +
+                                                   as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"))),
             mzMeta = list(runInfo = raw@runInfo,
                           header = raw@header),
             results = results,
@@ -3244,7 +3029,7 @@ setMethod("filterPeaks", signature("cpc"), function(x)
     # x@xdFilt <- x@xd
     
     # drop feature definitions if present
-    if (hasFeatures(x@xdFilt)) {
+    if (xcms::hasFeatures(x@xdFilt)) {
         message(paste0("Removing existing feature definitions from XCMS object. ",
                        "Run retention alignment and peak filling again after ",
                        "filtering."))
@@ -3264,7 +3049,7 @@ setMethod("filterPeaks", signature("cpc"), function(x)
     # keep will be which peaks in the cpt slot that will be kept (NOT which
     # peaks in the XCMS object that will be kept!)
     # keep <- peaksToKeep(x)
-    cpt <- cpc::cpt(x)
+    cpt <- cpt(x)
     keep <- which(apply(getFilterOutcomes(x), 1, FUN=function(z) all(z)))
     
     # if the XCMSnExp has filled peaks they will be removed when running
@@ -3274,9 +3059,9 @@ setMethod("filterPeaks", signature("cpc"), function(x)
     {
         keep_names <- rownames(xcms::chromPeaks(x@xd))[x@cpt$id[keep]]
         
-        keep_names <- keep_names[which(!is.na(match(keep_names, rownames(ncp))))]
+        keep_names <- keep_names[which(!is.na(match(keep_names, rownames(orgcp))))]
         
-        keep <- match(keep_names, rownames(ncp))
+        keep <- match(keep_names, rownames(orgcp))
         
     }
     
@@ -3316,8 +3101,8 @@ setMethod("getFilteredXCMS", signature("cpc"), function(x) {
 #' @docType methods
 #' @rdname cpc-methods
 setMethod("getRemovedPeaks", signature("cpc"), function(x) {
-    allPeaks <- row.names(chromPeaks(x@xd))
-    retainedPeaks <- row.names(chromPeaks(x@xdFilt))
+    allPeaks <- row.names(xcms::chromPeaks(x@xd))
+    retainedPeaks <- row.names(xcms::chromPeaks(x@xdFilt))
     
     return(allPeaks[which(!(allPeaks %in% retainedPeaks))])
     
@@ -3328,7 +3113,7 @@ setMethod("getRemovedPeaks", signature("cpc"), function(x) {
 #' @docType methods
 #' @rdname cpc-methods
 setMethod("getRetainedPeaks", signature("cpc"), function(x) {
-    return(row.names(chromPeaks(x@xdFilt)))
+    return(row.names(xcms::chromPeaks(x@xdFilt)))
     
 })
 
@@ -3340,19 +3125,16 @@ setMethod("getRetainedPeaks", signature("cpc"), function(x) {
 #' @rdname cpc-methods
 setMethod("show", signature("cpc"), function(x)
 {
-    cat(paste("S4 object of type 'cpc'.\n"))
+    cat("S4 object of type 'cpc'.\n")
     attributes(x)
 })
 
-
-#### Method: summary ####
+#### Method: print ####
 
 #' @export
 #' @docType methods
 #' @rdname cpc-methods
-setMethod("summary", signature("cpc"), function(x)
+setMethod("print", signature("cpc"), function(x)
 {
-    cat(paste("S4 object of type 'cpc'.\n"))
+    show(x)
 })
-
-
