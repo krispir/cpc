@@ -73,9 +73,8 @@ setGeneric("setParam<-", function(x, value) standardGeneric("setParam<-"))
 setGeneric("setResults<-", function(x, value) standardGeneric("setResults<-"))
 setGeneric("setFilterOutcomes<-", function(x, value) standardGeneric("setFilterOutcomes<-"))
 setGeneric("setXIC<-", function(x, value) standardGeneric("setXIC<-"))
-setGeneric("show", function(x) standardGeneric("show"))
+# setGeneric("show", function(x) standardGeneric("show"))
 setGeneric("smoothChromatogram", function(x) standardGeneric("smoothChromatogram"))
-setGeneric("summary", function(x) standardGeneric("summary"))
 
 # T ############################################################################
 # U ############################################################################
