@@ -10,9 +10,23 @@ Maintainer: Kristian Pirttilä <kristian.pirttila@ilk.uu.se>
 Description: Allows comprehensive peak characterization and filtering using 
   analytical chemistry parameters of peaks detected using XCMS.
 License: GPL (>= 2)
-Imports: Rcpp (>= 1.0.5)
-Depends: xcms (>= 3.13.5), mzR (>= 2.22.0), MSnbase (>= 2.15.7), roptim (>= 0.1.5), signal (>= 0.7-6)
-LinkingTo: Rcpp, RcppArmadillo, roptim
+Depends: 
+  xcms (>= 3.13.5), 
+  mzR (>= 2.22.0), 
+  MSnbase (>= 2.15.7), 
+  signal (>= 0.7-6)
+Imports: 
+  Rcpp (>= 1.0.5),
+  mzR (>= 2.22.0),
+  MSnbase (>= 2.15.7),
+  signal (>= 0.7-6), 
+  methods
+Suggests: 
+    knitr,
+    rmarkdown,
+	  markdown,
+	  pander
+LinkingTo: Rcpp
 SystemRequirements: C++11
 RoxygenNote: 7.1.2
 Collate:
@@ -25,8 +39,4 @@ Collate:
   "fun_plot_eval_eic.R"
   "utils.R"
   "RcppExports.R"
-Suggests: 
-    knitr,
-    rmarkdown,
-	  markdown
 VignetteBuilder: knitr
