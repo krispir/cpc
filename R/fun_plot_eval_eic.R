@@ -9,13 +9,18 @@
 #' @param outPath (optional) Path to save plots to
 #' @param prefix (optional) Filename prefix, if NULL the filename of the raw data is used
 #' @param device Graphics device to be used for saving plots (default: "png")
+#' @param plotEMG \code{logical} indicating if the EMG fitting results should be plotted (default: FALSE)
+#' @param plotXCMS \code{logical} indicating if the XCMS data should be included in the plot (default: TRUE)
+#' @param noPrompt \code{logical} indicating if the prompt when many peaks are being plotted will be suppressed (default: FALSE)
+#' @param annotation (Optional) A single string or a vector of strings for each plotted peak with additional annotations for the plot
 #' @param ... Additional parameters to be sent to the graphics device
 #'
 #' @return \code{NULL}
 #' @export
 plotPeaks <- function(cpc, peakIdx, 
                       outPath = NULL, prefix = NULL, device = "png", 
-                      plotEMG = F, plotXCMS = T, noPrompt = F, annotation = character(1), ...)
+                      plotEMG = FALSE, plotXCMS = TRUE, noPrompt = FALSE, 
+                      annotation = character(1), ...)
 {
     # check that there are selected peaks, otherwise plot all with query for 
     # the user (if noPrompt is FALSE)

@@ -11,7 +11,12 @@
 #' @param min_inf_width Filter criteria for minimum points between peak inflection points. Should be set >=3 to avoid issues.
 #' @param min_sn Filter criteria for minimum signal-to-noise ratio.
 #' @param min_frac Filter criteria for minimum samples a peak is found in. This is currently not used as it is only applicable to feature filtering.
+#' @param min_shoulder_pts 
+#' @param min_rounded_pts
 #' @param min_intensity Filter criteria for minimum peak area.
+#' @param interval_tf 
+#' @param min_w 
+#' @param max_w 
 #' @param smooth_method Smoothing method used during processing. Available: "savgol" for Savitzky-Golay smoothing or "mean" for moving mean smoothing.
 #' @param smooth_times Number of smooth iterations,
 #' @param smooth_win Width of the smoothing function. If set to NULL it will be determined from the peak sigma values in the XCMSnExp object.
@@ -112,6 +117,9 @@ cpcProcParam <- function(ppm = 50.0,
 #' @param min_sn Filter criteria for minimum signal-to-noise ratio.
 #' @param min_frac Filter criteria for minimum samples a peak is found in. This is currently not used as it is only applicable to feature filtering.
 #' @param min_intensity Filter criteria for minimum peak area.
+#' @param interval_tf 
+#' @param min_w 
+#' @param max_w 
 #' @param smooth_method Smoothing method used during processing. Available: "savgol" for Savitzky-Golay smoothing or "mean" for moving mean smoothing.
 #' @param smooth_times Number of smooth iterations,
 #' @param smooth_win Width of the smoothing function. If set to \code{NULL} it will be determined from the peak sigma values in the XCMSnExp object.
@@ -120,6 +128,7 @@ cpcProcParam <- function(ppm = 50.0,
 #' @param sel_peaks \code{integer} vector indicating a subset of peak indices to be processed from the XCMSnExp object. If NULL all peaks are processed.
 #' @param sel_files \code{integer} vector indicating a subset of file indices to be processed from the XCMSnExp object. If NULL all files are processed.
 #' @param verbose_output \code{logical} value indicating if output is to be given during processing.
+#' @param save_all 
 #' @param plot \code{logical} indicating if the results should be plotted for each peak
 #'
 #' @return A \code{cpcProcParam} object
