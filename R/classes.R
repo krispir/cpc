@@ -172,7 +172,10 @@ setMethod("show", signature("cpcParam"), function(x)
 #' @slot xic Raw XIC trace
 #' @slot d0 Smoothed XIC trace
 #' @slot d2 Smoothed second derivative of the XIC trace
-#' @slot procParams \code{list} containing processing parameters.
+#' @slot st Scantimes
+#' @slot param cpcParam object holding the processing parameters
+#' @slot mzMeta Metadata from the raw MS files
+#' @slot procParams \code{list} containing processing parameters. (deprecated)
 #' @slot procData \code{list} containing processing data.
 #' @slot procResults \code{list} containing the processing results for peak \code{id}.
 #' @slot rawProcResults \code{list} containing the raw processing results returned by \code{process_chromatogram}.
@@ -1361,6 +1364,7 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
 #' @slot scanrate Scans per second
 #' @slot scantime Seconds per scan
 #' @slot nscan Number of scans
+#' @slot backend String defining the backend used (currently not used).
 #' 
 #' @name cpc_raw-class
 #' @rdname cpc_raw-class
@@ -1494,10 +1498,12 @@ setMethod("scantime", signature("cpc_raw"), function(x)
 #' @slot rawResults A list of \code{data.frame}s with back-end results from the processing.
 #' @slot pt \code{data.frame} containing the original peak table from \code{xd}.
 #' @slot cpt \code{data.frame} containing the determined peak characteristics.
+#' @slot outcomes \code{data.frame} containing the results from the peak filters.
 #' @slot fdef Feature definitions (not used currently).
 #' @slot fpeaks Feature defining peaks (not used currently).
+#' @slot param \code{cpcParam} object holding the processing parameters
 #' @slot procData \code{list} containing processing data.
-#' @slot procParams \code{list} containing processing parameters.
+#' @slot procParams \code{list} containing processing parameters. (deprecated)
 #' 
 #' @name cpc-class
 #' @rdname cpc-class
