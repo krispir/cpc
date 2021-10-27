@@ -24,6 +24,7 @@ knitr::opts_chunk$set(
 
 ```{r init, message = FALSE, echo = FALSE, results = "hide"}
 
+# Load all packages silently to avoid unnecessary long output
 library(pander)
 library(xcms)
 library(cpc)
