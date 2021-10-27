@@ -22,9 +22,10 @@ Imports:
   signal (>= 0.7-6), 
   methods
 Suggests: 
-    knitr,
-    rmarkdown,
-	  markdown,
+    knitr, 
+    rmarkdown, 
+	  markdown, 
+	  ggvenn, 
 	  pander
 LinkingTo: Rcpp
 SystemRequirements: C++11
