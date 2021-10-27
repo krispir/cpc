@@ -21,9 +21,9 @@ filter_xcms_peaklist <- function(xd, return_type = c("xcms", "cpc"),
                                  param = cpcProcParam())
 {
     # requirements
-    if(!require(mzR)) stop("Package: mzR required...")
-    if(!require(signal)) stop("Package: signal required...")
-    if(!require(foreach)) stop("Package: foreach required...")
+    # if(!require(mzR)) stop("Package: mzR required...")
+    # if(!require(signal)) stop("Package: signal required...")
+    # if(!require(foreach)) stop("Package: foreach required...")
     
     # check params
     return_type <- match.arg(return_type)

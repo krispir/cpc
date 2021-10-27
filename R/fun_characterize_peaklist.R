@@ -19,9 +19,9 @@
 characterize_xcms_peaklist <- function(xd, param = cpcProcParam())
 {
     # requirements
-    if(!require(mzR)) stop("Package: mzR required...")
-    if(!require(signal)) stop("Package: signal required...")
-    if(!require(foreach)) stop("Package: foreach required...")
+    # if(!require(mzR)) stop("Package: mzR required...")
+    # if(!require(signal)) stop("Package: signal required...")
+    # if(!require(foreach)) stop("Package: foreach required...")
     
     ## check that xd object is XCMSnExp
     if (class(xd) != "XCMSnExp") stop("'xd' must be an XCMS object of type 'XCMSnExp'.")
