@@ -10,6 +10,7 @@
 #' steps will have to be performed again after running this function.
 #'
 #' @param xd \code{XCMSnExp} object
+#' @param return_type String indicating if the filtered XCMS object ('xcms') or the CPC object ('cpc') should be returned.
 #' @param param \code{cpcProcParam} object with process parameters
 #'
 #' @return Either an \code{XCMSnExp} object or a \code{cpc} object.
