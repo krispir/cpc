@@ -33,9 +33,11 @@ process_chromatogram(
 )
 }
 \arguments{
-\item{d0}{Smoothed XIC trace}
+\item{d0}{Numeric vector containing the smoothed XIC trace}
 
-\item{d2}{Second derivative of smoothed XIC}
+\item{d2}{Numeric vector containing the second derivative of smoothed XIC}
+
+\item{st}{Numeric vector containing scan times}
 
 \item{apex_thresh}{Second derivative threshold value.}
 
@@ -90,10 +92,11 @@ Do not use this function, this function is called via the R interface functions.
 \examples{
 require("signal")
 x <- seq(1, 200, 1)
+st <- seq_len(length(x))*0.05
 vec <- 1e5*dnorm(x, 100, 5) # create a vector with a gaussian peak
 noise <- rnorm(length(x), 0, 5) # generate a noise vector
 nvec <- vec + noise # create a noisy `chromatogram`.
 smvec <- signal::sgolayfilt(nvec, n = 5) # smooth the vector using Savitzky-Golay
 ddsmvec <- signal::sgolayfilt(nvec, n = 5, m = 2) # get the second derivative of the smoothed vector
-cpc::process_chromatogram(d0 = smvec, d2 = ddsmvec, apex_thresh = 10)
+cpc::process_chromatogram(d0 = smvec, d2 = ddsmvec, st = st, apex_thresh = 10)
 }

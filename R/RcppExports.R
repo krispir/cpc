@@ -22,8 +22,9 @@ testApexFinder <- function(v, w) {
 #' 
 #' Do not use this function, this function is called via the R interface functions.
 #'
-#' @param d0 Smoothed XIC trace
-#' @param d2 Second derivative of smoothed XIC
+#' @param d0 Numeric vector containing the smoothed XIC trace
+#' @param d2 Numeric vector containing the second derivative of smoothed XIC
+#' @param st Numeric vector containing scan times
 #' @param apex_thresh Second derivative threshold value.
 #' @param w Apex detection window. Do not change unless you know what you are doing.
 #' @param p Apex location of a specific peak. Leave blank if you wish to process the entire chromatogram.
@@ -53,12 +54,13 @@ testApexFinder <- function(v, w) {
 #' @examples
 #' require("signal")
 #' x <- seq(1, 200, 1)
+#' st <- seq_len(length(x))*0.05
 #' vec <- 1e5*dnorm(x, 100, 5) # create a vector with a gaussian peak
 #' noise <- rnorm(length(x), 0, 5) # generate a noise vector
 #' nvec <- vec + noise # create a noisy `chromatogram`.
 #' smvec <- signal::sgolayfilt(nvec, n = 5) # smooth the vector using Savitzky-Golay
 #' ddsmvec <- signal::sgolayfilt(nvec, n = 5, m = 2) # get the second derivative of the smoothed vector
-#' cpc::process_chromatogram(d0 = smvec, d2 = ddsmvec, apex_thresh = 10)
+#' cpc::process_chromatogram(d0 = smvec, d2 = ddsmvec, st = st, apex_thresh = 10)
 process_chromatogram <- function(d0, d2, st, apex_thresh = 0.0, w = 5L, p = -1L, liftoff = 0.0, touchdown = 0.5, output = 0L, fit_emg = 1L, fit_only_vip = 1L, fit_hess = 0L, fit_rel_lim = 0.05, pts_per_peak = 30L, min_shoulder_pts = 3L, min_rounded_pts = 3L, reltol = 1.0e-8, abstol = -1.0e35, alpha = 1.0, gamma = 2.1, rho = 0.75, sigma = 0.75, maxit = 2000L, maxeval = 2000L) {
     .Call(`_cpc_process_chromatogram`, d0, d2, st, apex_thresh, w, p, liftoff, touchdown, output, fit_emg, fit_only_vip, fit_hess, fit_rel_lim, pts_per_peak, min_shoulder_pts, min_rounded_pts, reltol, abstol, alpha, gamma, rho, sigma, maxit, maxeval)
 }

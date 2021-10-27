@@ -1,14 +1,14 @@
 // [[Rcpp::plugins(cpp11)]]
 
-#include <RcppArmadillo.h>
-// [[Rcpp::depends(RcppArmadillo)]]
+// #include <RcppArmadillo.h>
+// ***[[Rcpp::depends(RcppArmadillo)]]
 
 #include <Rcpp.h>
 // #include <bits/stdc++.h>
 #include <deque>
 
-#include <roptim.h>
-// [[Rcpp::depends(roptim)]]
+// #include <roptim.h>
+// ***[[Rcpp::depends(roptim)]]
 
 #include <cmath> // std::pow
 #include <numeric> // std::iota
@@ -16,24 +16,10 @@
 
 using namespace Rcpp;
 using namespace std;
-using namespace roptim;
+// using namespace roptim;
 
 using vec_d = std::vector<double>;
 using vec_i = std::vector<int>;
-
-// #define __APEX  0
-// #define __FINF  1
-// #define __TINF  2
-// #define __FEXP  3
-// #define __TEXP  4
-// #define __FTHR  5
-// #define __TTHR  6
-// #define __FBLB  7
-// #define __TBLB  8
-// #define __FPKB  9
-// #define __TPKB  10
-// #define __FTYP  11
-// #define __TTYP  12
 
 /********************
  * utility function *
@@ -726,12 +712,12 @@ public:
     
     void R_print()
     {
-        Rcout << "Simplex with " << this->npar << " variables and "
-              << this->verts.size() << " vertices." << std::endl
-              << "Vertices:" << std::endl;
+        Rcpp::Rcout << "Simplex with " << this->npar << " variables and "
+                    << this->verts.size() << " vertices." << std::endl
+                    << "Vertices:" << std::endl;
         for (unsigned int i = 0; i < this->verts.size(); i++)
             this->verts.at(i).R_print();
-        Rcout << "Centroid:" << std::endl;
+        Rcpp::Rcout << "Centroid:" << std::endl;
         this->vcen.R_print();
     }
     
@@ -1024,7 +1010,7 @@ void Minimizer<Derived>::nmmin(Derived &fn_)
      ***********************************/
     
     // calculate ptol based on initial simplex
-    this->control.ptol = 1.0e-6; // made up value for now...
+    this->control.ptol = 1.0e-6; // made up small value for now...
     
     // TODO: ENSURE ALL FVAL ARE DEFINED THROUGHOUT THE ITERATIONS
     // I need to find out a good way to do this! I should probably check the 
@@ -1112,7 +1098,8 @@ void Minimizer<Derived>::nmmin(Derived &fn_)
         // calculate relative difference in the current simplex as implemented in 
         // Numerical Recipes (add edition)
         this->rfdiff = 
-        2.0 * abs(this->sim.verts.at(this->sim.npar).fval - this->sim.verts.at(0).fval) / 
+        2.0 * abs(this->sim.verts.at(this->sim.npar).fval - 
+        this->sim.verts.at(0).fval) / 
         (abs(this->sim.verts.at(this->sim.npar).fval) + 
         abs(this->sim.verts.at(0).fval) + this->control.eps);
         
@@ -1622,158 +1609,158 @@ public:
 //     }
 // };
 
-class EMGFit2 : public Functor {
-private:
-    arma::vec si;
-    arma::vec st;
-    arma::vec wt;
-    arma::vec seed;
-    arma::vec lower;
-    arma::vec upper;
-    arma::vec pars_plus_h;
-    arma::vec pars_minus_h;
-    
-    // double st_mid = -1.0;
-    
-    std::string method;
-    
-    unsigned int npeaks;
-    unsigned int npars;
-    unsigned int nvals;
-    unsigned int nx;
-    double h = 1e-5;
-    double SS = 0.0;
-    double sum = 0.0;
-    double val = 0.0;
-    double pen = 0.0;
-    int objout = 0;
-    
-    bool seed_scaled = false;
-    
-public:
-    EMGFit2(arma::vec &_si,
-           arma::vec &_st,
-           arma::vec &_wt,
-           arma::vec _seed,
-           arma::vec &_lower,
-           arma::vec &_upper,
-           unsigned int _npeaks,
-           double _h = 1e-5,
-           const std::string &_method = "Not-NM",
-           const int _objout = 0)
-    {
-        si = _si;
-        st = _st;
-        wt = _wt;
-        seed = _seed;
-        lower = _lower;
-        upper = _upper;
-        
-        objout = _objout;
-        
-        npeaks = _npeaks;
-        npars = _seed.size()/_npeaks;
-        nx = _si.size();
-        nvals = _seed.size();
-        h = _h;
-        method = _method;
-        
-        pars_plus_h = arma::vec(this->nvals);
-        pars_minus_h = arma::vec(this->nvals);
-    }
-    
-    void emg(const double &val, const unsigned int &i, const double &u, const double &s, const double &l)
-    {
-        this->val = std::exp(std::log(l)+l*(u+((l*s*s)/2)-this->st.at(i)) +
-            R::pnorm((u+l*s*s-this->st.at(i))/(s), 0.0, 1.0, false, true));
-    }
-    
-    void objFun(const arma::vec &pars) {
-        /* calculate sum of squares */
-        this->SS = 0.0;
-        this->sum = 0.0;
-        
-        if (this->objout)
-        {
-            Rcout << "pars: ";
-            
-            for (auto & i : pars) Rcout << i << " ";
-            
-            Rcout << std::endl;
-        }
-        
-        for (unsigned int i = 0; i < this->nx; i++)
-        {
-            this->sum = 0.0;
-            
-            // A * emg[x_i]
-            for (unsigned int j = 0; j < this->npeaks; j++)
-            {
-                this->val = 0.0;
-                this->emg(this->val,
-                          i,
-                          pars.at(j*this->npars),
-                          pars.at(1+j*this->npars),
-                          std::exp(pars.at(2+j*this->npars)));
-                this->sum += std::exp(pars.at(3+j*this->npars)) * this->val;
-                
-            }
-            
-            this->SS += this->wt.at(i) * std::pow(this->si.at(i) - this->sum, 2);
-        }
-        
-    }
-    
-    void penFun(const arma::vec &pars) {
-        this->pen = 0.0;
-        
-        for (unsigned int i = 0; i < this->nvals; i++)
-        {
-            if (pars.at(i) > upper.at(i) || pars.at(i) < lower.at(i))
-            {
-                this->pen += std::numeric_limits<double>::infinity();
-                break;
-            }
-        }
-    }
-    
-    double operator()(const arma::vec &pars) override {
-        this->objFun(pars);
-        
-        if (this->method.compare("Nelder-Mead") == 0)
-        {
-            this->penFun(pars);
-        }
-        
-        return this->SS + this->pen;
-    }
-    
-    void Gradient(const arma::vec &pars, arma::vec &gr) override {
-        if (gr.size() != this->nvals)
-        {
-            gr = arma::zeros<arma::vec>(this->nvals);
-        }
-        
-        for (unsigned int i = 0; i < this->nvals; i++)
-        {
-            this->pars_plus_h = pars;
-            this->pars_minus_h = pars;
-            
-            // pars_plus_h.at(i) = pars.at(i) + this->h;
-            // pars_minus_h.at(i) = pars.at(i) - this->h;
-            this->pars_plus_h.at(i) = pars.at(i) + this->h*pars.at(i);
-            this->pars_minus_h.at(i) = pars.at(i) - this->h*pars.at(i);
-            
-            this->objFun(this->pars_plus_h);
-            this->sum = this->val;
-            this->objFun(this->pars_minus_h);
-            this->sum -= this->val;
-            
-            gr.at(i) = this->sum/(2*this->h*pars.at(i));
-            
-        }
-    }
-};
+// class EMGFit2 : public Functor {
+// private:
+//     arma::vec si;
+//     arma::vec st;
+//     arma::vec wt;
+//     arma::vec seed;
+//     arma::vec lower;
+//     arma::vec upper;
+//     arma::vec pars_plus_h;
+//     arma::vec pars_minus_h;
+//     
+//     // double st_mid = -1.0;
+//     
+//     std::string method;
+//     
+//     unsigned int npeaks;
+//     unsigned int npars;
+//     unsigned int nvals;
+//     unsigned int nx;
+//     double h = 1e-5;
+//     double SS = 0.0;
+//     double sum = 0.0;
+//     double val = 0.0;
+//     double pen = 0.0;
+//     int objout = 0;
+//     
+//     bool seed_scaled = false;
+//     
+// public:
+//     EMGFit2(arma::vec &_si,
+//            arma::vec &_st,
+//            arma::vec &_wt,
+//            arma::vec _seed,
+//            arma::vec &_lower,
+//            arma::vec &_upper,
+//            unsigned int _npeaks,
+//            double _h = 1e-5,
+//            const std::string &_method = "Not-NM",
+//            const int _objout = 0)
+//     {
+//         si = _si;
+//         st = _st;
+//         wt = _wt;
+//         seed = _seed;
+//         lower = _lower;
+//         upper = _upper;
+//         
+//         objout = _objout;
+//         
+//         npeaks = _npeaks;
+//         npars = _seed.size()/_npeaks;
+//         nx = _si.size();
+//         nvals = _seed.size();
+//         h = _h;
+//         method = _method;
+//         
+//         pars_plus_h = arma::vec(this->nvals);
+//         pars_minus_h = arma::vec(this->nvals);
+//     }
+//     
+//     void emg(const double &val, const unsigned int &i, const double &u, const double &s, const double &l)
+//     {
+//         this->val = std::exp(std::log(l)+l*(u+((l*s*s)/2)-this->st.at(i)) +
+//             R::pnorm((u+l*s*s-this->st.at(i))/(s), 0.0, 1.0, false, true));
+//     }
+//     
+//     void objFun(const arma::vec &pars) {
+//         /* calculate sum of squares */
+//         this->SS = 0.0;
+//         this->sum = 0.0;
+//         
+//         if (this->objout)
+//         {
+//             Rcout << "pars: ";
+//             
+//             for (auto & i : pars) Rcout << i << " ";
+//             
+//             Rcout << std::endl;
+//         }
+//         
+//         for (unsigned int i = 0; i < this->nx; i++)
+//         {
+//             this->sum = 0.0;
+//             
+//             // A * emg[x_i]
+//             for (unsigned int j = 0; j < this->npeaks; j++)
+//             {
+//                 this->val = 0.0;
+//                 this->emg(this->val,
+//                           i,
+//                           pars.at(j*this->npars),
+//                           pars.at(1+j*this->npars),
+//                           std::exp(pars.at(2+j*this->npars)));
+//                 this->sum += std::exp(pars.at(3+j*this->npars)) * this->val;
+//                 
+//             }
+//             
+//             this->SS += this->wt.at(i) * std::pow(this->si.at(i) - this->sum, 2);
+//         }
+//         
+//     }
+//     
+//     void penFun(const arma::vec &pars) {
+//         this->pen = 0.0;
+//         
+//         for (unsigned int i = 0; i < this->nvals; i++)
+//         {
+//             if (pars.at(i) > upper.at(i) || pars.at(i) < lower.at(i))
+//             {
+//                 this->pen += std::numeric_limits<double>::infinity();
+//                 break;
+//             }
+//         }
+//     }
+//     
+//     double operator()(const arma::vec &pars) override {
+//         this->objFun(pars);
+//         
+//         if (this->method.compare("Nelder-Mead") == 0)
+//         {
+//             this->penFun(pars);
+//         }
+//         
+//         return this->SS + this->pen;
+//     }
+//     
+//     void Gradient(const arma::vec &pars, arma::vec &gr) override {
+//         if (gr.size() != this->nvals)
+//         {
+//             gr = arma::zeros<arma::vec>(this->nvals);
+//         }
+//         
+//         for (unsigned int i = 0; i < this->nvals; i++)
+//         {
+//             this->pars_plus_h = pars;
+//             this->pars_minus_h = pars;
+//             
+//             // pars_plus_h.at(i) = pars.at(i) + this->h;
+//             // pars_minus_h.at(i) = pars.at(i) - this->h;
+//             this->pars_plus_h.at(i) = pars.at(i) + this->h*pars.at(i);
+//             this->pars_minus_h.at(i) = pars.at(i) - this->h*pars.at(i);
+//             
+//             this->objFun(this->pars_plus_h);
+//             this->sum = this->val;
+//             this->objFun(this->pars_minus_h);
+//             this->sum -= this->val;
+//             
+//             gr.at(i) = this->sum/(2*this->h*pars.at(i));
+//             
+//         }
+//     }
+// };
 
 
 // CLASS ApexFinder
@@ -1912,7 +1899,7 @@ private:
     vec_d st;
     
     // emg fitting vars
-    Roptim<EMGFit> fit;
+    // Roptim<EMGFit> fit;
     vec_i clusters_to_fit;
     
     double slope_at_idx(int _idx);
@@ -2115,6 +2102,7 @@ void PeakTable::summary()
         Rcout << left << setw(5) << setfill(filler) << this->apex.at(i);
         Rcout << left << setw(5) << setfill(filler) << this->adj_apex.at(i);
         Rcout << left << setw(5) << setfill(filler) << this->atyp.at(i);
+        
         switch(this->ftyp.at(i)) {
         case 0: code.append("B"); break;
         case 1: code.append("V"); break;
@@ -2122,6 +2110,7 @@ void PeakTable::summary()
         case 3: code.append("R"); break;
         default: code.append("U");
         }
+        
         switch(this->ttyp.at(i)) {
         case 0: code.append("B"); break;
         case 1: code.append("V"); break;
@@ -2129,19 +2118,29 @@ void PeakTable::summary()
         case 3: code.append("R"); break;
         default: code.append("U");
         }
-        Rcout << left << setw(5) << setfill(filler) << code;
-        Rcout << left << setw(outwidth) << setfill(filler) << std::setprecision(6) << this->finf.at(i);
-        Rcout << left << setw(outwidth) << setfill(filler) << std::setprecision(6) << this->tinf.at(i);
-        Rcout << left << setw(5) << setfill(filler) << this->fblb.at(i);
-        Rcout << left << setw(5) << setfill(filler) << this->tblb.at(i);
-        Rcout << left << setw(5) << setfill(filler) << this->fpkb.at(i);
-        Rcout << left << setw(5) << setfill(filler) << this->tpkb.at(i);
-        Rcout << left << setw(outwidth) << setfill(filler) << this->area.at(i);
-        Rcout << left << setw(outwidth) << setfill(filler) << std::setprecision(6) << this->emg_mu.at(i);
-        Rcout << left << setw(outwidth) << setfill(filler) << std::setprecision(6) << this->emg_sigma.at(i);
-        Rcout << left << setw(outwidth) << setfill(filler) << std::setprecision(6) << this->emg_lambda.at(i);
-        Rcout << left << setw(outwidth) << setfill(filler) << std::setprecision(6) << this->emg_area.at(i);
-        Rcout << left << setw(5) << setfill(filler) << this->emg_conv.at(i);
+        
+        Rcpp::Rcout << left << setw(5) << setfill(filler) << code;
+        Rcpp::Rcout << left << setw(outwidth) << setfill(filler) 
+                    << std::setprecision(6) << this->finf.at(i);
+        Rcpp::Rcout << left << setw(outwidth) << setfill(filler) 
+                    << std::setprecision(6) << this->tinf.at(i);
+        Rcpp::Rcout << left << setw(5) << setfill(filler) << this->fblb.at(i);
+        Rcpp::Rcout << left << setw(5) << setfill(filler) << this->tblb.at(i);
+        Rcpp::Rcout << left << setw(5) << setfill(filler) << this->fpkb.at(i);
+        Rcpp::Rcout << left << setw(5) << setfill(filler) << this->tpkb.at(i);
+        Rcpp::Rcout << left << setw(outwidth) << setfill(filler) 
+                    << this->area.at(i);
+        Rcpp::Rcout << left << setw(outwidth) << setfill(filler) 
+                    << std::setprecision(6) << this->emg_mu.at(i);
+        Rcpp::Rcout << left << setw(outwidth) << setfill(filler) 
+                    << std::setprecision(6) << this->emg_sigma.at(i);
+        Rcpp::Rcout << left << setw(outwidth) << setfill(filler) 
+                    << std::setprecision(6) << this->emg_lambda.at(i);
+        Rcpp::Rcout << left << setw(outwidth) << setfill(filler) 
+                    << std::setprecision(6) << this->emg_area.at(i);
+        Rcpp::Rcout << left << setw(5) << setfill(filler) 
+                    << this->emg_conv.at(i);
+        
         if (this->vip == i)
         {
             Rcout << left << setw(5) << setfill(filler) << "*";
@@ -4824,7 +4823,8 @@ void Chromatogram::fit_emg()
             this->pt.emg_sigma.at(peaks_to_fit.at(j)) = opt_param.at(1+(j*4));
             this->pt.emg_lambda.at(peaks_to_fit.at(j)) = exp(opt_param.at(2+(j*4)));
             this->pt.emg_area.at(peaks_to_fit.at(j)) = exp(opt_param.at(3+(j*4)));
-            this->pt.emg_conv.at(peaks_to_fit.at(j)) = this->fit.convergence();
+            // this->pt.emg_conv.at(peaks_to_fit.at(j)) = this->fit.convergence();
+            this->pt.emg_conv.at(peaks_to_fit.at(j)) = opt.tfval;
         }
         
     }
@@ -4904,8 +4904,9 @@ void Chromatogram::process_chromatogram()
 //' 
 //' Do not use this function, this function is called via the R interface functions.
 //'
-//' @param d0 Smoothed XIC trace
-//' @param d2 Second derivative of smoothed XIC
+//' @param d0 Numeric vector containing the smoothed XIC trace
+//' @param d2 Numeric vector containing the second derivative of smoothed XIC
+//' @param st Numeric vector containing scan times
 //' @param apex_thresh Second derivative threshold value.
 //' @param w Apex detection window. Do not change unless you know what you are doing.
 //' @param p Apex location of a specific peak. Leave blank if you wish to process the entire chromatogram.
@@ -4935,12 +4936,13 @@ void Chromatogram::process_chromatogram()
 //' @examples
 //' require("signal")
 //' x <- seq(1, 200, 1)
+//' st <- seq_len(length(x))*0.05
 //' vec <- 1e5*dnorm(x, 100, 5) # create a vector with a gaussian peak
 //' noise <- rnorm(length(x), 0, 5) # generate a noise vector
 //' nvec <- vec + noise # create a noisy `chromatogram`.
 //' smvec <- signal::sgolayfilt(nvec, n = 5) # smooth the vector using Savitzky-Golay
 //' ddsmvec <- signal::sgolayfilt(nvec, n = 5, m = 2) # get the second derivative of the smoothed vector
-//' cpc::process_chromatogram(d0 = smvec, d2 = ddsmvec, apex_thresh = 10)
+//' cpc::process_chromatogram(d0 = smvec, d2 = ddsmvec, st = st, apex_thresh = 10)
 // [[Rcpp::export]]
 Rcpp::List process_chromatogram(vec_d &d0, 
                                 vec_d &d2,
