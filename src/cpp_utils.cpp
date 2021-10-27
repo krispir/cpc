@@ -1,6 +1,6 @@
 // [[Rcpp::plugins(cpp11)]]
 
-#include <RcppArmadillo.h>
+// #include <RcppArmadillo.h>
 #include <Rcpp.h>
 #include <vector>
 #include <algorithm>
