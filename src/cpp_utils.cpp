@@ -252,6 +252,8 @@ using vec_i = std::vector<int>;
 //     return gradout;
 // }
 
+//' Matches a vector of integers in a second vector of integers
+//' 
 // [[Rcpp::export]]
 vec_i fast_match(vec_i &v1, vec_i &v2)
 {
