@@ -11,12 +11,12 @@
 #' @param min_inf_width Filter criteria for minimum points between peak inflection points. Should be set >=3 to avoid issues.
 #' @param min_sn Filter criteria for minimum signal-to-noise ratio.
 #' @param min_frac Filter criteria for minimum samples a peak is found in. This is currently not used as it is only applicable to feature filtering.
-#' @param min_shoulder_pts 
-#' @param min_rounded_pts
+#' @param min_shoulder_pts Minimum number of points between the inflection points of a shoulder peak (default: 3)
+#' @param min_rounded_pts Minimum number of points between the inflection points of a rounded peak (default: 3)
 #' @param min_intensity Filter criteria for minimum peak area.
-#' @param interval_tf 
-#' @param min_w 
-#' @param max_w 
+#' @param interval_tf A numeric vector of length 2 giving the min and max tailing factor for filtering of peaks (default: NULL means peaks will not be filtered based on this)
+#' @param min_w Minimum smoothing function window size (default: 5L)
+#' @param max_w Maximum smoothing function window size (default: 21L)
 #' @param smooth_method Smoothing method used during processing. Available: "savgol" for Savitzky-Golay smoothing or "mean" for moving mean smoothing.
 #' @param smooth_times Number of smooth iterations,
 #' @param smooth_win Width of the smoothing function. If set to NULL it will be determined from the peak sigma values in the XCMSnExp object.
@@ -117,9 +117,9 @@ cpcProcParam <- function(ppm = 50.0,
 #' @param min_sn Filter criteria for minimum signal-to-noise ratio.
 #' @param min_frac Filter criteria for minimum samples a peak is found in. This is currently not used as it is only applicable to feature filtering.
 #' @param min_intensity Filter criteria for minimum peak area.
-#' @param interval_tf 
-#' @param min_w 
-#' @param max_w 
+#' @param interval_tf A numeric vector of length 2 giving the min and max tailing factor for filtering of peaks (default: NULL means peaks will not be filtered based on this)
+#' @param min_w Minimum smoothing function window size (default: 5L)
+#' @param max_w Maximum smoothing function window size (default: 21L)
 #' @param smooth_method Smoothing method used during processing. Available: "savgol" for Savitzky-Golay smoothing or "mean" for moving mean smoothing.
 #' @param smooth_times Number of smooth iterations,
 #' @param smooth_win Width of the smoothing function. If set to \code{NULL} it will be determined from the peak sigma values in the XCMSnExp object.
