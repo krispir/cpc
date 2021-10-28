@@ -54,7 +54,7 @@ setGeneric("hasCharacterizedPeakTable",
 # P ############################################################################
 
 setGeneric("parsePeaklist", function(x) standardGeneric("parsePeaklist"))
-setGeneric("parseFeatures", function(x) standardGeneric("parseFeatures"))
+# setGeneric("parseFeatures", function(x) standardGeneric("parseFeatures"))
 setGeneric("parseMz", function(x) standardGeneric("parseMz"))
 setGeneric("peaksToKeep", function(x, returnBoolean = FALSE) standardGeneric("peaksToKeep"))
 setGeneric("plotPeak", function(x, plotEMG = F, plotXCMS = T, annotation = character(1)) standardGeneric("plotPeak"))
