@@ -17,9 +17,6 @@ Depends:
   signal (>= 0.7-6)
 Imports: 
   Rcpp (>= 1.0.5),
-  mzR (>= 2.22.0),
-  MSnbase (>= 2.15.7),
-  signal (>= 0.7-6), 
   methods
 Suggests: 
     knitr, 
@@ -31,13 +28,12 @@ LinkingTo: Rcpp
 SystemRequirements: C++11
 RoxygenNote: 7.1.2
 Collate:
-  "generics.R"
-  "fun_param.R"
-  "classes.R"
-  "fun_characterize_peaklist.R"
-  "fun_filter_xcms_peaklist.R"
-  "fun_emg_fit.R"
-  "fun_plot_eval_eic.R"
   "utils.R"
   "RcppExports.R"
+  "generics.R"
+  "fun_plot_eval_eic.R"
+  "fun_param.R"
+  "fun_filter_xcms_peaklist.R"
+  "fun_characterize_peaklist.R"
+  "classes.R"
 VignetteBuilder: knitr
