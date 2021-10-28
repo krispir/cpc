@@ -1,4 +1,53 @@
 useDynLib(cpc, .registration=TRUE)
-exportPattern("^[[:alpha:]]+")
-importFrom(Rcpp, evalCpp)
+# exportPattern("^[[:alpha:]]+")
+import("methods")
+importFrom("Rcpp", "evalCpp")
 importClassesFrom("xcms")
+importFrom("grDevices", "dev.off", "png", "pdf")
+importFrom("graphics", "plot", "layout", "points", "lines", 
+           "par", "title", "text", "polygon", "abline")
+importFrom("MSnbase", "fileNames")
+importFrom("mzR", "openMSfile", "peaks", "runInfo", "header")
+importFrom("signal", "sgolayfilt")
+
+
+# exported functions
+export("characterize_xcms_peaklist",
+       "filter_xcms_peaklist",
+       "cpcProcParam",
+       "cpcChromParam",
+       "plotPeaks",
+       "process_chromatogram")
+
+# exported classes
+exportClasses("cpc", 
+              "cpc_chrom", 
+              "cpc_raw",
+              "cpcProcParam", 
+              "cpcChromParam")
+
+# exported methods of cpc
+exportMethods("getPeaklist",
+              "cpt",
+              "parsePeaklist",
+              "getChromatogram",
+              "processPeaks",
+              "getFilterOutcomes",
+              "filterPeaks",
+              "getOriginalXCMS",
+              "getFilteredXCMS",
+              "getRemovedPeaks",
+              "getRetainedPeaks",
+              "show")
+
+# exported methods of cpc_chrom
+exportMethods("plotPeak",
+              "processChromatogram")
+
+# exported methods of cpc_raw
+# none for now
+
+# exported methods of cpcProcParam
+# show is already exported
+
+# exported methods of cpcChromParam
