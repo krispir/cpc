@@ -39,7 +39,17 @@ cpcProcParam(
 
 \item{min_frac}{Filter criteria for minimum samples a peak is found in. This is currently not used as it is only applicable to feature filtering.}
 
+\item{min_shoulder_pts}{Minimum number of points between the inflection points of a shoulder peak (default: 3)}
+
+\item{min_rounded_pts}{Minimum number of points between the inflection points of a rounded peak (default: 3)}
+
 \item{min_intensity}{Filter criteria for minimum peak area.}
+
+\item{interval_tf}{A numeric vector of length 2 giving the min and max tailing factor for filtering of peaks (default: NULL means peaks will not be filtered based on this)}
+
+\item{min_w}{Minimum smoothing function window size (default: 5L)}
+
+\item{max_w}{Maximum smoothing function window size (default: 21L)}
 
 \item{smooth_method}{Smoothing method used during processing. Available: "savgol" for Savitzky-Golay smoothing or "mean" for moving mean smoothing.}
 

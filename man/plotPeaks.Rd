@@ -10,9 +10,9 @@ plotPeaks(
   outPath = NULL,
   prefix = NULL,
   device = "png",
-  plotEMG = F,
-  plotXCMS = T,
-  noPrompt = F,
+  plotEMG = FALSE,
+  plotXCMS = TRUE,
+  noPrompt = FALSE,
   annotation = character(1),
   ...
 )
@@ -27,6 +27,14 @@ plotPeaks(
 \item{prefix}{(optional) Filename prefix, if NULL the filename of the raw data is used}
 
 \item{device}{Graphics device to be used for saving plots (default: "png")}
+
+\item{plotEMG}{\code{logical} indicating if the EMG fitting results should be plotted (default: FALSE)}
+
+\item{plotXCMS}{\code{logical} indicating if the XCMS data should be included in the plot (default: TRUE)}
+
+\item{noPrompt}{\code{logical} indicating if the prompt when many peaks are being plotted will be suppressed (default: FALSE)}
+
+\item{annotation}{(Optional) A single string or a vector of strings for each plotted peak with additional annotations for the plot}
 
 \item{...}{Additional parameters to be sent to the graphics device}
 }

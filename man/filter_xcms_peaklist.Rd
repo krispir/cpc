@@ -13,6 +13,8 @@ filter_xcms_peaklist(
 \arguments{
 \item{xd}{\code{XCMSnExp} object}
 
+\item{return_type}{String indicating if the filtered XCMS object ('xcms') or the CPC object ('cpc') should be returned.}
+
 \item{param}{\code{cpcProcParam} object with process parameters}
 }
 \value{

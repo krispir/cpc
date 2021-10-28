@@ -19,7 +19,13 @@ of a chromatogram is performed using this class.
 
 \item{\code{d2}}{Smoothed second derivative of the XIC trace}
 
-\item{\code{procParams}}{\code{list} containing processing parameters.}
+\item{\code{st}}{Scantimes}
+
+\item{\code{param}}{cpcParam object holding the processing parameters}
+
+\item{\code{mzMeta}}{Metadata from the raw MS files}
+
+\item{\code{procParams}}{\code{list} containing processing parameters. (deprecated)}
 
 \item{\code{procData}}{\code{list} containing processing data.}
 

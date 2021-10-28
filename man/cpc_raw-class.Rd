@@ -28,5 +28,7 @@ raw data.
 \item{\code{scantime}}{Seconds per scan}
 
 \item{\code{nscan}}{Number of scans}
+
+\item{\code{backend}}{String defining the backend used (currently not used).}
 }}
 

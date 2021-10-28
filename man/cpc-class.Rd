@@ -20,12 +20,16 @@ cpc class
 
 \item{\code{cpt}}{\code{data.frame} containing the determined peak characteristics.}
 
+\item{\code{outcomes}}{\code{data.frame} containing the results from the peak filters.}
+
 \item{\code{fdef}}{Feature definitions (not used currently).}
 
 \item{\code{fpeaks}}{Feature defining peaks (not used currently).}
 
+\item{\code{param}}{\code{cpcParam} object holding the processing parameters}
+
 \item{\code{procData}}{\code{list} containing processing data.}
 
-\item{\code{procParams}}{\code{list} containing processing parameters.}
+\item{\code{procParams}}{\code{list} containing processing parameters. (deprecated)}
 }}
 

@@ -51,6 +51,12 @@ cpcChromParam(
 
 \item{min_intensity}{Filter criteria for minimum peak area.}
 
+\item{interval_tf}{A numeric vector of length 2 giving the min and max tailing factor for filtering of peaks (default: NULL means peaks will not be filtered based on this)}
+
+\item{min_w}{Minimum smoothing function window size (default: 5L)}
+
+\item{max_w}{Maximum smoothing function window size (default: 21L)}
+
 \item{smooth_method}{Smoothing method used during processing. Available: "savgol" for Savitzky-Golay smoothing or "mean" for moving mean smoothing.}
 
 \item{smooth_times}{Number of smooth iterations,}
@@ -66,6 +72,8 @@ cpcChromParam(
 \item{sel_files}{\code{integer} vector indicating a subset of file indices to be processed from the XCMSnExp object. If NULL all files are processed.}
 
 \item{verbose_output}{\code{logical} value indicating if output is to be given during processing.}
+
+\item{save_all}{}
 
 \item{plot}{\code{logical} indicating if the results should be plotted for each peak}
 }
