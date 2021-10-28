@@ -6,6 +6,33 @@ setClassUnion("integerOrNULL", members=c("integer", "NULL"))
 
 #### Class: cpcProcParam ####
 
+#' Title
+#'
+#' @slot ppm numericOrNULL. 
+#' @slot min_pts numericOrNULL. 
+#' @slot min_inf_width numericOrNULL. 
+#' @slot min_sn numericOrNULL. 
+#' @slot min_frac numericOrNULL. 
+#' @slot min_intensity numericOrNULL. 
+#' @slot min_shoulder_pts numericOrNULL. 
+#' @slot min_rounded_pts numericOrNULL. 
+#' @slot interval_tf numericOrNULL. 
+#' @slot min_fwhm numericOrNULL. 
+#' @slot min_w numericOrNULL. 
+#' @slot max_w numericOrNULL. 
+#' @slot smooth_method character. 
+#' @slot smooth_times numericOrNULL. 
+#' @slot smooth_win numericOrNULL. 
+#' @slot max_sigma numericOrNULL. 
+#' @slot fit_emg logical. 
+#' @slot sel_peaks numericOrNULL. 
+#' @slot sel_files numericOrNULL. 
+#' @slot verbose_output logical. 
+#' @slot save_all logical. 
+#' @slot plot logical. 
+#'
+#' @return
+#' @export
 setClass("cpcProcParam",
          representation(ppm = "numericOrNULL", 
                         min_pts = "numericOrNULL",
@@ -52,6 +79,16 @@ setClass("cpcProcParam",
                    save_all = FALSE,
                    plot = FALSE))
 
+#' Title
+#'
+#' @slot mz numericOrNULL. 
+#' @slot p numericOrNULL. 
+#' @slot s numericOrNULL. 
+#' @slot mz_range numericOrNULL. 
+#' @slot nscan numericOrNULL. 
+#'
+#' @return
+#' @export
 setClass("cpcChromParam",
          representation(mz = "numericOrNULL",
                         p = "numericOrNULL",
@@ -69,7 +106,6 @@ setClassUnion("cpcParam",
               members = c("cpcProcParam", "cpcChromParam"))
 
 #### Method: setParam<- ####
-#' @export
 setMethod("setParam<-", signature("cpcParam"), function(x, value) 
 {
     if (class(value) == "list")
@@ -148,14 +184,22 @@ setMethod("getParam", signature("cpcParam"), function(x, param)
 })
 
 #### Method: show ####
+#' @title Show method for the cpcParam object
+#' 
+#' @description 
+#' 
+#' Outputs a summary of the cpcParam object.
+#' 
+#' @param object A \code{cpc} object
+#' 
 #' @export
-setMethod("show", signature("cpcParam"), function(x)
+setMethod("show", signature("cpcParam"), function(object)
 {
-    paste0("'", class(x), "' object:\n")
-    sNames <- slotNames(x)
+    paste0("'", class(object), "' object:\n")
+    sNames <- slotNames(object)
     for (i in 1:length(sNames))
     {
-        paste0(sNames[i], ": ", slot(x, sNames[i]), "\n")
+        paste0(sNames[i], ": ", slot(object, sNames[i]), "\n")
     }
 })
 
@@ -278,9 +322,7 @@ setClass("cpc_chrom",
 #' 
 #' @return A named \code{list} of process parameters.
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc_chrom-methods
 setMethod("getProcParams", signature("cpc_chrom"), function(x, value = NULL)
 {
     if (!is.null(value) & is.character(value))
@@ -307,9 +349,7 @@ setMethod("getProcParams", signature("cpc_chrom"), function(x, value = NULL)
 #' 
 #' @return A \code{cpc_chrom} object
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc_chrom-methods
 setMethod("setProcParams<-", signature("cpc_chrom"), function(x, value)
 {
     if (class(value) != "list") stop("Process params must be a named list.")
@@ -344,9 +384,7 @@ setMethod("setProcParams<-", signature("cpc_chrom"), function(x, value)
 #' 
 #' @return A named \code{list} with process data.
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc_chrom-methods
 setMethod("getProcData", signature("cpc_chrom"), function(x, value = NULL)
 {
     if (!is.null(value) && is.character(value))
@@ -379,9 +417,7 @@ setMethod("getProcData", signature("cpc_chrom"), function(x, value = NULL)
 #' 
 #' @return A \code{cpc_chrom} object
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc_chrom-methods
 setMethod("setProcData<-", signature("cpc_chrom"), function(x, value)
 {
     if (class(value) != "list") stop("Process data must be a named list.")
@@ -416,9 +452,7 @@ setMethod("setProcData<-", signature("cpc_chrom"), function(x, value)
 #' 
 #' @return A \code{numeric} vector with mz range.
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc_chrom-methods
 setMethod("getMzRange", signature("cpc_chrom"), 
           function(x) getParam(x@param, "mz_range"))
 
@@ -431,9 +465,7 @@ setMethod("getMzRange", signature("cpc_chrom"),
 #' 
 #' @return A \code{data.frame} with the results from the peak processing.
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc_chrom-methods
 setMethod("getResults", signature("cpc_chrom"), 
           function(x) x@results)
 
@@ -446,9 +478,7 @@ setMethod("getResults", signature("cpc_chrom"),
 #' 
 #' @return A \code{cpc_chrom} object.
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc_chrom-methods
 setMethod("setResults<-", signature("cpc_chrom"), function(x, value)
 {
     if (class(value) != "list") stop("Result vals must be a named list.")
@@ -490,9 +520,7 @@ setMethod("setResults<-", signature("cpc_chrom"), function(x, value)
 #' 
 #' @return A \code{cpc_chrom} object
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc_chrom-methods
 setMethod("setXIC<-", signature("cpc_chrom"), function(x, value)
 {
     if (!is.numeric(value)) stop("XIC must be a numeric vector.")
@@ -511,13 +539,16 @@ setMethod("setXIC<-", signature("cpc_chrom"), function(x, value)
 #' This method will plot the processing result as a panel for review.
 #' 
 #' @param x A \code{cpc_chrom} object.
+#' @param plotEMG \code{logical} indicating if results from EMG deconvolution should be plotted (default: TRUE)
+#' @param plotXCMS \code{logical} indicating if XCMS reported peak bounds should be plotted (default: TRUE)
+#' @param annotation (Optional) A single string or a vector of strings for each plotted peak with additional annotations for the plot
 #' 
 #' @return NULL
 #' 
 #' @export
 #' @docType methods
 #' @rdname cpc_chrom-methods
-setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS = T,
+setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = TRUE, plotXCMS = TRUE,
                                                        annotation = character(1))
 {
     if (!is.na(x@results$apex) && 
@@ -538,7 +569,7 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
         ylim = c(0, max(x@xic[x@procData$plotrange[1]:x@procData$plotrange[2]]))
     }
     
-    layout(mat = matrix(c(1,2), nrow = 2, ncol = 1, byrow = T))
+    graphics::layout(mat = matrix(c(1,2), nrow = 2, ncol = 1, byrow = T))
     par_bk <- graphics::par()
     
     # d0 main plot 
@@ -804,9 +835,7 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = T, plotXCMS 
 #' 
 #' @return cpc_chrom object
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc_chrom-methods
 setMethod("calculatePeakCharacteristics", signature("cpc_chrom"), function(x)
 {
     
@@ -1005,9 +1034,7 @@ setMethod("calculatePeakCharacteristics", signature("cpc_chrom"), function(x)
 #' 
 #' @return A \code{cpc_chrom} object.
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc_chrom-methods
 setMethod("smoothChromatogram", signature("cpc_chrom"), function(x)
 {
     if (length(x@xic) < 1)
@@ -1402,14 +1429,12 @@ setClass("cpc_raw",
 #' 
 #' @param x A \code{cpc_raw} object with parsed MS data
 #' @param mzrange A \code{numeric} vector of length 2.
-#' @param scanrage An \code{integer} vector of length 2.
+#' @param scanrange An \code{integer} vector of length 2.
 #' @param method A single \code{integer} indicating which method to use.
 #' 
 #' @return A \code{numeric} vector.
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc_raw-methods
 setMethod("getXIC", signature("cpc_raw"), function(x, mzrange, scanrange = NULL, 
                                                    method = 1)
 {
@@ -1442,9 +1467,7 @@ setMethod("getXIC", signature("cpc_raw"), function(x, mzrange, scanrange = NULL,
 #' 
 #' @return A \code{cpc_raw} object
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc_raw-methods
 setMethod("parseMz", signature("cpc_raw"), function(x) 
 {
     conn <- mzR::openMSfile(filename = x@file_path)
@@ -1479,9 +1502,7 @@ setMethod("parseMz", signature("cpc_raw"), function(x)
 #' 
 #' @return A \code{numeric} vector with scantimes
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc_raw-methods
 setMethod("scantime", signature("cpc_raw"), function(x)
 {
     return(x@header$retentionTime)
@@ -1557,11 +1578,9 @@ setClass("cpc",
 #' 
 #' @param x A \code{cpc} object
 #' 
-#' @return A \link{boolean}
+#' @return A \code{logical} indicating if there is a peak table in the object
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("hasPeakTable", signature("cpc"), function(x)
 {
     return(nrow(x@pt) > 0)
@@ -1574,11 +1593,9 @@ setMethod("hasPeakTable", signature("cpc"), function(x)
 #' 
 #' @param x A \code{cpc} object
 #' 
-#' @return A \link{boolean}
+#' @return A \code{logical} indicating if there is a cpc characterized peak table in the object
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("hasCharacterizedPeakTable", signature("cpc"), function(x) 
 {
     return(nrow(x@cpt) > 0 & nrow(x@cpt) == length(getParam(x@param, "sel_peaks")))
@@ -1593,9 +1610,7 @@ setMethod("hasCharacterizedPeakTable", signature("cpc"), function(x)
 #' 
 #' @return A \code{XCMSnExp} object
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("xdObj", signature("cpc"), function(x) x@xdObj)
 
 
@@ -1607,9 +1622,7 @@ setMethod("xdObj", signature("cpc"), function(x) x@xdObj)
 #' 
 #' @return A \code{cpc} object
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("xdObj<-", signature("cpc"), function(x, value) 
 {
     # data checks
@@ -1628,9 +1641,7 @@ setMethod("xdObj<-", signature("cpc"), function(x, value)
 #' 
 #' @return A filtered \code{XCMSnExp} object
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("filteredObject", signature("cpc"), function(x) return(x@xdFilt))
 
 
@@ -1639,13 +1650,11 @@ setMethod("filteredObject", signature("cpc"), function(x) return(x@xdFilt))
 #' @title Method to generate an idx vector of peaks that pass the filter criteria after peak characterization.
 #' 
 #' @param x A \code{cpc} object
-#' @param returnBoolean \code{boolean} indicating if ...
+#' @param returnBoolean \code{logical} indicating if a vector of logicals should be returned instead of the row numbers (default: FALSE)
 #' 
-#' @return An \code{integer} vector of peak idx that pass the criteria
+#' @return An \code{integer} vector of peak idx that pass the criteria or if \code{returnBoolean} is TRUE, a vector of logicals indicating, for each peak, if they pass the criteria
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("peaksToKeep", signature("cpc"), function(x, returnBoolean = FALSE)
 {
     if(!hasCharacterizedPeakTable(x))
@@ -1701,9 +1710,7 @@ setMethod("getPeaklist", signature("cpc"), function(x) return(x@pt))
 #' 
 #' @return A \code{cpc} object
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("setPeaklist<-", signature("cpc"), function(x, value) 
 {
     # data checks
@@ -1716,6 +1723,10 @@ setMethod("setPeaklist<-", signature("cpc"), function(x, value)
 #### Method: cpt ####
 
 #' @title Getter method for the \code{cpt} slot in a \code{cpc} object
+#' 
+#' @description 
+#' 
+#' Method that returns the characterized peak list with all calculated peak characteristics.
 #' 
 #' @param x A \code{cpc} object
 #' 
@@ -1736,9 +1747,7 @@ setMethod("cpt", signature("cpc"), function(x) x@cpt)
 #' 
 #' @return A \code{cpc} object
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("cpt<-", signature("cpc"), function(x, value) 
 {
     # data checks
@@ -1757,9 +1766,7 @@ setMethod("cpt<-", signature("cpc"), function(x, value)
 #' 
 #' @return Named \code{list} holding the parameter values
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("getProcData", signature("cpc"), function(x, value = NULL)
 {
     if (!is.null(value) & is.character(value))
@@ -1785,9 +1792,7 @@ setMethod("getProcData", signature("cpc"), function(x, value = NULL)
 #' 
 #' @return A \code{cpc} object
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("setProcData<-", signature("cpc"), function(x, value)
 {
     x@procData <- value
@@ -1823,9 +1828,7 @@ setMethod("setProcData<-", signature("cpc"), function(x, value)
 #' 
 #' @return A \code{cpc} object
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("setProcData<-", signature("cpc"), function(x, value)
 {
     if (class(value) != "list") stop("Process params must be a named list.")
@@ -1861,9 +1864,7 @@ setMethod("setProcData<-", signature("cpc"), function(x, value)
 #' 
 #' @return A named \code{list} of process parameters.
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("getProcParams", signature("cpc"), function(x, value = NULL) 
 {
     if (!is.null(value) & is.character(value))
@@ -1891,9 +1892,7 @@ setMethod("getProcParams", signature("cpc"), function(x, value = NULL)
 #' 
 #' @return A \code{cpc} object.
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("setProcParams<-", signature("cpc"), function(x, value)
 {
     if (class(value) != "list") stop("Process params must be a named list.")
@@ -1934,9 +1933,7 @@ setMethod("setProcParams<-", signature("cpc"), function(x, value)
 #' 
 #' @return The parameter value.
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("getParam", signature("cpc"), function(x, param)
 {
     return(getParam(x@param, param))
@@ -1958,12 +1955,11 @@ setMethod("getParam", signature("cpc"), function(x, param)
 #' 
 #' @return A \code{cpc} object.
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("setParam<-", signature("cpc"), function(x, value) 
 {
-    x@param <- setParam(x@param, value)
+    # x@param <- setParam(x@param, value)
+    setParam(x@param) <- value
     
     return(x)
     
@@ -2073,72 +2069,7 @@ setMethod("parsePeaklist", signature("cpc"), function(x)
 })
 
 
-#### Method: parseFeatures ####
 
-#' @title Method for parsing the feature table from an \code{XCMSnExp} object contained in the \code{cpc} object
-#' 
-#' @description
-#' 
-#' This method will set the \code{sel_peaks} parameter in \code{procParams} to 
-#' include only peaks that make up a part of a feature. It will call 
-#' \code{parsePeaklist} with the new peak subset.
-#' 
-#' @param x A \code{cpc} object
-#' 
-#' @return A \code{cpc} object
-#' 
-#' @seealso \link{parsePeaklist}
-#' 
-#' @export
-#' @docType methods
-#' @rdname cpc-methods
-setMethod("parseFeatures", signature("cpc"), function(x)
-{
-    # ensure that use_features is set in params (in case the method is run externally.)
-    setProcParams(x) <- list(use_features = TRUE)
-    
-    # check for feature information in xd (in case the method is run externally.)
-    ## check that correspondence has been run on the xcms object
-    if (!any(unlist(lapply(x@xd@.processHistory, 
-                           function(o) o@type)) == "Peak grouping"))
-    {
-        stop(paste("It does not appear that correspondence has been run on 'xd'. ",
-                   "Use XCMS to perform correspondence on 'xd' before using cpc to ",
-                   "process feature data.", sep = ""))
-    } else
-    {
-        corr_proc_idx <- which(unlist(lapply(x@xd@.processHistory, 
-                                             function(o) o@type)) == "Peak grouping")
-    }
-    
-    ## check that feature information is present in the xcms object
-    if (nrow(featureDefinitions(xd)) < 1)
-        stop(paste("'xd' does not contain any feature information. ",
-                   "Run peak picking and correspondence on the data before running ",
-                   "cpc.", sep = ""))
-    
-    # set min_frac argument
-    if (getParam(x@param, "use_features") && is.null(getParam(x@param, "min_frac")))
-    {
-        # get min_frac from the xcms object
-        setParam(x@param) <- 
-            list(min_frac = x@xd@.processHistory[[corr_proc_idx]]@param@minFraction)
-    }
-    
-    # get feature definitions from xcms object
-    fdef <- xcms::featureDefinitions(x@xd)
-    
-    x@fdef <- data.frame(fdef[, 1:(ncol(fdef)-1)])
-    x@fpeaks <- fdef$peakidx
-    
-    setParam(x@param) <- 
-        list(sel_peaks = sort(as.integer(unique(unlist(lapply(x@fpeaks, 
-                                                    function(k) return(k)))))))
-    
-    x <- parsePeaklist(x)
-    
-    return(x)
-})
 
 
 #### Method: filePaths ####
@@ -2149,9 +2080,7 @@ setMethod("parseFeatures", signature("cpc"), function(x)
 #' 
 #' @return A \code{character} vector with file paths
 #' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("filePaths", signature("cpc"), function(x) 
 {
     x@procData$file_paths
@@ -2195,22 +2124,21 @@ setMethod("determineMaxSigma", signature("cpc"), function(x, scantime, scanrate)
 #' \code{parsePeaklist} or \code{parseFeatures} methods.
 #' 
 #' @param x A \code{cpc} object
+#' @param id The peak ID
 #' 
 #' @return A \code{cpc_chrom} object
-#' 
-#' @seealso \link{parsePeaklist}, \link{parseFeatures}, \link{cpc_chrom-class}
 #' 
 #' @export
 #' @docType methods
 #' @rdname cpc-methods
 setMethod("getChromatogram", signature("cpc"), function(x, id) 
 {
-    if (nrow(cpt(x)) > 0 && !is.na(match(id, cpc::cpt(x)$id)))
+    if (nrow(cpt(x)) > 0 && !is.na(match(id, cpt(x)$id)))
     {
-        results <- x@cpt[match(id, cpc::cpt(x)$id), ]
+        results <- x@cpt[match(id, cpt(x)$id), ]
         if (length(x@rawResults) > 0)
         {
-            rawResults <- as.list(x@rawResults[[match(id, cpc::cpt(x)$id)]])
+            rawResults <- as.list(x@rawResults[[match(id, cpt(x)$id)]])
         } else
         {
             rawResults <- list()
@@ -2356,8 +2284,6 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
 #' @param x A \code{cpc} object
 #' 
 #' @return A \code{cpc} object
-#' 
-#' @seealso \link{parsePeaklist}, \link{parseFeatures}
 #' 
 #' @export
 #' @docType methods
@@ -2601,215 +2527,6 @@ setMethod("processPeaks", signature("cpc"), function(x)
     return(x)
 })
 
-# Method: processPeaks BACKUP ####
-# setMethod("processPeaks", signature("cpc"), function(x)
-# {
-#     # initialize empty cpt data.frame
-#     cpt(x) <- data.frame()
-#     
-#     # check to ensure that all data needed is present
-#     if (nrow(x@pt) < 1)
-#     {
-#         x <- parsePeaklist(x)
-#         
-#         if (nrow(x@pt) < 1) stop("No peak information in object")
-#     }
-#     
-#     # loop over files
-#     # (i <- getParam(x@param, "sel_files")[1])
-#     for (i in getParam(x@param, "sel_files"))
-#     {
-#         # start timer
-#         full_timer <- Sys.time()
-#         
-#         i_idx <- getParam(x@param, "sel_peaks")[
-#             which(x@pt$sample[getParam(x@param, "sel_peaks")] == i)
-#         ]
-#         i_npeaks <- length(i_idx)
-#         
-#         # output
-#         cat(paste("Processing file:", x@procData$file_paths[i], "\n"))
-#         
-#         # load raw data
-#         raw <- new("cpc_raw", file_path = x@procData$file_paths[i])
-#         raw <- parseMz(raw)
-#         
-#         # output
-#         cat(paste("Found ", i_npeaks, " peak(s).\n", sep = ""))
-#         
-#         i_counter = 1
-#         
-#         if (getParam(x@param, "verbose_output"))
-#         {
-#             cat(paste("[debug] starting peak processing...\n"))
-#         } else
-#         {
-#             cat("% complete: ")
-#             i_progress <- floor(floor(i_counter/i_npeaks*100)/10)*10
-#             cat(paste(i_progress, " ", sep=""))
-#             i_lastprogress <- i_progress
-#         }
-#         
-#         # calculate filter window max threshold for smoother
-#         # first checks so that it hasnt been calculated already - assuming that
-#         # the files have the same scanrate it shouldnt change but if it does
-#         # it is good to recalculate it for each file
-#         if (is.null(getParam(x@param, "max_sigma")) ||
-#             !is.numeric(getParam(x@param, "max_sigma")))
-#         {
-#             setParam(x@param) <- 
-#                 list(max_sigma = 
-#                          as.numeric(quantile(x@pt$rtmax - x@pt$rtmin,
-#                                              probs = 0.75, na.rm = T)) * 
-#                          raw@scanrate / 4)
-#             
-#             if (is.na(getParam(x@param, "max_sigma")) ||
-#                 is.null(getParam(x@param, "max_sigma")) ||
-#                 !is.numeric(getParam(x@param, "max_sigma")))
-#             {
-#                 stop(paste0("Could not determine filter width threshold ", 
-#                             "the smoother..."))
-#             }
-#         }
-#         
-#         # (pd <- x@pt[i_idx[18717], ]) # - tryptophan 210402
-#         # (pd <- x@pt[i_idx, ])
-#         df <- do.call("rbind", apply(x@pt[i_idx, ], 1, FUN = function(pd)
-#         {
-#             # start timer
-#             proc_timer <- Sys.time()
-#             
-#             # output
-#             if (getParam(x@param, "verbose_output")) 
-#             {
-#                 cat(paste("[debug] peak: ", pd["id"], "; ", sep = ""))
-#             } else
-#             {
-#                 # <<- is dangerous... should probably find another
-#                 # way to deal with the progress output
-#                 i_progress <<- floor(floor(i_counter/i_npeaks*100)/10)*10
-#                 i_counter <<- i_counter + 1
-#                 
-#                 if (i_progress > i_lastprogress)
-#                 {
-#                     cat(paste(i_progress, " ", sep=""))
-#                     i_lastprogress <<- i_progress
-#                 }
-#             }
-#             
-#             # check if xcms data is missing
-#             if (!is.numeric(unlist(pd[c("mz", "rt", "rtmin", "rtmax")])))
-#             {
-#                 if (getParam(x@param, "verbose_output")) cat("missing xcms data")
-#                 
-#                 setResults(chrom) <- list(note = "xcms_missing", file = i)
-#             } else # if xcms data exist
-#             {
-#                 # determine params for processing
-#                 ## peak location
-#                 cur_p <- binsearch_closest(x = raw@scantime, val = pd["rt"])
-#                 
-#                 ## filter width for smoothing
-#                 cur_s <- (pd["rtmax"] - pd["rtmin"])/4
-#                 if (is.na(cur_s) || 
-#                     is.null(cur_s) || 
-#                     cur_s > getParam(x@param, "max_sigma"))
-#                 {
-#                     cur_s <- floor(getParam(x@param, "max_sigma")+0.5)
-#                 }
-#                 
-#                 ## mz range for extracting ion traces
-#                 cur_mzrange <- 
-#                     c(as.numeric(pd["mz"]) -
-#                           as.numeric(pd["mz"])/1e6*getParam(x@param, "ppm"),
-#                       as.numeric(pd["mz"]) +
-#                           as.numeric(pd["mz"])/1e6*getParam(x@param, "ppm"))
-#                 
-#                 # create chrom object
-#                 chrom <- 
-#                     new("cpc_chrom",
-#                         id = as.integer(pd["id"]),
-#                         param = cpcChromParam(mz = as.numeric(pd["mz"]),
-#                                               p = cur_p,
-#                                               s = cur_s,
-#                                               mz_range = cur_mzrange))
-#                 
-#                 # chrom <- 
-#                 #     new("cpc_chrom",
-#                 #         id = as.integer(pd["id"]),
-#                 #         param = cpcChromParam(mz = as.numeric(pd["mz"]),
-#                 #                               p = cur_p,
-#                 #                               s = cur_s,
-#                 #                               mz_range = cur_mzrange),
-#                 #         procParams = list(mz = as.numeric(pd["mz"]),
-#                 #                           p = binsearch_closest(x = raw$scantime,
-#                 #                                                 val = pd["rt"]),
-#                 #                           s = ifelse((is.na(pd["sigma"]) || as.numeric(pd["sigma"]) >
-#                 #                                           as.numeric(getProcData(x, "max_sigma")[i])),
-#                 #                                      as.numeric(getProcData(x, "max_sigma")[i]),
-#                 #                                      as.numeric(pd["sigma"])),
-#                 #                           mz_range = c(as.numeric(pd["mz"]) -
-#                 #                                            as.numeric(pd["mz"])/1e6*getParam(x@param, "ppm"),
-#                 #                                        as.numeric(pd["mz"]) +
-#                 #                                            as.numeric(pd["mz"])/1e6*getParam(x@param, "ppm"))))
-#                 
-#                 # old param methodlogy with a list() holding the params
-#                 # setProcParams(chrom) <- getProcParams(x)
-#                 
-#                 # new param methodology with a cpcParam object holding the params
-#                 # for better control
-#                 # add params from cpc object
-#                 setParam(chrom@param) <- x@param
-#                 
-#                 setProcData(chrom) <- list(pd = pd)
-#                 
-#                 # get XIC
-#                 setXIC(chrom) <- getXIC(raw, mzrange = getParam(chrom@param, "mz_range"))
-#                 
-#                 # process chromatogram
-#                 chrom <- processChromatogram(chrom)
-#                 
-#                 setResults(chrom) <- list(file = i)
-#                 
-#             }
-#             
-#             setResults(chrom) <- list(exectime = as.numeric(difftime(Sys.time(), proc_timer,
-#                                                                      units = "secs")))
-#             
-#             # end output line
-#             if (getParam(x@param, "verbose_output")) cat("\n")
-#             
-#             # return the data.frame row for the current peak
-#             # row.names are added from the original peak table for matching
-#             # purposes later on
-#             # return(list(res = chrom@rawProcResults,
-#             #             df = data.frame(id = chrom@id, getResults(chrom),
-#             #                        row.names = row.names(pd)[1])))
-#             
-#             return(data.frame(id = chrom@id, getResults(chrom),
-#                               row.names = row.names(pd)[1]))
-#         }))
-#         
-#         # end output
-#         if (getParam(x@param, "verbose_output"))
-#         {
-#             cat("[debug] Done!\n\n")
-#         } else
-#         {
-#             cat(paste("Done!\n", sep  = ""))
-#         }
-#         
-#         cpt(x) <- rbind(cpt(x), df)
-#         
-#         # output timer
-#         output_formatted_time(full_timer, Sys.time())
-#     }
-#     
-#     # return object
-#     return(x)
-# })
-
-
 #### Method: checkPeaksAgainstCriteria ####
 #' @title Method that check each peak in the XCMS object against the criteria 
 #' specified by the user in the *cpcProcParam* object
@@ -2824,11 +2541,7 @@ setMethod("processPeaks", signature("cpc"), function(x)
 #' 
 #' @return A \code{cpc} object
 #' 
-#' @seealso \link{processPeaks}
-#' 
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("checkPeaksAgainstCriteria", signature("cpc"), function(x) {
     # check that the peak processing has been performed
     if (!hasCharacterizedPeakTable(x))
@@ -2874,9 +2587,7 @@ setMethod("checkPeaksAgainstCriteria", signature("cpc"), function(x) {
 
 
 #### Method: setFilterOutcomes ####
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("setFilterOutcomes<-", signature("cpc"), function(x, value) {
     # ensure that value is a data frame with the same number of rows as cpt
     if (class(value) != "data.frame")
@@ -2895,9 +2606,7 @@ setMethod("setFilterOutcomes<-", signature("cpc"), function(x, value) {
 })
 
 #### Method: determineFilterOutcomes ####
-#' @export
 #' @docType methods
-#' @rdname cpc-methods
 setMethod("determineFilterOutcomes", signature("cpc"), function(x) {
     # check that the peak processing has been performed
     if (!hasCharacterizedPeakTable(x))
@@ -2996,8 +2705,6 @@ setMethod("getFilterOutcomes", signature("cpc"), function(x) {
 #' 
 #' @return A \code{cpc} object
 #' 
-#' @seealso \link{processPeaks}
-#' 
 #' @export
 #' @docType methods
 #' @rdname cpc-methods
@@ -3085,6 +2792,16 @@ setMethod("filterPeaks", signature("cpc"), function(x)
 })
 
 #### Method: getOriginalXCMS ####
+#' @title Getter for the original unfiltered XCMS object
+#' 
+#' @description 
+#' 
+#' This method returns the unfiltered original \code{XCMSnExp} object.
+#' 
+#' @param x A \code{cpc} object
+#' 
+#' @return A \code{XCMSnExp} object
+#' 
 #' @export
 #' @docType methods
 #' @rdname cpc-methods
@@ -3094,6 +2811,17 @@ setMethod("getOriginalXCMS", signature("cpc"), function(x) {
 
 
 #### Method: getFilteredXCMS ####
+#' @title Getter for the filtered XCMS object
+#' 
+#' @description 
+#' 
+#' This method returns the filtered XCMS object after running the CPC
+#' algorithm.
+#' 
+#' @param x A \code{cpc} object
+#' 
+#' @return A \code{XCMSnExp} object
+#' 
 #' @export
 #' @docType methods
 #' @rdname cpc-methods
@@ -3103,6 +2831,17 @@ setMethod("getFilteredXCMS", signature("cpc"), function(x) {
 
 
 #### Method: getRemovedPeaks ####
+#' @title Getter for the removed peaks after CPC processing
+#' 
+#' @description 
+#' 
+#' This method will return a vector containing the peak IDs of the peaks that
+#' were removed during the CPC filtering.
+#' 
+#' @param x A \code{cpc} object
+#' 
+#' @return A vector of peak IDs
+#' 
 #' @export
 #' @docType methods
 #' @rdname cpc-methods
@@ -3115,6 +2854,17 @@ setMethod("getRemovedPeaks", signature("cpc"), function(x) {
 })
 
 #### Method: getRetainedPeaks ####
+#' @title Getter for the retained peaks after CPC processing
+#' 
+#' @description 
+#' 
+#' This method will return a vector containing the peak IDs of the peaks that
+#' were *not* removed during the CPC filtering.
+#' 
+#' @param x A \code{cpc} object
+#' 
+#' @return A vector of peak IDs
+#' 
 #' @export
 #' @docType methods
 #' @rdname cpc-methods
@@ -3125,22 +2875,20 @@ setMethod("getRetainedPeaks", signature("cpc"), function(x) {
 
 
 #### Method: show ####
-
+#' @title Show method for the cpc object
+#' 
+#' @description 
+#' 
+#' Outputs a summary of the cpc object.
+#' 
+#' @param object A \code{cpc} object
+#' 
 #' @export
 #' @docType methods
 #' @rdname cpc-methods
-setMethod("show", signature("cpc"), function(x)
+setMethod("show", signature("cpc"), function(object)
 {
     cat("S4 object of type 'cpc'.\n")
-    attributes(x)
-})
-
-#### Method: print ####
-
-#' @export
-#' @docType methods
-#' @rdname cpc-methods
-setMethod("print", signature("cpc"), function(x)
-{
-    show(x)
+    attributes(object)
+    
 })
