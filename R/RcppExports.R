@@ -77,6 +77,8 @@ getEIC_Rcpp <- function(mz, intensity, scan_idx, mz_range, scan_range) {
     .Call(`_cpc_getEIC_Rcpp`, mz, intensity, scan_idx, mz_range, scan_range)
 }
 
+#' Matches a vector of integers in a second vector of integers
+#' 
 fast_match <- function(v1, v2) {
     .Call(`_cpc_fast_match`, v1, v2)
 }
