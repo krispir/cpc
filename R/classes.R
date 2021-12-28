@@ -6,7 +6,13 @@ setClassUnion("integerOrNULL", members=c("integer", "NULL"))
 
 #### Class: cpcProcParam ####
 
-#' Title
+#' @title Class cpcProcParam
+#' 
+#' @description 
+#' 
+#' The class *cpcProcParam* holds all necessary parameters used in the characterization 
+#' and filtering of peaks contained in an XCMS object. Instances of this class 
+#' should be created using the constructor *cpcProcParam*.
 #'
 #' @slot ppm numericOrNULL. 
 #' @slot min_pts numericOrNULL. 
@@ -79,7 +85,14 @@ setClass("cpcProcParam",
                    save_all = FALSE,
                    plot = FALSE))
 
-#' Title
+#' @title Class cpcChromParam
+#' 
+#' @description 
+#' 
+#' The class *cpcChromParam* holds all necessary parameters to characterize the 
+#' peaks in a chromatogram. Instances of this class should be created using the
+#' constructor *cpcChromParam*. The class *cpcChromParam* extends the class 
+#' *cpcProcParam*.
 #'
 #' @slot mz numericOrNULL. 
 #' @slot p numericOrNULL. 
@@ -114,7 +127,8 @@ setMethod("setParam<-", signature("cpcParam"), function(x, value)
         valueType <- "list"
         
         # check that the list is named
-        if (length(namesInArgument) < 1) stop("Process params must be a named list.")
+        if (length(namesInArgument) < 1) 
+            stop("Process params must be a named list.")
         
     } else if (extends(class(value), "cpcParam"))
     {
@@ -838,7 +852,6 @@ setMethod("plotPeak", signature("cpc_chrom"), function(x, plotEMG = TRUE, plotXC
 #' @docType methods
 setMethod("calculatePeakCharacteristics", signature("cpc_chrom"), function(x)
 {
-    
     # peak height
     setResults(x) <- list(height = x@d0[x@results$apex] - 
                               interpolate_y(x = c(x@results$fblb, 
@@ -1023,6 +1036,7 @@ setMethod("calculatePeakCharacteristics", signature("cpc_chrom"), function(x)
     
     # return object
     return(x)
+    
 })
 
 
