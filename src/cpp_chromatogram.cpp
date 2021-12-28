@@ -3425,7 +3425,7 @@ void Chromatogram::expand_all_peaks()
 //     
 // }
 
-void Chromatogram:: detect_clusters()
+void Chromatogram::detect_clusters()
 {
     double cur_fslp, cur_tslp;
     
@@ -4373,6 +4373,9 @@ void Chromatogram::fit_emg()
      *
      * if fit_only_vip is set to 0 and/or no vip is found then it will perform
      * emg fitting on all clusters
+     * 
+     * TODO: Change logic such that if fit_only_vip == 1 and no vip is found
+     *       then no fitting is performed.
      *
      **************************************************************************/
     if (this->options.fit_only_vip && this->get_vip() >= 0)
@@ -4900,9 +4903,16 @@ void Chromatogram::process_chromatogram()
 //' 
 //' @description
 //' 
-//' The function takes smoothed d0, d1, and d2 vectors and processes the chromatogram by baseline expansion of peaks detected in the second derivative.
+//' The function takes smoothed d0, d1, and d2 vectors and processes the 
+//' chromatogram by baseline expansion of peaks detected in the second 
+//' derivative. In short, the algorithm detects all peak apices in the 
+//' chromatogram as negative minima craddled by inflection points in the 
+//' second derivative of the chromatogram. Each peak apex detected is then
+//' subjected to a baseline expansion algorithm in order to determine the
+//' peak boundaries and baseline boundaries of the peaks.
 //' 
-//' Do not use this function, this function is called via the R interface functions.
+//' It is not recommended to use this function directly unless you know what
+//' you are doing. Instead, use the supplied API functions defined.
 //'
 //' @param d0 Numeric vector containing the smoothed XIC trace
 //' @param d2 Numeric vector containing the second derivative of smoothed XIC
