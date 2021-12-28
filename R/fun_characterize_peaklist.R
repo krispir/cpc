@@ -3,10 +3,20 @@
 #'
 #' @description
 #' 
+#' This wrapper function for the characterization of all peaks detected by
+#' XCMS takes an *XCMSnExp* object and a *cpcProcParam* object as arguments
+#' and will run over all peaks detected in all files or the subset defined in 
+#' the *cpcProcParam* object. Before running this function, XCMS must be used
+#' to detect chromatographic peaks in the data. Currently the available algorithm for peak
+#' characterization is an adaption of the ApexTrack algorithm implemented in 
+#' many instrumental software. In short, the algorithm proceeds by first 
+#' detecting all peak apices present as negative minima craddled by inflection
+#' points in the second derivative of the chromatogram. All detected peak apices
+#' is then subjected to a baseline expansion algorithm in order to determine the
+#' peak boundaries and baseline boundaries.
+#' 
 #' This function is called by \code{filter_xcms_peaklist} but can be called 
 #' independently to only characterize the peaks in the \code{XCMSnExp}.
-#' 
-#' TODO: Add a description about the algorithms used.
 #'
 #' @param xd \code{XCMSnExp} object with peak information
 #' @param param \code{cpcProcParam} object with process parameters
