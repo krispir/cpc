@@ -14,7 +14,8 @@ Depends:
   xcms (>= 3.13.5), 
   mzR (>= 2.22.0), 
   MSnbase (>= 2.15.7), 
-  signal (>= 0.7-6)
+  signal (>= 0.7-6),
+  pander
 Imports: 
   Rcpp (>= 1.0.5),
   methods
@@ -22,8 +23,7 @@ Suggests:
     knitr, 
     rmarkdown, 
 	  markdown, 
-	  ggvenn, 
-	  pander
+	  ggvenn
 LinkingTo: Rcpp
 SystemRequirements: C++11
 RoxygenNote: 7.1.2
