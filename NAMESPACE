@@ -12,7 +12,8 @@ importFrom("signal", "sgolayfilt")
 
 
 # exported functions
-export("characterize_xcms_peaklist",
+export("chromFromTrace",
+       "characterize_xcms_peaklist",
        "filter_xcms_peaklist",
        "cpcProcParam",
        "cpcChromParam",

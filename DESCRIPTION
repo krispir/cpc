@@ -33,6 +33,7 @@ Collate:
   "generics.R"
   "fun_plot_eval_eic.R"
   "fun_param.R"
+  "fun_chrom.R"
   "fun_filter_xcms_peaklist.R"
   "fun_characterize_peaklist.R"
   "classes.R"
