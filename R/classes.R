@@ -119,6 +119,23 @@ setClassUnion("cpcParam",
               members = c("cpcProcParam", "cpcChromParam"))
 
 #### Method: setParam<- ####
+
+#' @title Setter method for the parameter slot
+#' 
+#' @description 
+#' 
+#' Takes a named \code{list} with parameter values as argument. Each existing
+#' parameter given in the list will be updated with the value in the list. The
+#' parameter names should be the same as the slot names in the *cpcProcParam* 
+#' and *cpcChromParam* classes.
+#' 
+#' @param x A \code{cpc_chrom} object.
+#' @param value A named \code{list} with parameter values.
+#' 
+#' @return A \code{cpc_chrom} object
+#' 
+#' @export
+#' @docType methods
 setMethod("setParam<-", signature("cpcParam"), function(x, value) 
 {
     if (class(value) == "list")
@@ -173,6 +190,16 @@ setMethod("setParam<-", signature("cpcParam"), function(x, value)
 })
 
 #### Method: getParam ####
+
+#' @title Getter method for the parameter slot
+#' 
+#' @param x A \code{cpc_chrom} object.
+#' @param param A string defining which parameter should be returned.
+#' 
+#' @return A parameter value.
+#' 
+#' @export
+#' @docType methods
 setMethod("getParam", signature("cpcParam"), function(x, param)
 {
     # check the param argument
