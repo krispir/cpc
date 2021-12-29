@@ -1164,8 +1164,18 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
         setParam(x@param) <- list(nscan = length(x@xic))
     }
     
-    ## check that XCMS data exist
-    if (is.null(getParam(x@param, "p")))
+    ## check that XCMS data is not corrupt
+    # if (is.null(getParam(x@param, "p")))
+    # {
+    #     if (getParam(x@param, "verbose_output"))
+    #         message(paste0("[debug] idx =", x@id, "missing xcms data.\n"))
+    #     
+    #     setResults(x) <- list(id = x@id, note = "xcms_missing")
+    #     
+    #     return(x)
+    #     
+    # } else 
+    if (getParam(x@param, "p") < 1)
     {
         if (getParam(x@param, "verbose_output"))
             message(paste0("[debug] idx =", x@id, "missing xcms data.\n"))
@@ -1174,22 +1184,25 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
         
         return(x)
         
-    } else if (getParam(x@param, "p") < 1)
-    {
-        if (getParam(x@param, "verbose_output"))
-            message(paste0("[debug] idx =", x@id, "missing xcms data.\n"))
-        
-        setResults(x) <- list(id = x@id, note = "xcms_missing")
-        
-        return(x)
     }
     
-    # determine plotrange
-    setProcData(x) <- list(plotrange = c(max(1, floor(getParam(x@param, "p") - 
-                                                          20*getParam(x@param, "s"))),
-                                         min(x@procData$nscan, 
-                                             floor(getParam(x@param, "p") + 
-                                                       20*getParam(x@param, "s")))))
+    # if a vip is selected, set plotrange to be 20 standard deviations around
+    # that peak, else set it to the entire chromatogram
+    if (!is.null(getParam(x@param, "p")))
+    {
+        setProcData(x) <- list(plotrange = c(max(1, floor(getParam(x@param, "p") - 
+                                                              20*getParam(x@param, "s"))),
+                                             min(x@procData$nscan, 
+                                                 floor(getParam(x@param, "p") + 
+                                                           20*getParam(x@param, "s")))))
+        vip_selected <- 1L
+        
+    } else
+    {
+        setProcData(x) <- list(plotrange = c(1, x@procData$nscan))
+        vip_selected <- 0L
+        
+    }
     
     # setup and check procParams
     ## smooth times
@@ -1222,14 +1235,17 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
                      ifelse(floor(2.354*getParam(x@param, "s")) %% 2 == 0, # If w is even
                             floor(2.354*getParam(x@param, "s")) + 1, # w + 1
                             floor(2.354*getParam(x@param, "s")))) # else w
+        
     }
     
     if (getParam(x@param, "smooth_win") < getParam(x@param, "min_w"))
     {
         setParam(x@param) <- list(smooth_win = getParam(x@param, "min_w"))
+        
     } else if (getParam(x@param, "smooth_win") > getParam(x@param, "max_w"))
     {
         setParam(x@param) <- list(smooth_win = getParam(x@param, "max_w"))
+        
     }
     
     # calculate smoothed vectors
@@ -1244,7 +1260,9 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
                 x@d0 <- pmax(0, signal::sgolayfilt(x = x@d0, p = 2, 
                                                    n = getParam(x@param, "smooth_win"), 
                                                    m = 0)) # ~780 µsecs for 25509
+                
             }
+            
         }
         
         x@d2 <- signal::sgolayfilt(x = x@d0, p = 2, 
@@ -1279,6 +1297,7 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
     if (length(x@procData$noise_sel) < floor(getParam(x@param, "nscan")/2))
     {
         x@procData$noise_sel <- 1:getParam(x@param, "nscan")
+        
     }
     
     setProcData(x) <- list(xic_noise = c_peak_to_peak_noise(x = x@procData$noise_sel-1,
@@ -1295,10 +1314,12 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
         #       second derivative of gaussian
         setParam(x@param) <- list(min_intensity = x@procData$d2_noise)
         # x@procParams$min_intensity <- x@procData$d2_noise
+        
     } else
     {
         setParam(x@param) <- list(min_intensity = x@procData$d2_noise)
         # x@procParams$min_intensity <- x@procData$d2_noise
+        
     }
     
     # process chromatogram (C++ function)
@@ -1310,74 +1331,81 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
                                              p = getParam(x@param, "p")-1L,
                                              output = as.integer(x@param@verbose_output), 
                                              fit_emg = as.integer(x@param@fit_emg), 
-                                             fit_only_vip = 1L,
+                                             fit_only_vip = as.integer(vip_selected),
                                              min_shoulder_pts = getParam(x@param, "min_shoulder_pts"),
                                              min_rounded_pts = getParam(x@param, "min_rounded_pts"))
     
-    # check that the current peak was detected
-    if (x@rawProcResults$current_peak < 0)
+    # if a vip was selected
+    if (vip_selected > 0L)
     {
-        # set not_detected flag in results
-        setResults(x) <- list(note = "not_detected")
+        # check that the current peak was detected
+        if (x@rawProcResults$current_peak < 0)
+        {
+            # set not_detected flag in results
+            setResults(x) <- list(note = "not_detected")
+            
+            # plot result if plot
+            if (getParam(x@param, "plot")) plotPeak(x)
+            
+            return(x)
+            
+        }
         
-        # plot result if plot
+        # record results from processing
+        setResults(x) <- list(
+            apex = x@rawProcResults$adj_apex[x@rawProcResults$current_peak+1]+1,
+            finf = x@rawProcResults$front_inf[x@rawProcResults$current_peak+1]+1,
+            tinf = x@rawProcResults$tail_inf[x@rawProcResults$current_peak+1]+1,
+            fblb = x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1,
+            tblb = x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1,
+            fpkb = x@rawProcResults$front_peak_bound[x@rawProcResults$current_peak+1]+1,
+            tpkb = x@rawProcResults$tail_peak_bound[x@rawProcResults$current_peak+1]+1,
+            fcode = switch(x@rawProcResults$front_code[x@rawProcResults$current_peak+1]+1, 
+                           "B", "V", "S", "R"),
+            tcode = switch(x@rawProcResults$tail_code[x@rawProcResults$current_peak+1]+1, 
+                           "B", "V", "S", "R"),
+            blslp = (x@d0[(x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1)] - 
+                         x@d0[(x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1)]) / 
+                ((x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1) - 
+                     (x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1)),
+            emu = x@rawProcResults$emg_mu[x@rawProcResults$current_peak+1]+1,
+            esigma = x@rawProcResults$emg_sigma[x@rawProcResults$current_peak+1],
+            elambda = x@rawProcResults$emg_lambda[x@rawProcResults$current_peak+1],
+            earea = x@rawProcResults$emg_area[x@rawProcResults$current_peak+1],
+            econv = x@rawProcResults$emg_conv[x@rawProcResults$current_peak+1],
+            note = "detected"
+        )
+        
+        # check peak bounds and apex
+        if (x@results$fblb < 1 || x@results$tblb < 1 || 
+            x@results$fpkb < 1 || x@results$tpkb < 1 || 
+            x@results$apex < 1)
+        {
+            setResults(x) <- list(note = "not_detected")
+            
+            if (getParam(x@param, "plot")) plotPeak(x)
+            
+            return(x)
+            
+        }
+        
+        # check peak width
+        # if (x@results$tpkb - x@results$fpkb < getParam(x@param, "min_pts"))
+        # {
+        #     setResults(x) <- list(note = "too_narrow")
+        # 
+        #     if (getParam(x@param, "plot")) plotPeak(x)
+        # 
+        #     return(x)
+        # }
+        
+        # calculate peak characteristics
+        x <- calculatePeakCharacteristics(x)
+        
+        # if plot true -> plot result
         if (getParam(x@param, "plot")) plotPeak(x)
         
-        return(x)
     }
-    
-    # record results from processing
-    setResults(x) <- list(
-        apex = x@rawProcResults$adj_apex[x@rawProcResults$current_peak+1]+1,
-        finf = x@rawProcResults$front_inf[x@rawProcResults$current_peak+1]+1,
-        tinf = x@rawProcResults$tail_inf[x@rawProcResults$current_peak+1]+1,
-        fblb = x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1,
-        tblb = x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1,
-        fpkb = x@rawProcResults$front_peak_bound[x@rawProcResults$current_peak+1]+1,
-        tpkb = x@rawProcResults$tail_peak_bound[x@rawProcResults$current_peak+1]+1,
-        fcode = switch(x@rawProcResults$front_code[x@rawProcResults$current_peak+1]+1, 
-                       "B", "V", "S", "R"),
-        tcode = switch(x@rawProcResults$tail_code[x@rawProcResults$current_peak+1]+1, 
-                       "B", "V", "S", "R"),
-        blslp = (x@d0[(x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1)] - 
-                     x@d0[(x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1)]) / 
-            ((x@rawProcResults$tail_baseline_bound[x@rawProcResults$current_peak+1]+1) - 
-                 (x@rawProcResults$front_baseline_bound[x@rawProcResults$current_peak+1]+1)),
-        emu = x@rawProcResults$emg_mu[x@rawProcResults$current_peak+1]+1,
-        esigma = x@rawProcResults$emg_sigma[x@rawProcResults$current_peak+1],
-        elambda = x@rawProcResults$emg_lambda[x@rawProcResults$current_peak+1],
-        earea = x@rawProcResults$emg_area[x@rawProcResults$current_peak+1],
-        econv = x@rawProcResults$emg_conv[x@rawProcResults$current_peak+1],
-        note = "detected"
-    )
-    
-    # check peak bounds and apex
-    if (x@results$fblb < 1 || x@results$tblb < 1 || 
-        x@results$fpkb < 1 || x@results$tpkb < 1 || 
-        x@results$apex < 1)
-    {
-        setResults(x) <- list(note = "not_detected")
-        
-        if (getParam(x@param, "plot")) plotPeak(x)
-        
-        return(x)
-    }
-    
-    # check peak width
-    # if (x@results$tpkb - x@results$fpkb < getParam(x@param, "min_pts"))
-    # {
-    #     setResults(x) <- list(note = "too_narrow")
-    # 
-    #     if (getParam(x@param, "plot")) plotPeak(x)
-    # 
-    #     return(x)
-    # }
-    
-    # calculate peak characteristics
-    x <- calculatePeakCharacteristics(x)
-    
-    # if plot true -> plot result
-    if (getParam(x@param, "plot")) plotPeak(x)
     
     # return object
     return(x)
