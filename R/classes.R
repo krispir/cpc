@@ -94,11 +94,11 @@ setClass("cpcProcParam",
 #' constructor *cpcChromParam*. The class *cpcChromParam* extends the class 
 #' *cpcProcParam*.
 #'
-#' @slot mz numericOrNULL. 
-#' @slot p numericOrNULL. 
-#' @slot s numericOrNULL. 
-#' @slot mz_range numericOrNULL. 
-#' @slot nscan numericOrNULL. 
+#' @slot mz Numeric holding the m/z value of the selected peak.
+#' @slot p Retention time of the selected peak. 
+#' @slot s Peak standard deviation to be used for determining the smoothing windows size.
+#' @slot mz_range Numeric vector of length 2 holding the m/z range for extracting the ion trace.
+#' @slot nscan Integer holding the length in number of scans of the ion trace.
 #'
 #' @return
 #' @export
@@ -398,6 +398,7 @@ setMethod("setProcParams<-", signature("cpc_chrom"), function(x, value)
 #' 
 #' @return A named \code{list} with process data.
 #' 
+#' @export
 #' @docType methods
 setMethod("getProcData", signature("cpc_chrom"), function(x, value = NULL)
 {
@@ -431,6 +432,7 @@ setMethod("getProcData", signature("cpc_chrom"), function(x, value = NULL)
 #' 
 #' @return A \code{cpc_chrom} object
 #' 
+#' @export
 #' @docType methods
 setMethod("setProcData<-", signature("cpc_chrom"), function(x, value)
 {
