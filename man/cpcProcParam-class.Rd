@@ -3,58 +3,60 @@
 \docType{class}
 \name{cpcProcParam-class}
 \alias{cpcProcParam-class}
-\title{Title}
+\title{Class cpcProcParam}
 \value{
 
 }
 \description{
-Title
+The class *cpcProcParam* holds all necessary parameters used in the characterization 
+and filtering of peaks contained in an XCMS object. Instances of this class 
+should be created using the constructor *cpcProcParam*.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{ppm}}{numericOrNULL.}
+\item{\code{ppm}}{Numeric holding the ppm value for calculating the m/z range when extracting the ion trace.}
 
-\item{\code{min_pts}}{numericOrNULL.}
+\item{\code{min_pts}}{Integer holding the minimum required scan points between the peak bounds. Used for filtering based on peak width.}
 
-\item{\code{min_inf_width}}{numericOrNULL.}
+\item{\code{min_inf_width}}{Integer holding the minimum required number of scan points between the inflection points. Used internally when detecting peak apices in the chromatogram.}
 
-\item{\code{min_sn}}{numericOrNULL.}
+\item{\code{min_sn}}{Numeric holding the minimum required signal-to-noise ratio. Used to filter peaks based on signal-to-noise ratio.}
 
-\item{\code{min_frac}}{numericOrNULL.}
+\item{\code{min_frac}}{Numeric holding the minimum fraction of samples a peak should be contained in. Currently not used.}
 
-\item{\code{min_intensity}}{numericOrNULL.}
+\item{\code{min_intensity}}{Numeric holding the minimum required intensity of a peak. Used to filter peaks based on peak intensity.}
 
-\item{\code{min_shoulder_pts}}{numericOrNULL.}
+\item{\code{min_shoulder_pts}}{Integer holding the minimum number of points between peak apices when detecting should peaks. Used internally when detecting peak apices in the chromatogram.}
 
-\item{\code{min_rounded_pts}}{numericOrNULL.}
+\item{\code{min_rounded_pts}}{Integer holding the minimum number of points between peak apices when detecting rounded peaks. Used internally when detecting peak apices in the chromatogram.}
 
-\item{\code{interval_tf}}{numericOrNULL.}
+\item{\code{interval_tf}}{Numeric of length 2 defining the required tailing factor interval. Used when filtering peaks based on symmetry using the tailing factor.}
 
-\item{\code{min_fwhm}}{numericOrNULL.}
+\item{\code{min_fwhm}}{Numeric holding the minimum required full width at half maxima. Used in peak filtering based on full width half maxima.}
 
-\item{\code{min_w}}{numericOrNULL.}
+\item{\code{min_w}}{Numeric defining the minimum smoothing window width.}
 
-\item{\code{max_w}}{numericOrNULL.}
+\item{\code{max_w}}{Numeric defining the maximum smoothing window width.}
 
-\item{\code{smooth_method}}{character.}
+\item{\code{smooth_method}}{String defining the smoothing method to be used. 'savgol' is default and uses a Savitzky-Golay smoother. 'mean' uses a moving window mean smoother.}
 
-\item{\code{smooth_times}}{numericOrNULL.}
+\item{\code{smooth_times}}{Integer defining the number of times the smoother will be applied to the data.}
 
-\item{\code{smooth_win}}{numericOrNULL.}
+\item{\code{smooth_win}}{Numeric defining the smoothing window width.}
 
-\item{\code{max_sigma}}{numericOrNULL.}
+\item{\code{max_sigma}}{Numeric defining the maximum signal value to be used in determining the smoothing window width based on XCMS data. Used internally.}
 
-\item{\code{fit_emg}}{logical.}
+\item{\code{fit_emg}}{Logical defining if EMG deconvolution should be applied.}
 
-\item{\code{sel_peaks}}{numericOrNULL.}
+\item{\code{sel_peaks}}{Integer vector defining which peaks in the XCMS peak list that should be processed. Default: NULL means all peaks will be processed.}
 
-\item{\code{sel_files}}{numericOrNULL.}
+\item{\code{sel_files}}{Integer vector defining which files in the XCMS object that should be processed. Default: NULL means all files will be processed.}
 
-\item{\code{verbose_output}}{logical.}
+\item{\code{verbose_output}}{Logical defining if verbose output should be given during processing. Default: FALSE.}
 
-\item{\code{save_all}}{logical.}
+\item{\code{save_all}}{Logical defining if all processing data should be saved in the object. Default: FALSE. Warning: This may result in very large objects and should be used with care.}
 
-\item{\code{plot}}{logical.}
+\item{\code{plot}}{Logical defining if the results should be plotted after each peak is processed. Default: FALSE. Warning: Will slow down processing very much if a large number of peaks are processed. Should only be used for a small number of peaks.}
 }}
 

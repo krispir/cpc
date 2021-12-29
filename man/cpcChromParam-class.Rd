@@ -3,24 +3,27 @@
 \docType{class}
 \name{cpcChromParam-class}
 \alias{cpcChromParam-class}
-\title{Title}
+\title{Class cpcChromParam}
 \value{
 
 }
 \description{
-Title
+The class *cpcChromParam* holds all necessary parameters to characterize the 
+peaks in a chromatogram. Instances of this class should be created using the
+constructor *cpcChromParam*. The class *cpcChromParam* extends the class 
+*cpcProcParam*.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{mz}}{numericOrNULL.}
+\item{\code{mz}}{Numeric holding the m/z value of the selected peak.}
 
-\item{\code{p}}{numericOrNULL.}
+\item{\code{p}}{Retention time of the selected peak.}
 
-\item{\code{s}}{numericOrNULL.}
+\item{\code{s}}{Peak standard deviation to be used for determining the smoothing windows size.}
 
-\item{\code{mz_range}}{numericOrNULL.}
+\item{\code{mz_range}}{Numeric vector of length 2 holding the m/z range for extracting the ion trace.}
 
-\item{\code{nscan}}{numericOrNULL.}
+\item{\code{nscan}}{Integer holding the length in number of scans of the ion trace.}
 }}
 
