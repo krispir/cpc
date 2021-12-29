@@ -4,6 +4,11 @@
 \name{getPeaklist,cpc-method}
 \alias{getPeaklist,cpc-method}
 \alias{cpt,cpc-method}
+\alias{getProcData,cpc-method}
+\alias{setProcData<-,cpc-method}
+\alias{getProcParams,cpc-method}
+\alias{getParam,cpc-method}
+\alias{setParam<-,cpc-method}
 \alias{parsePeaklist,cpc-method}
 \alias{getChromatogram,cpc-method}
 \alias{processPeaks,cpc-method}
@@ -19,6 +24,18 @@
 \S4method{getPeaklist}{cpc}(x)
 
 \S4method{cpt}{cpc}(x)
+
+\S4method{getProcData}{cpc}(x, value = NULL)
+
+\S4method{setProcData}{cpc}(x) <- value
+
+\S4method{setProcData}{cpc}(x) <- value
+
+\S4method{getProcParams}{cpc}(x, value = NULL)
+
+\S4method{getParam}{cpc}(x, param)
+
+\S4method{setParam}{cpc}(x) <- value
 
 \S4method{parsePeaklist}{cpc}(x)
 
@@ -43,6 +60,8 @@
 \arguments{
 \item{x}{A \code{cpc} object}
 
+\item{value}{A named \code{list} of parameters.}
+
 \item{id}{The peak ID}
 
 \item{object}{A \code{cpc} object}
@@ -51,6 +70,18 @@
 A \code{data.frame} of the peak table
 
 A \code{data.frame} of the characterized peak table
+
+Named \code{list} holding the parameter values
+
+A \code{cpc} object
+
+A \code{cpc} object
+
+A named \code{list} of process parameters.
+
+The parameter value.
+
+A \code{cpc} object.
 
 A \code{cpc} object
 
@@ -70,6 +101,13 @@ A vector of peak IDs
 }
 \description{
 Method that returns the characterized peak list with all calculated peak characteristics.
+
+Takes a \code{cpc} object and a single character vector indicating a slot in 
+the \code{cpcParam} object.
+
+Takes a named \code{list} of parameters or another \code{cpcParam} object as 
+argument. The element names in the \code{list} must correspond to a slot name in the 
+cpcProcParam object.
 
 Parses the peak table contained in the \code{XCMSnExp} object and stores it 
 in the \code{pt} slot.
