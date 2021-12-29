@@ -1156,9 +1156,6 @@ setMethod("smoothChromatogram", signature("cpc_chrom"), function(x)
 #' @rdname cpc_chrom-methods
 setMethod("processChromatogram", signature("cpc_chrom"), function(x)
 {
-    # x <- chrom
-    # if(!require(signal, quietly = T)) stop("Package: signal required...")
-    
     if (is.null(x@xic) || length(x@xic) < 1)
     {
         stop("No XIC supplied to processChromatogram().")
