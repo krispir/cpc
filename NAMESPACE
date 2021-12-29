@@ -39,7 +39,12 @@ exportMethods("getPeaklist",
               "getFilteredXCMS",
               "getRemovedPeaks",
               "getRetainedPeaks",
-              "show")
+              "show",
+              "setProcData",
+              "getProcData",
+              "setParam",
+              "getParam",
+              "setXIC")
 
 # exported methods of cpc_chrom
 exportMethods("plotPeak",
