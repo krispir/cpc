@@ -1170,7 +1170,7 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
     ## check that XCMS data exist
     if (is.null(getParam(x@param, "p")))
     {
-        if (getParam(x@param, "vebose_output"))
+        if (getParam(x@param, "verbose_output"))
             message(paste0("[debug] idx =", x@id, "missing xcms data.\n"))
         
         setResults(x) <- list(id = x@id, note = "xcms_missing")
@@ -1179,7 +1179,7 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
         
     } else if (getParam(x@param, "p") < 1)
     {
-        if (getParam(x@param, "vebose_output"))
+        if (getParam(x@param, "verbose_output"))
             message(paste0("[debug] idx =", x@id, "missing xcms data.\n"))
         
         setResults(x) <- list(id = x@id, note = "xcms_missing")
