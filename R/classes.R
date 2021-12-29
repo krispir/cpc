@@ -136,6 +136,7 @@ setClassUnion("cpcParam",
 #' 
 #' @export
 #' @docType methods
+#' @rdname cpcParam-methods
 setMethod("setParam<-", signature("cpcParam"), function(x, value) 
 {
     if (class(value) == "list")
@@ -200,6 +201,7 @@ setMethod("setParam<-", signature("cpcParam"), function(x, value)
 #' 
 #' @export
 #' @docType methods
+#' @rdname cpcParam-methods
 setMethod("getParam", signature("cpcParam"), function(x, param)
 {
     # check the param argument
@@ -427,6 +429,7 @@ setMethod("setProcParams<-", signature("cpc_chrom"), function(x, value)
 #' 
 #' @export
 #' @docType methods
+#' @rdname cpc_chrom-methods
 setMethod("getProcData", signature("cpc_chrom"), function(x, value = NULL)
 {
     if (!is.null(value) && is.character(value))
@@ -461,6 +464,7 @@ setMethod("getProcData", signature("cpc_chrom"), function(x, value = NULL)
 #' 
 #' @export
 #' @docType methods
+#' @rdname cpc_chrom-methods
 setMethod("setProcData<-", signature("cpc_chrom"), function(x, value)
 {
     if (class(value) != "list") stop("Process data must be a named list.")
@@ -1834,7 +1838,9 @@ setMethod("cpt<-", signature("cpc"), function(x, value)
 #' 
 #' @return Named \code{list} holding the parameter values
 #' 
+#' @export
 #' @docType methods
+#' @rdname cpc-methods
 setMethod("getProcData", signature("cpc"), function(x, value = NULL)
 {
     if (!is.null(value) & is.character(value))
@@ -1860,7 +1866,9 @@ setMethod("getProcData", signature("cpc"), function(x, value = NULL)
 #' 
 #' @return A \code{cpc} object
 #' 
+#' @export
 #' @docType methods
+#' @rdname cpc-methods
 setMethod("setProcData<-", signature("cpc"), function(x, value)
 {
     x@procData <- value
@@ -1896,7 +1904,9 @@ setMethod("setProcData<-", signature("cpc"), function(x, value)
 #' 
 #' @return A \code{cpc} object
 #' 
+#' @export
 #' @docType methods
+#' @rdname cpc-methods
 setMethod("setProcData<-", signature("cpc"), function(x, value)
 {
     if (class(value) != "list") stop("Process params must be a named list.")
@@ -1932,7 +1942,9 @@ setMethod("setProcData<-", signature("cpc"), function(x, value)
 #' 
 #' @return A named \code{list} of process parameters.
 #' 
+#' @export
 #' @docType methods
+#' @rdname cpc-methods
 setMethod("getProcParams", signature("cpc"), function(x, value = NULL) 
 {
     if (!is.null(value) & is.character(value))
@@ -2001,7 +2013,9 @@ setMethod("setProcParams<-", signature("cpc"), function(x, value)
 #' 
 #' @return The parameter value.
 #' 
+#' @export
 #' @docType methods
+#' @rdname cpc-methods
 setMethod("getParam", signature("cpc"), function(x, param)
 {
     return(getParam(x@param, param))
@@ -2023,7 +2037,9 @@ setMethod("getParam", signature("cpc"), function(x, param)
 #' 
 #' @return A \code{cpc} object.
 #' 
+#' @export
 #' @docType methods
+#' @rdname cpc-methods
 setMethod("setParam<-", signature("cpc"), function(x, value) 
 {
     # x@param <- setParam(x@param, value)
