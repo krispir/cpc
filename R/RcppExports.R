@@ -18,9 +18,16 @@ testApexFinder <- function(v, w) {
 #' 
 #' @description
 #' 
-#' The function takes smoothed d0, d1, and d2 vectors and processes the chromatogram by baseline expansion of peaks detected in the second derivative.
+#' The function takes smoothed d0, d1, and d2 vectors and processes the 
+#' chromatogram by baseline expansion of peaks detected in the second 
+#' derivative. In short, the algorithm detects all peak apices in the 
+#' chromatogram as negative minima craddled by inflection points in the 
+#' second derivative of the chromatogram. Each peak apex detected is then
+#' subjected to a baseline expansion algorithm in order to determine the
+#' peak boundaries and baseline boundaries of the peaks.
 #' 
-#' Do not use this function, this function is called via the R interface functions.
+#' It is not recommended to use this function directly unless you know what
+#' you are doing. Instead, use the supplied API functions defined.
 #'
 #' @param d0 Numeric vector containing the smoothed XIC trace
 #' @param d2 Numeric vector containing the second derivative of smoothed XIC
