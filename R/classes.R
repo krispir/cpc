@@ -1208,7 +1208,7 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
     #     return(x)
     #     
     # } else 
-    if (getParam(x@param, "p") < 1)
+    if (!is.null(getParam(x@param, "p")) && getParam(x@param, "p") < 1)
     {
         if (getParam(x@param, "verbose_output"))
             message(paste0("[debug] idx =", x@id, "missing xcms data.\n"))
@@ -1361,7 +1361,9 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
                                              st = x@st,
                                              apex_thresh = 0L,
                                              w = floor(getParam(x@param, "smooth_win")/2L), 
-                                             p = getParam(x@param, "p")-1L,
+                                             p = ifelse(!is.null(getParam(x@param, "p")),
+                                                        getParam(x@param, "p")-1L,
+                                                        -1L),
                                              output = as.integer(x@param@verbose_output), 
                                              fit_emg = as.integer(x@param@fit_emg), 
                                              fit_only_vip = as.integer(vip_selected),
