@@ -1,7 +1,7 @@
 ---
 title: "Filtering of chromatographic peaks in an XCMS object"
 author: "Kristian Pirttilä"
-date: '2021-10-25'
+date: '2022-01-12'
 output:
   html_document:
     toc: true
@@ -435,7 +435,7 @@ cpc::plotPeaks(cpc, peakIdx = selection)
 ```{r}
 
 cpcParam <- cpc::cpcProcParam(fit_emg = TRUE, sel_peaks = selection, plot = F,
-                         save_all = TRUE)
+                              save_all = TRUE)
 cpcDeconv <- cpc::characterize_xcms_peaklist(xd = xd, param = cpcParam)
 
 ```
