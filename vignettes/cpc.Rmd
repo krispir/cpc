@@ -22,7 +22,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r init, message = FALSE, echo = FALSE, results = "hide"}
+```{r load-packages-hidden, message = FALSE, echo = FALSE, results = "hide"}
 
 # Load all packages silently to avoid unnecessary long output
 library(pander)
@@ -40,7 +40,7 @@ The data originates from 4 replicate injections of protein precipitated plasma o
 
 # Setup environment
 
-```{r setup}
+```{r load-packages-visible, message = FALSE}
 
 library(xcms)
 library(cpc)
@@ -52,7 +52,7 @@ library(ggvenn)
 
 The first step in this tutorial is to use XCMS to process the reduced data set. This step normally takes a long time to run on a full dataset, however, thanks to the significant filtering made, it should run very fast on an average desktop PC. For more information on how to use XCMS for processing LC/MS data, see XCMS documentation. Only the peak picking will be performed as the retention alignment will not work properly with this heavily filtered dataset, and is not important to illustrate the workflow.
 
-```{r}
+```{r xcms-processing}
 
 # get example raw data file paths from package
 fp_raw <- list.files(system.file("extdata", package = "cpc"), full.names = T)
@@ -94,7 +94,7 @@ The way in which the CPC package is applied to the workflow is via two wrapper f
 
 The *cpcProcParam* object holds processing parameters for both peak characterization as well as peak filtering.
 
-```{r}
+```{r cpc-processing}
 
 cpc <- cpc::filter_xcms_peaklist(xd = xd, return_type = "cpc", 
                                  param = cpc::cpcProcParam(min_sn = 10, 
@@ -107,7 +107,7 @@ Processing times will depend heavily on the computer hardware used. With this da
 
 After processing we can get the original peak table from the XCMS object and the characterized peak table from the CPC object using the methods *cpt* and *getPeaklist*.
 
-```{r}
+```{r get-cpt}
 
 cpcPeaktable <- cpc::cpt(cpc)
 
@@ -166,7 +166,7 @@ The peak table that you get from the CPC package has a number of determined peak
 
 First lets determine which peaks are kept and which are filtered. In the *cpc* object, there are two *XCMSnExp* objects, *xd* and *xdFilt*. *xdFilt*, as the name implies, is the filtered *XCMSnExp* object. It can be extracted using the *filteredObject()* method.
 
-```{r}
+```{r get-data-from-objects}
 
 # get the original xcms object using getOriginalXCMS()
 xdOrig <- cpc::getOriginalXCMS(cpc)
@@ -193,7 +193,7 @@ In the original XCMS object there were 1110 peaks identified across 4 files. Aft
 
 To see how many peaks were removed in a file-by-file basis you can use the table function on the chromatographic peak table from the xcms object.
 
-```{r}
+```{r output-removed-peaks}
 
 rbind(Original = table(xcmsPeaktableOrig[, "sample"]),
       Filtered = table(xcmsPeaktableFilt[, "sample"]),
@@ -204,7 +204,7 @@ rbind(Original = table(xcmsPeaktableOrig[, "sample"]),
 
 The filtering outcomes can be extracted from the object using the *getFilterOutcomes()* method. This returns a data.frame indicating if a peak passed the filter criteria or not for the different filter characteristics.
 
-```{r}
+```{r get-filter-outcomes}
 
 outcomes <- cpc::getFilterOutcomes(cpc)
 
@@ -216,7 +216,7 @@ In the example presented here we have the peak width, peak area, and signal-to-n
 
 To check which peaks are retained and which are removed, the outcomes data.frame can be used. A character vector of removed and retained peak IDs can also be obtained using the *getRemovedPeaks()* and *getRetainedPeaks()* methods, respectively. We can visualize the filtering outcomes using a Venn diagram.
 
-```{r}
+```{r venn-diagram}
 
 # setup a list for the Venn diagram
 outcomesList <- lapply(outcomes, function(x) which(!x))
@@ -231,7 +231,7 @@ ggvenn::ggvenn(data = outcomesList[c(1, 2, 3, 6)], show_percentage = FALSE,
 
 We can see that 8 peaks were not detected at all, ie. did not exhibit the characteristic pattern in the second derivative. Apart from those, the majority of peaks were removed due to their signal-to-noise being too low (SN<10).
 
-```{r}
+```{r select-sample-peaks}
 
 # set a seed for sample() to make it reproducible
 seed <- 12345
@@ -282,7 +282,7 @@ randomRemoved
 
 And then we can plot these peaks using the *plotPeaks()* function. This function takes a *cpc* object as well as a list of peak IDs as argument. The peak IDs can be supplied as indices in the full peak list (ie. not the filtered peak list) or as a character vector with peak IDs (row names in the peak tables). In the present example they are the same and we can use either the names of randomRemoved or the values.
 
-```{r fig.width = 7, fig.height = 5}
+```{r plot-selected-peaks, fig.width = 7, fig.height = 5}
 
 cpc::plotPeaks(cpc, peakIdx = randomRemoved[[1]])
 cpc::plotPeaks(cpc, peakIdx = randomRemoved[[2]])
@@ -295,7 +295,7 @@ In the above plots the original XIC trace is plotted as a gray dashed line with 
 
 We can also plot some of the retained peaks in the same way. Here we will randomly select one peak from each quartile of the signal-to-noise range.
 
-```{r}
+```{r select-retained-peaks}
 
 # get a vector of all detected peaks
 allRetainedPeaks <- cpc::getRetainedPeaks(cpc)
@@ -335,7 +335,7 @@ randomRetained
 
 And then we can plot all these peaks in the same way as with the removed peaks.
 
-```{r fig.width = 7, fig.height = 5}
+```{r plot-retained-peaks, fig.width = 7, fig.height = 5}
 
 cpc::plotPeaks(cpc, peakIdx = randomRetained[[1]])
 cpc::plotPeaks(cpc, peakIdx = randomRetained[[2]])
@@ -344,7 +344,7 @@ cpc::plotPeaks(cpc, peakIdx = randomRetained[[4]])
 
 ```
 
-```{r}
+```{r plot-peak-locations}
 
 # get a vector of all removed peak numeric IDs
 removedPeaksIdx <- match(cpc::getRemovedPeaks(cpc), row.names(cpcPeaktable))
@@ -404,7 +404,7 @@ plot(x = cpcPeaktable$rt[removedPeaksIdx],
 
 Overlapping peak clusters can be detected by the algorithm as their baseline boundaries after expansion will overlap. Consequently the boundaries between peaks in clusters need to be determined and updated. This is handled differently depending on the degree of overlap. Valley boundaries between peaks are set to the lowest point between the peak apices along the ion trace. Shoulder boundaries are set to the maxima between the peak apices along the second derivative of the ion trace. When two similarily sized peaks overlap sufficiently much, it can lead to a rounded peak shape. This is detected as two peak apices that share inflection points along the second derivative which a negative valued maxima in between the apice points. The boundary is then set to the negative maxima point between the apices.
 
-```{r}
+```{r plot-examples}
 
 # Valley boundary example
 cpc::plotPeaks(cpc, 931)
@@ -420,7 +420,7 @@ The processing engine used in the CPC package includes EMG deconvolution of peak
 
 To illustrate this, we first need to find a few peaks to perform EMG deconvolution on.
 
-```{r}
+```{r select-and-plot-emg-examples}
 
 (selection <- c(34, 138, 106, 165, 179, 217))
 
@@ -432,7 +432,7 @@ cpc::plotPeaks(cpc, peakIdx = selection)
 
 ```
 
-```{r}
+```{r cpc-proc-with-emg}
 
 cpcParam <- cpc::cpcProcParam(fit_emg = TRUE, sel_peaks = selection, plot = F,
                               save_all = TRUE)
@@ -440,7 +440,7 @@ cpcDeconv <- cpc::characterize_xcms_peaklist(xd = xd, param = cpcParam)
 
 ```
 
-```{r}
+```{r plot-result-cpc-emg}
 
 cpc::plotPeaks(cpc = cpcDeconv, peakIdx = peakIdx, plotEMG = T)
 
@@ -448,7 +448,7 @@ cpc::plotPeaks(cpc = cpcDeconv, peakIdx = peakIdx, plotEMG = T)
 
 # Session info
 
-```{r}
+```{r session-info}
 
 sessionInfo()
 
