@@ -18,3 +18,7 @@ if(!require("signal")) install.package("signal")
 remotes::install_github(repo = "krispir/cpc", 
                          build_vignettes = TRUE)
 ```
+
+# Usage
+
+In addition to the normal documentation that can be accessed using the ? notation in R (e.g. ?filter_xcms_peaklist) there is a vignette included that processes the example data provided with the package. A pre-knitted vignette (cpc.pdf) is available in the inst/ folder or via the link [https://github.com/krispir/cpc/tree/master/inst](https://github.com/krispir/cpc/tree/master/inst). The vignette can also be accessed within R using the command vignette("cpc") if the package was installed with the argument *build_vignette = TRUE*.
