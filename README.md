@@ -1,6 +1,6 @@
 # The cpc package
 
-The purpose of the cpc package is primarily to characterize the peaks detected using a separate peak detection method. Currently the only supported preprocessing software is XCMS.
+The purpose of the cpc package is primarily to characterize the peaks detected using a separate peak detection method. The peak characteristics can then be used to assess the quality of the reported peaks and filter those that subseed user defined thresholds. The cpc package is fully integrated into a normal XCMS workflow and takes an *XCMSnExp* object containing peak information generated using XCMS as argument.
 
 # Installation instructions
 
