@@ -2409,19 +2409,25 @@ setMethod("processPeaks", signature("cpc"), function(x)
         # output
         message(paste0("Found ", i_npeaks, " peak(s).\n"))
         
-        # implement progress::progress_bar() instead here
-        
-        i_counter = 1
+        # i_counter = 1
         
         if (getParam(x@param, "verbose_output"))
         {
             message(paste("[debug] starting peak processing...\n"))
         } else
         {
-            message("% complete: ")
-            i_progress <- floor(floor(i_counter/i_npeaks*100)/10)*10
-            message(paste0(i_progress, " ", sep=""))
-            i_lastprogress <- i_progress
+            # message("% complete: ")
+            # i_progress <- floor(floor(i_counter/i_npeaks*100)/10)*10
+            # message(paste0(i_progress, " ", sep=""))
+            # i_lastprogress <- i_progress
+            
+            # start a progress bar using the package 'progress'
+            i_progbar <- 
+                progress::progress_bar$new(
+                    format = paste0(" Processing peak :current of :total [:bar]",
+                                    " in :elapsed"), 
+                    total = i_npeaks
+                )
         }
         
         # calculate filter window max threshold for smoother
@@ -2463,14 +2469,18 @@ setMethod("processPeaks", signature("cpc"), function(x)
             {
                 # <<- is dangerous... should probably find another
                 # way to deal with the progress output
-                i_progress <<- floor(floor(i_counter/i_npeaks*100)/10)*10
-                i_counter <<- i_counter + 1
+                # i_progress <<- floor(floor(i_counter/i_npeaks*100)/10)*10
+                # i_counter <<- i_counter + 1
+                # 
+                # if (i_progress > i_lastprogress)
+                # {
+                #     message(paste0(i_progress, " ", sep=""))
+                #     i_lastprogress <<- i_progress
+                # }
                 
-                if (i_progress > i_lastprogress)
-                {
-                    message(paste0(i_progress, " ", sep=""))
-                    i_lastprogress <<- i_progress
-                }
+                # tick the progress bar
+                i_progbar$tick()
+                
             }
             
             # check if xcms data is missing
