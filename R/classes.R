@@ -2426,7 +2426,8 @@ setMethod("processPeaks", signature("cpc"), function(x)
                 progress::progress_bar$new(
                     format = paste0(" Processing peak :current of :total [:bar]",
                                     " in :elapsed"), 
-                    total = i_npeaks
+                    total = i_npeaks,
+                    clear = FALSE
                 )
         }
         
@@ -2605,10 +2606,11 @@ setMethod("processPeaks", signature("cpc"), function(x)
         if (getParam(x@param, "verbose_output"))
         {
             message("[debug] Done!\n\n")
-        } else
-        {
-            message(paste("Done!\n", sep  = ""))
         }
+        # } else
+        # {
+        #     message(paste("Done!\n", sep  = ""))
+        # }
         
         if (getParam(x@param, "save_all"))
         {
