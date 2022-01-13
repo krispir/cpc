@@ -2409,6 +2409,8 @@ setMethod("processPeaks", signature("cpc"), function(x)
         # output
         message(paste0("Found ", i_npeaks, " peak(s).\n"))
         
+        # implement progress::progress_bar() instead here
+        
         i_counter = 1
         
         if (getParam(x@param, "verbose_output"))
