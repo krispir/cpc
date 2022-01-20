@@ -37,6 +37,7 @@ env:
   has_testthat: 'false'
   run_covr: 'true'
   run_pkgdown: 'true'
+  run_check: 'false'
   has_RUnit: 'false'
   has_BiocCheck: 'false'
   cache-version: 'cache-v1'
@@ -224,6 +225,7 @@ jobs:
         shell: Rscript {0}
 
       - name: Run CMD check
+        if:  env.run_check == 'true'
         env:
           _R_CHECK_CRAN_INCOMING_: false
         run: |
