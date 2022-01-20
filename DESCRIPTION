@@ -18,12 +18,13 @@ Depends:
   pander
 Imports: 
   Rcpp (>= 1.0.5),
-  methods
+  methods,
+  progress
 Suggests: 
     knitr, 
-    rmarkdown, 
-	  markdown, 
-	  ggvenn
+    rmarkdown,
+    markdown, 
+    ggvenn
 LinkingTo: Rcpp
 SystemRequirements: C++11
 RoxygenNote: 7.1.2
