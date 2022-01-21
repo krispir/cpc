@@ -9,7 +9,7 @@ importFrom("graphics", "plot", "layout", "points", "lines",
 importFrom("MSnbase", "fileNames")
 importFrom("mzR", "openMSfile", "peaks", "runInfo", "header")
 importFrom("signal", "sgolayfilt")
-
+importFrom("progress", "progress_bar")
 
 # exported functions
 export("chromFromTrace",
