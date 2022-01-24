@@ -12,7 +12,7 @@ importFrom("signal", "sgolayfilt")
 importFrom("progress", "progress_bar")
 
 # exported functions
-export("chromFromTrace",
+export("cpc_chrom",
        "characterize_xcms_peaklist",
        "filter_xcms_peaklist",
        "cpcProcParam",
