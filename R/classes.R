@@ -2533,15 +2533,16 @@ setMethod("processPeaks", signature("cpc"), function(x)
                 #                               p = cur_p,
                 #                               s = cur_s,
                 #                               mz_range = cur_mzrange))
-                chrom <- 
-                    cpc_chrom(id = as.integer(pd["id"]),
-                              st = raw@scantime,
-                              trace = getXIC(raw, mzrange = getParam(chrom@param, 
-                                                                     "mz_range")),
-                              param = cpcChromParam(mz = as.numeric(pd["mz"]),
-                                                    p = cur_p,
-                                                    s = cur_s,
-                                                    mz_range = cur_mzrange))
+                chrom <- cpc_chrom(
+                    id = as.integer(pd["id"]),
+                    st = raw@scantime,
+                    trace = getXIC(raw, mzrange = getParam(chrom@param, 
+                                                           "mz_range")),
+                    param = cpcChromParam(mz = as.numeric(pd["mz"]),
+                                          p = cur_p,
+                                          s = cur_s,
+                                          mz_range = cur_mzrange)
+                )
                 
                 # new param methodology with a cpcParam object holding the params
                 # for better control
