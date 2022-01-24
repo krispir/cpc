@@ -2525,7 +2525,7 @@ setMethod("processPeaks", signature("cpc"), function(x)
                           as.numeric(pd["mz"])/1e6*getParam(x@param, "ppm"))
                 
                 # create chrom object
-                # chrom <- 
+                # chrom <-
                 #     new("cpc_chrom",
                 #         id = as.integer(pd["id"]),
                 #         st = raw@scantime,
@@ -2536,8 +2536,7 @@ setMethod("processPeaks", signature("cpc"), function(x)
                 chrom <- cpc_chrom(
                     id = as.integer(pd["id"]),
                     st = raw@scantime,
-                    trace = getXIC(raw, mzrange = getParam(chrom@param, 
-                                                           "mz_range")),
+                    trace = getXIC(raw, mzrange = cur_mzrange),
                     param = cpcChromParam(mz = as.numeric(pd["mz"]),
                                           p = cur_p,
                                           s = cur_s,
@@ -2553,7 +2552,7 @@ setMethod("processPeaks", signature("cpc"), function(x)
                 setProcData(chrom) <- list(pd = pd)
                 
                 # get XIC
-                # setXIC(chrom) <- getXIC(raw, mzrange = getParam(chrom@param, 
+                # setXIC(chrom) <- getXIC(raw, mzrange = getParam(chrom@param,
                 #                                                 "mz_range"))
                 
                 # process chromatogram
