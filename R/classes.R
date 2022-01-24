@@ -2525,47 +2525,35 @@ setMethod("processPeaks", signature("cpc"), function(x)
                           as.numeric(pd["mz"])/1e6*getParam(x@param, "ppm"))
                 
                 # create chrom object
-                chrom <- 
-                    new("cpc_chrom",
-                        id = as.integer(pd["id"]),
-                        st = raw@scantime,
-                        param = cpcChromParam(mz = as.numeric(pd["mz"]),
-                                              p = cur_p,
-                                              s = cur_s,
-                                              mz_range = cur_mzrange))
-                
                 # chrom <- 
                 #     new("cpc_chrom",
                 #         id = as.integer(pd["id"]),
+                #         st = raw@scantime,
                 #         param = cpcChromParam(mz = as.numeric(pd["mz"]),
                 #                               p = cur_p,
                 #                               s = cur_s,
-                #                               mz_range = cur_mzrange),
-                #         procParams = list(mz = as.numeric(pd["mz"]),
-                #                           p = binsearch_closest(x = raw$scantime,
-                #                                                 val = pd["rt"]),
-                #                           s = ifelse((is.na(pd["sigma"]) || as.numeric(pd["sigma"]) >
-                #                                           as.numeric(getProcData(x, "max_sigma")[i])),
-                #                                      as.numeric(getProcData(x, "max_sigma")[i]),
-                #                                      as.numeric(pd["sigma"])),
-                #                           mz_range = c(as.numeric(pd["mz"]) -
-                #                                            as.numeric(pd["mz"])/1e6*getParam(x@param, "ppm"),
-                #                                        as.numeric(pd["mz"]) +
-                #                                            as.numeric(pd["mz"])/1e6*getParam(x@param, "ppm"))))
-                
-                # old param methodlogy with a list() holding the params
-                # setProcParams(chrom) <- getProcParams(x)
+                #                               mz_range = cur_mzrange))
+                chrom <- 
+                    cpc_chrom(id = as.integer(pd["id"]),
+                              st = raw@scantime,
+                              trace = getXIC(raw, mzrange = getParam(chrom@param, 
+                                                                     "mz_range")),
+                              param = cpcChromParam(mz = as.numeric(pd["mz"]),
+                                                    p = cur_p,
+                                                    s = cur_s,
+                                                    mz_range = cur_mzrange))
                 
                 # new param methodology with a cpcParam object holding the params
                 # for better control
                 # add params from cpc object
                 setParam(chrom@param) <- x@param
                 
+                # add peak data
                 setProcData(chrom) <- list(pd = pd)
                 
                 # get XIC
-                setXIC(chrom) <- getXIC(raw, mzrange = getParam(chrom@param, 
-                                                                "mz_range"))
+                # setXIC(chrom) <- getXIC(raw, mzrange = getParam(chrom@param, 
+                #                                                 "mz_range"))
                 
                 # process chromatogram
                 chrom <- processChromatogram(chrom)
@@ -2592,6 +2580,7 @@ setMethod("processPeaks", signature("cpc"), function(x)
             return(list(data.frame(id = chrom@id, getResults(chrom),
                                    row.names = row.names(pd)[1]),
                         data.frame(chrom@rawProcResults)))
+            
         }))
         
         df <- do.call("rbind", lapply(res, function(x) return(x[[1]])))
@@ -2600,21 +2589,20 @@ setMethod("processPeaks", signature("cpc"), function(x)
         {
             rawResults <- do.call("list", 
                                   lapply(res, function(x) return(x[[2]])))
+            
         }
         
         # end output
         if (getParam(x@param, "verbose_output"))
         {
             message("[debug] Done!\n\n")
+            
         }
-        # } else
-        # {
-        #     message(paste("Done!\n", sep  = ""))
-        # }
         
         if (getParam(x@param, "save_all"))
         {
             x@rawResults <- c(x@rawResults, rawResults)
+            
         }
         
         cpt(x) <- rbind(cpt(x), df)
