@@ -15,9 +15,9 @@
 #'
 #' @examples
 cpc_chrom <- function(id,
-                           st,
-                           trace, 
-                           param = cpcChromParam())
+                      st,
+                      trace, 
+                      param = cpcChromParam())
 {
   # check if id is supplied
   if (missing(id))
@@ -43,7 +43,7 @@ cpc_chrom <- function(id,
     
   }
   
-  # set missing important parameters
+  # create instance of cpc_chrom
   chrom <- new("cpc_chrom", 
                id = id,
                st = st, 
