@@ -2312,21 +2312,40 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
     ## mz range for extracting ion traces
     
     # create a cpc_chrom object for processing
-    chrom <- 
-        new("cpc_chrom",
-            id = as.integer(id),
-            st = raw@scantime,
-            param = cpcChromParam(mz = as.numeric(x@pt$mz[id]),
-                                  p = cur_p,
-                                  s = cur_s,
-                                  mz_range = c(as.numeric(x@pt$mz[id]) -
-                                                   as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"),
-                                               as.numeric(x@pt$mz[id]) +
-                                                   as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"))),
-            mzMeta = list(runInfo = raw@runInfo,
-                          header = raw@header),
-            results = results,
-            rawProcResults = rawResults)
+    # chrom <- 
+    #     new("cpc_chrom",
+    #         id = as.integer(id),
+    #         st = raw@scantime,
+    #         param = cpcChromParam(mz = as.numeric(x@pt$mz[id]),
+    #                               p = cur_p,
+    #                               s = cur_s,
+    #                               mz_range = c(as.numeric(x@pt$mz[id]) -
+    #                                                as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"),
+    #                                            as.numeric(x@pt$mz[id]) +
+    #                                                as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"))),
+    #         mzMeta = list(runInfo = raw@runInfo,
+    #                       header = raw@header),
+    #         results = results,
+    #         rawProcResults = rawResults)
+    chrom <- cpc_chrom(
+        id = as.integer(id),
+        st = raw@scantime,
+        param = cpcChromParam(mz = as.numeric(x@pt$mz[id]),
+                              p = cur_p,
+                              s = cur_s,
+                              mz_range = c(as.numeric(x@pt$mz[id]) -
+                                               as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"),
+                                           as.numeric(x@pt$mz[id]) +
+                                               as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm")))
+    )
+    
+    # Populate object with further data
+    # TODO: Add setters for these slots or add it to the constructor with a 
+    #       conditional
+    chrom@mzMeta <- list(runInfo = raw@runInfo,
+                         header = raw@header)
+    chrom@results <- results
+    chrom@rawProcResults <- rawResults
     
     # new param methodology with a cpcParam object
     setParam(chrom@param) <- x@param
