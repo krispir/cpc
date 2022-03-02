@@ -3,6 +3,8 @@
 
 setClassUnion("numericOrNULL", members=c("numeric", "NULL"))
 setClassUnion("integerOrNULL", members=c("integer", "NULL"))
+setClassUnion("XCMSnExpOrNULL", members=c("XCMSnExp", "NULL"))
+
 
 #### Class: cpcProcParam ####
 
@@ -1583,6 +1585,26 @@ setMethod("scantime", signature("cpc_raw"), function(x)
 })
 
 
+#### Class: cpc_pt ####
+setClass("cpc_pt",
+         representation(
+             id = "integer",
+             rt = "numeric",
+             rtmin = "numeric",
+             rtmax = "numeric",
+             rtf1b = "numeric",
+             rtt1b = "numeric",
+             rtf5b = "numeric",
+             rtt5b = "numeric",
+             rtf10b = "numeric",
+             rtt10b = "numeric",
+             
+         ),
+         
+         prototype(
+             
+         ))
+
 
 #### Class: cpc ####
 
@@ -1605,8 +1627,8 @@ setMethod("scantime", signature("cpc_raw"), function(x)
 #' @export
 setClass("cpc",
          representation(
-             xd = "XCMSnExp",
-             xdFilt = "XCMSnExp",
+             xd = "XCMSnExpOrNULL",
+             xdFilt = "XCMSnExpOrNULL",
              rawResults = "list",
              pt = "data.frame",
              cpt = "data.frame",
@@ -1657,7 +1679,7 @@ setClass("cpc",
 #' @docType methods
 setMethod("hasPeakTable", signature("cpc"), function(x)
 {
-    return(nrow(x@pt) > 0)
+    return(nrow(x@xpt) > 0)
 })
 
 
@@ -1771,7 +1793,7 @@ setMethod("peaksToKeep", signature("cpc"), function(x, returnBoolean = FALSE)
 #' @export
 #' @docType methods
 #' @rdname cpc-methods
-setMethod("getPeaklist", signature("cpc"), function(x) return(x@pt))
+setMethod("getPeaklist", signature("cpc"), function(x) return(x@xpt))
 
 
 
@@ -1789,7 +1811,7 @@ setMethod("setPeaklist<-", signature("cpc"), function(x, value)
 {
     # data checks
     
-    x@pt <- value
+    x@xpt <- value
     return(x)
 })
 
@@ -2052,7 +2074,7 @@ setMethod("setParam<-", signature("cpc"), function(x, value)
 })
 
 
-#### Method: parsePeaklist ####
+#### Method: parseXCMSPeaklist ####
 
 #' @title Method for parsing the peak table from an \code{XCMSnExp} object contained in the \code{cpc} object
 #' 
@@ -2068,8 +2090,16 @@ setMethod("setParam<-", signature("cpc"), function(x, value)
 #' @export
 #' @docType methods
 #' @rdname cpc-methods
-setMethod("parsePeaklist", signature("cpc"), function(x)
+setMethod("parseXCMSPeaklist", signature("cpc"), function(x)
 {
+    # ensure there is an XCMS object in the cpc object
+    if (class(x@xd) == "NULL")
+    {
+        stop("No XCMS object contained in object.")
+        
+    }
+        
+    
     # check that xd contain peak information
     if (nrow(xcms::chromPeaks(x@xd)) < 1) 
         stop("'xd' does not contain any peak information.")
@@ -2089,19 +2119,17 @@ setMethod("parsePeaklist", signature("cpc"), function(x)
     {
         message(paste0("Removing filled peak data from the XCMS object. "))
         
-        
     }
     
     # get the peaklist from the XCMS object
-    x@pt <- as.data.frame(xcms::chromPeaks(x@xd))
+    x@xpt <- as.data.frame(xcms::chromPeaks(x@xd))
     
     # add id column to the peaklist
     # I think it would be better to instead convert the rownames into numbers
     # by removing "CP" and then always match to rownames when referencing peaks
     # in the peak table - this way I will always reference the right peak, even
     # if the ordering is off - might be slower tho...
-    x@pt <- data.frame(id = as.numeric(sub("CP", "", rownames(x@pt))), x@pt)
-    # x@pt
+    x@xpt <- data.frame(id = as.numeric(sub("CP", "", rownames(x@xpt))), x@xpt)
     
     # parse sel_peaks and sel_files
     if (!is.null(getParam(x@param, "sel_peaks")) &&
@@ -2111,31 +2139,31 @@ setMethod("parsePeaklist", signature("cpc"), function(x)
             message("Note: parameter sel_peaks will override sel_files.")
         
         if (any(getParam(x@param, "sel_peaks") < 1L &
-                getParam(x@param, "sel_peaks") > nrow(x@pt))) 
+                getParam(x@param, "sel_peaks") > nrow(x@xpt))) 
             stop("Selected peaks out of bounds.")
         
         setParam(x@param) <- 
             list(sel_files = 
-                     sort(unique(x@pt$sample[getParam(x@param, "sel_peaks")])))
+                     sort(unique(x@xpt$sample[getParam(x@param, "sel_peaks")])))
         
     } else
     {
         if (is.null(getParam(x@param, "sel_files")))
         {
-            setParam(x@param) <- list(sel_peaks = 1:nrow(x@pt),
-                                      sel_files = sort(unique(x@pt$sample)))
+            setParam(x@param) <- list(sel_peaks = 1:nrow(x@xpt),
+                                      sel_files = sort(unique(x@xpt$sample)))
         } else
         {
             # check that the selected files are not out of bounds of the files
             # present in the XCMS object
             if (any(!(getParam(x@param, "sel_files") %in% 
-                      sort(unique(x@pt$sample)))))
+                      sort(unique(x@xpt$sample)))))
                 stop("Invalid files selected")
             
             # set the sel_peaks param to be all peaks originating from the
             # selected files
             setParam(x@param) <- 
-                list(sel_peaks = which(x@pt$sample %in% getParam(x@param, "sel_files")))
+                list(sel_peaks = which(x@xpt$sample %in% getParam(x@param, "sel_files")))
         }
     }
     
@@ -2143,15 +2171,53 @@ setMethod("parsePeaklist", signature("cpc"), function(x)
     if (is.null(x@procData$file_paths))
     {
         # get file_paths from the XCMS object
-        x@procData$file_paths <- MSnbase::fileNames(x@xd)#[getParam(x@param, "sel_files")]
+        x@procData$file_paths <- MSnbase::fileNames(x@xd)
+        
+        # ensure that the list of files match the number of samples in the peaktable
+        if (length(x@procData$file_paths) != 
+            length(table(x@xpt$sample)))
+        {
+            stop(paste0("Mismatch between number of files presented in the ",
+                        "file paths of the XCMSnExp object and the peak table ", 
+                        "reported by XCMS."))
+            
+        }
         
         # check that all files can be opened
         if (!all(file.exists(x@procData$file_paths[getParam(x@param, "sel_files")]))) 
             stop("Raw data files missing or cannot be opened.")
+        
     }
+    
+    # create cpc peak table for processing and storage of results
+    x@cpt <- data.frame(
+        # peak idx
+        id = as.numeric(sub("CP", "", rownames(x@xpt)))[
+            getParam(x@param, "sel_peaks")
+        ],
+        
+        # peak mz
+        setMz = x@xpt$mz[getParam(x@param, "sel_peaks")],
+        
+        # peak rt
+        setRt = x@xpt$rt[getParam(x@param, "sel_peaks")],
+        
+        # set rt min
+        setRtMin = x@xpt$rtmin[getParam(x@param, "sel_peaks")],
+        
+        # set rt max
+        setRtMax = x@xpt$rtmax[getParam(x@param, "sel_peaks")],
+        
+        # set file idx
+        setFile = x@xpt$sample[getParam(x@param, "sel_peaks")]
+        
+    )
+    
+    row.names(x@cpt) <- row.names(x@xpt)[getParam(x@param, "sel_peaks")]
     
     # return object
     return(x)
+    
 })
 
 
@@ -2170,6 +2236,7 @@ setMethod("parsePeaklist", signature("cpc"), function(x)
 setMethod("filePaths", signature("cpc"), function(x) 
 {
     x@procData$file_paths
+    
 })
 
 
@@ -2179,11 +2246,11 @@ setMethod("determineMaxSigma", signature("cpc"), function(x, scantime, scanrate)
     # ensure that the peaklist has been parsed
     
     # determine nearest scans for rtmin and rtmax
-    scmin <- sapply(x@pt$rtmin, binsearch_closest, 
+    scmin <- sapply(x@xpt$rtmin, binsearch_closest, 
                     x = scantime, simplify = "array")
-    scpos <- sapply(x@pt$rt, binsearch_closest, 
+    scpos <- sapply(x@xpt$rt, binsearch_closest, 
                     x = scantime, simplify = "array")
-    # scmax <- sapply(x@pt$rtmax, binsearch_closest,
+    # scmax <- sapply(x@xpt$rtmax, binsearch_closest,
     #                 x = scantime, simplify = "array")
     
     # set max sigma value
@@ -2207,7 +2274,7 @@ setMethod("determineMaxSigma", signature("cpc"), function(x, scantime, scanrate)
 #' @description 
 #' 
 #' Prior to running this method the peak table must be parsed using the 
-#' \code{parsePeaklist} or \code{parseFeatures} methods.
+#' \code{parseXCMSPeaklist} or \code{parseFeatures} methods.
 #' 
 #' @param x A \code{cpc} object
 #' @param id The peak ID
@@ -2222,12 +2289,15 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
     if (nrow(cpt(x)) > 0 && !is.na(match(id, cpt(x)$id)))
     {
         results <- x@cpt[match(id, cpt(x)$id), ]
+        
         if (length(x@rawResults) > 0)
         {
             rawResults <- as.list(x@rawResults[[match(id, cpt(x)$id)]])
+            
         } else
         {
             rawResults <- list()
+            
         }
         
     } else
@@ -2237,7 +2307,7 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
     }
     
     # load raw data
-    matchedPeakIdx <- match(id, x@pt$id)
+    matchedPeakIdx <- match(id, x@xpt$id)
     
     if (is.na(matchedPeakIdx))
     {
@@ -2250,7 +2320,7 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
         }
     }
     
-    matchedFileName <- MSnbase::fileNames(x@xd)[x@pt$sample[matchedPeakIdx]]
+    matchedFileName <- MSnbase::fileNames(x@xd)[x@xpt$sample[matchedPeakIdx]]
     
     if (!is.character(matchedFileName))
     {
@@ -2264,7 +2334,7 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
     # determine parameters for processing the chromatogram
     ## peak location
     cur_p <- binsearch_closest(x = raw@scantime,
-                               val = x@pt$rt[id])
+                               val = x@xpt$rt[id])
     
     ## filter width for smoothing
     # if (is.null(getParam(x@param, "max_sigma")))
@@ -2276,15 +2346,15 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
         
         # setParam(x@param) <- 
         #     list(max_sigma = 
-        #              as.numeric(quantile(x@pt$rtmax - x@pt$rtmin,
+        #              as.numeric(quantile(x@xpt$rtmax - x@xpt$rtmin,
         #                                  probs = 0.75, na.rm = T)) * 
         #              raw@scanrate / 4)
     }
     
     # cur_rtmin <- binsearch_closest(x = raw@scantime,
-    #                                val = x@pt$rtmin[id])
+    #                                val = x@xpt$rtmin[id])
     # cur_rtmax <- binsearch_closest(x = raw@scantime,
-    #                                val = x@pt$rtmax[id])
+    #                                val = x@xpt$rtmax[id])
     # 
     # cur_s <- ifelse(as.numeric(cur_rtmax - cur_rtmin)*0.25 >
     #                     getParam(x@param, "max_sigma"),
@@ -2293,9 +2363,9 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
     
     ## filter width for smoothing
     cur_rtmin <- binsearch_closest(x = raw@scantime, 
-                                   val = x@pt$rtmin[id])
+                                   val = x@xpt$rtmin[id])
     # cur_rtmax <- binsearch_closest(x = raw@scantime, 
-    #                                val = x@pt$rtmax[id])
+    #                                val = x@xpt$rtmax[id])
     
     cur_s <- (cur_p - cur_rtmin)/2
     
@@ -2310,19 +2380,23 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
     }
     
     ## mz range for extracting ion traces
+    cur_mzrange <- c(as.numeric(x@xpt$mz[id]) -
+                         as.numeric(x@xpt$mz[id])/1e6*getParam(x@param, "ppm"),
+                     as.numeric(x@xpt$mz[id]) +
+                         as.numeric(x@xpt$mz[id])/1e6*getParam(x@param, "ppm"))
     
     # create a cpc_chrom object for processing
     # chrom <- 
     #     new("cpc_chrom",
     #         id = as.integer(id),
     #         st = raw@scantime,
-    #         param = cpcChromParam(mz = as.numeric(x@pt$mz[id]),
+    #         param = cpcChromParam(mz = as.numeric(x@xpt$mz[id]),
     #                               p = cur_p,
     #                               s = cur_s,
-    #                               mz_range = c(as.numeric(x@pt$mz[id]) -
-    #                                                as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"),
-    #                                            as.numeric(x@pt$mz[id]) +
-    #                                                as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"))),
+    #                               mz_range = c(as.numeric(x@xpt$mz[id]) -
+    #                                                as.numeric(x@xpt$mz[id])/1e6*getParam(x@param, "ppm"),
+    #                                            as.numeric(x@xpt$mz[id]) +
+    #                                                as.numeric(x@xpt$mz[id])/1e6*getParam(x@param, "ppm"))),
     #         mzMeta = list(runInfo = raw@runInfo,
     #                       header = raw@header),
     #         results = results,
@@ -2330,13 +2404,11 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
     chrom <- cpc_chrom(
         id = as.integer(id),
         st = raw@scantime,
-        param = cpcChromParam(mz = as.numeric(x@pt$mz[id]),
+        xic = getXIC(raw, mzrange = cur_mzrange),
+        param = cpcChromParam(mz = as.numeric(x@xpt$mz[id]),
                               p = cur_p,
                               s = cur_s,
-                              mz_range = c(as.numeric(x@pt$mz[id]) -
-                                               as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm"),
-                                           as.numeric(x@pt$mz[id]) +
-                                               as.numeric(x@pt$mz[id])/1e6*getParam(x@param, "ppm")))
+                              mz_range = cur_mzrange)
     )
     
     # Populate object with further data
@@ -2350,13 +2422,14 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
     # new param methodology with a cpcParam object
     setParam(chrom@param) <- x@param
     
-    setProcData(chrom) <- list(pd = x@pt[id, ])
+    setProcData(chrom) <- list(pd = x@xpt[id, ])
     
     # save MS info
     setParam(chrom@param) <- list(nscan = raw@runInfo$scanCount)
     
     # set XIC in chrom
-    setXIC(chrom) <- getXIC(raw, mzrange = getParam(chrom@param, "mz_range"))
+    # removed since it is set in the constructor instead
+    # setXIC(chrom) <- getXIC(raw, mzrange = getParam(chrom@param, "mz_range"))
     
     # smooth trace
     chrom <- smoothChromatogram(chrom)
@@ -2371,6 +2444,7 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
                        min(getParam(chrom@param, "nscan"), 
                            floor(getParam(chrom@param, "p") + 
                                      20*getParam(chrom@param, "s")))))
+        
     }
     
     return(chrom)
@@ -2384,7 +2458,7 @@ setMethod("getChromatogram", signature("cpc"), function(x, id)
 #' @description 
 #' 
 #' This is the main method run on a \code{cpc} object to characterize the peaks detected by XCMS.
-#' Prior to running this method the peak table must be parsed using the \code{parsePeaklist} method.
+#' Prior to running this method the peak table must be parsed using the \code{parseXCMSPeaklist} method.
 #' 
 #' @param x A \code{cpc} object
 #' 
@@ -2399,11 +2473,11 @@ setMethod("processPeaks", signature("cpc"), function(x)
     cpt(x) <- data.frame()
     
     # check to ensure that all data needed is present
-    if (nrow(x@pt) < 1)
+    if (nrow(x@xpt) < 1)
     {
-        x <- parsePeaklist(x)
+        x <- parseXCMSPeaklist(x)
         
-        if (nrow(x@pt) < 1) stop("No peak information in object")
+        if (nrow(x@xpt) < 1) stop("No peak information in object")
     }
     
     # loop over files
@@ -2414,7 +2488,7 @@ setMethod("processPeaks", signature("cpc"), function(x)
         full_timer <- Sys.time()
         
         i_idx <- getParam(x@param, "sel_peaks")[
-            which(x@pt$sample[getParam(x@param, "sel_peaks")] == i)
+            which(x@xpt$sample[getParam(x@param, "sel_peaks")] == i)
         ]
         i_npeaks <- length(i_idx)
         
@@ -2459,7 +2533,7 @@ setMethod("processPeaks", signature("cpc"), function(x)
         {
             # setParam(x@param) <- 
             #     list(max_sigma = 
-            #              as.numeric(quantile(x@pt$rtmax - x@pt$rtmin,
+            #              as.numeric(quantile(x@xpt$rtmax - x@xpt$rtmin,
             #                                  probs = 0.75, na.rm = T)) * 
             #              raw@scanrate / 4)
             
@@ -2474,9 +2548,10 @@ setMethod("processPeaks", signature("cpc"), function(x)
             }
         }
         
-        # (pd <- x@pt[i_idx[25509], ]) # - tryptophan 210518
-        # (pd <- x@pt[i_idx[1], ])
-        res <- do.call("list", apply(x@pt[i_idx, ], 1, FUN = function(pd)
+        # (pd <- x@xpt[247, ]) # - tryptophan in sample data file 1
+        # (pd <- x@xpt[i_idx[1], ]) 
+        # res <- do.call(function(...) base::Map(c, ...), apply(x@xpt[i_idx, ], 1, FUN = function(pd)
+        res <- do.call("list", apply(x@xpt[i_idx, ], 1, FUN = function(pd)
         {
             # start timer
             proc_timer <- Sys.time()
@@ -2596,13 +2671,19 @@ setMethod("processPeaks", signature("cpc"), function(x)
             #             df = data.frame(id = chrom@id, getResults(chrom),
             #                        row.names = row.names(pd)[1])))
             
-            return(list(data.frame(id = chrom@id, getResults(chrom),
+            return(list(data.frame(id = chrom@id, 
+                                   getResults(chrom),
                                    row.names = row.names(pd)[1]),
                         data.frame(chrom@rawProcResults)))
             
         }))
         
-        df <- do.call("rbind", lapply(res, function(x) return(x[[1]])))
+        #CURRENTLY: I AM TO SAVE AS DF FOR NOW SO TRY RUNNING FROM HERE
+        #           WITH EXAMPLE DATASET AND SEE HOW IT LOOKS AFTER THE 
+        #           PROCESSING AND THEN ADAPT THE BELOW CODE
+        # df <- do.call("rbind", lapply(res, function(x) return(x[[1]])))
+        df <- as.data.frame(do.call(function(...) base::Map(c, ...), 
+                                    lapply(res, function(x) return(x[[1]]))))
         
         if (getParam(x@param, "save_all"))
         {
@@ -2624,7 +2705,9 @@ setMethod("processPeaks", signature("cpc"), function(x)
             
         }
         
+        # add new results to the prior results
         cpt(x) <- rbind(cpt(x), df)
+        # cpt(x) <- Map(cpt(x), res)
         
         # output timer
         output_formatted_time(full_timer, Sys.time())
@@ -2656,9 +2739,8 @@ setMethod("checkPeaksAgainstCriteria", signature("cpc"), function(x) {
         stop("Please run peak characterization first!")
     }
     
-    for (i in 1:nrow(x@cpt))
+    for (i in 1:nrow(as.data.frame(x@cpt)))
     {
-        # TODO: Parallell testing here instead and save result of each test.
         # TODO: Add tailing factor filter.
         if (x@cpt$note[i] == "detected")
         {
