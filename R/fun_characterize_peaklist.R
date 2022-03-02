@@ -40,7 +40,7 @@ characterize_xcms_peaklist <- function(xd, param = cpcProcParam())
     cpc <- new("cpc", xd = xd, param = param)
     
     # parse peaklist from XCMS object
-    cpc <- parsePeaklist(cpc)
+    cpc <- parseXCMSPeaklist(cpc)
     
     # process peaklist
     cpc <- processPeaks(cpc)
