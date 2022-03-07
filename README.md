@@ -14,6 +14,7 @@ The cpc package can be installed from this github using the devtools function in
 if(!require("remotes")) install.packages("remotes")
 if(!require("rmarkdown")) install.packages("rmarkdown")
 if(!require("signal")) install.packages("signal")
+if(!require("ggvenn")) install.packages("ggvenn")
 
 remotes::install_github(repo = "krispir/cpc", build_vignettes = TRUE)
 ```
