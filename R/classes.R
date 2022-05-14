@@ -2100,7 +2100,15 @@ setMethod("parsePeaklist", signature("cpc"), function(x)
     # by removing "CP" and then always match to rownames when referencing peaks
     # in the peak table - this way I will always reference the right peak, even
     # if the ordering is off - might be slower tho...
-    x@pt <- data.frame(id = as.numeric(sub("CP", "", rownames(x@pt))), x@pt)
+    #x@pt <- data.frame(id = as.numeric(sub("CP", "", rownames(x@pt))), x@pt)
+    # there was an issue where the error "NAs introduced by coersion" was given
+    # in issue #2 on github which turned out to be caused by a non-standard
+    # naming convention in XCMS where an "M" was added to the "CP" in the 
+    # peak IDs.
+    # new workaround for issue where XCMS added an "M" in the peakIDs for some 
+    # reasons. this will instead remove all letters which should work better.
+    x@pt <- data.frame(id = as.numeric(gsub("[^0-9.-]", "", rownames(x@pt))), 
+                       x@pt)
     # x@pt
     
     # parse sel_peaks and sel_files
