@@ -1370,6 +1370,17 @@ setMethod("processChromatogram", signature("cpc_chrom"), function(x)
                                              min_shoulder_pts = getParam(x@param, "min_shoulder_pts"),
                                              min_rounded_pts = getParam(x@param, "min_rounded_pts"))
     
+    # ensure there is data in all
+    x@rawProcResults <- lapply(x@rawProcResults, function(res) {
+        if (length(res) < 1)
+        {
+            return(-1)
+        } else
+        {
+            return(res)
+        }
+    })
+    
     # if a vip was selected
     if (vip_selected > 0L)
     {
