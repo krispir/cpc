@@ -59,8 +59,10 @@
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>Filtering of chromatographic peaks in an XCMS object</h1>
-                        <h4 data-toc-skip class="author">Kristian Pirttilä</h4>
+      <h1 data-toc-skip>Filtering of chromatographic peaks in an XCMS
+object</h1>
+                        <h4 data-toc-skip class="author">Kristian
+Pirttilä</h4>
             
             <h4 data-toc-skip class="date">2022-01-12</h4>
       
@@ -74,8 +76,27 @@
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>This tutorial describes the CPC package functionality on an example data set included with the package. We will load the example dataset, perform peak picking using XCMS and apply the CPC algorithm to filter the peaks detected. Furthermore, we will showcase the data extraction methods and visualize the results.</p>
-<p>The data originates from 4 replicate injections of protein precipitated plasma on a HILIC platform. The example data is heavily filtered in order to keep package size and processing times to a minimum. The filtering is made in two steps: (1) The full data set was processed using XCMS and CPC in the same way described below. A subset of 100 peaks was randomly selected from those that were retained in the filtering step, based on the calculated signal-to-noise of the peaks (25 from each quartile). Similarily 100 peaks were randomly selected from those removed in the filtering step (33-34 each from those removed due to not being detected, having too low signal to noise, or having too few data points along the peak range). (2) The data set was then filtered to (i) only include scan indices 1-1200, (ii) only include mass peaks with intensity &gt; 2.225*median intensity (removes a lot of noise peaks), and (iii) include only mass peaks whose m/z value coincide with one of the selected peaks in step (1) within a ppm value of 50 and a retention window of +/- 120 seconds.</p>
+<p>This tutorial describes the CPC package functionality on an example
+data set included with the package. We will load the example dataset,
+perform peak picking using XCMS and apply the CPC algorithm to filter
+the peaks detected. Furthermore, we will showcase the data extraction
+methods and visualize the results.</p>
+<p>The data originates from 4 replicate injections of protein
+precipitated plasma on a HILIC platform. The example data is heavily
+filtered in order to keep package size and processing times to a
+minimum. The filtering is made in two steps: (1) The full data set was
+processed using XCMS and CPC in the same way described below. A subset
+of 100 peaks was randomly selected from those that were retained in the
+filtering step, based on the calculated signal-to-noise of the peaks (25
+from each quartile). Similarily 100 peaks were randomly selected from
+those removed in the filtering step (33-34 each from those removed due
+to not being detected, having too low signal to noise, or having too few
+data points along the peak range). (2) The data set was then filtered to
+(i) only include scan indices 1-1200, (ii) only include mass peaks with
+intensity &gt; 2.225*median intensity (removes a lot of noise peaks),
+and (iii) include only mass peaks whose m/z value coincide with one of
+the selected peaks in step (1) within a ppm value of 50 and a retention
+window of +/- 120 seconds.</p>
 </div>
 <div class="section level2">
 <h2 id="setup-environment">Setup environment<a class="anchor" aria-label="anchor" href="#setup-environment"></a>
@@ -89,7 +110,14 @@
 <div class="section level2">
 <h2 id="xcms-processing">XCMS processing<a class="anchor" aria-label="anchor" href="#xcms-processing"></a>
 </h2>
-<p>The first step in this tutorial is to use XCMS to process the reduced data set. This step normally takes a long time to run on a full dataset, however, thanks to the significant filtering made, it should run very fast on an average desktop PC. For more information on how to use XCMS for processing LC/MS data, see XCMS documentation. Only the peak picking will be performed as the retention alignment will not work properly with this heavily filtered dataset, and is not important to illustrate the workflow.</p>
+<p>The first step in this tutorial is to use XCMS to process the reduced
+data set. This step normally takes a long time to run on a full dataset,
+however, thanks to the significant filtering made, it should run very
+fast on an average desktop PC. For more information on how to use XCMS
+for processing LC/MS data, see XCMS documentation. Only the peak picking
+will be performed as the retention alignment will not work properly with
+this heavily filtered dataset, and is not important to illustrate the
+workflow.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
 <span class="co"># get example raw data file paths from package</span>
@@ -119,8 +147,8 @@
 <span class="co">#&gt;  Number of spectra: 5200 </span>
 <span class="co">#&gt;  MSn retention times: 0:02 - 11:18 minutes</span>
 <span class="co">#&gt; - - - Processing information - - -</span>
-<span class="co">#&gt; Data loaded [Wed Feb 23 15:00:20 2022] </span>
-<span class="co">#&gt; Filter: select MS level(s) 1. [Wed Feb 23 15:00:20 2022] </span>
+<span class="co">#&gt; Data loaded [Sat May 14 12:50:15 2022] </span>
+<span class="co">#&gt; Filter: select MS level(s) 1. [Sat May 14 12:50:15 2022] </span>
 <span class="co">#&gt;  MSnbase version: 2.20.4 </span>
 <span class="co">#&gt; - - - Meta data  - - -</span>
 <span class="co">#&gt; phenoData</span>
@@ -224,8 +252,8 @@
 <span class="co">#&gt;  Number of spectra: 5200 </span>
 <span class="co">#&gt;  MSn retention times: 0:02 - 11:18 minutes</span>
 <span class="co">#&gt; - - - Processing information - - -</span>
-<span class="co">#&gt; Data loaded [Wed Feb 23 15:00:20 2022] </span>
-<span class="co">#&gt; Filter: select MS level(s) 1. [Wed Feb 23 15:00:20 2022] </span>
+<span class="co">#&gt; Data loaded [Sat May 14 12:50:15 2022] </span>
+<span class="co">#&gt; Filter: select MS level(s) 1. [Sat May 14 12:50:15 2022] </span>
 <span class="co">#&gt;  MSnbase version: 2.20.4 </span>
 <span class="co">#&gt; - - - Meta data  - - -</span>
 <span class="co">#&gt; phenoData</span>
@@ -250,8 +278,22 @@
 <div class="section level2">
 <h2 id="cpc-peak-filtering">CPC peak filtering<a class="anchor" aria-label="anchor" href="#cpc-peak-filtering"></a>
 </h2>
-<p>The way in which the CPC package is applied to the workflow is via two wrapper functions, <em>characterize_peaklist()</em> and <em>filter_xcms_peaklist()</em>. The first one will only characterize the peaks detected by XCMS and returns a <em>cpc</em> object, whereas the second will call <em>characterize_peaklist()</em> as well as run the filtering method and can return either a <em>cpc</em> object containing all the information, including the filtered XCMSnExp object, or only the filtered XCMSnExp object. For incorporating the package into an XCMS workflow, it is recommended to use the function <em>filter_xcms_peaklist()</em> with <em>return_type = “xcms”</em> or use the <em>getFilteredXCMS()</em> method on the <em>cpc</em> object returned by <em>filter_xcms_peaklist()</em> as both cases will give the same result. The latter case will be used in this tutorial as we want to keep the information contained in the <em>cpc</em> object.</p>
-<p>The <em>cpcProcParam</em> object holds processing parameters for both peak characterization as well as peak filtering.</p>
+<p>The way in which the CPC package is applied to the workflow is via
+two wrapper functions, <em>characterize_peaklist()</em> and
+<em>filter_xcms_peaklist()</em>. The first one will only characterize
+the peaks detected by XCMS and returns a <em>cpc</em> object, whereas
+the second will call <em>characterize_peaklist()</em> as well as run the
+filtering method and can return either a <em>cpc</em> object containing
+all the information, including the filtered XCMSnExp object, or only the
+filtered XCMSnExp object. For incorporating the package into an XCMS
+workflow, it is recommended to use the function
+<em>filter_xcms_peaklist()</em> with <em>return_type = “xcms”</em> or
+use the <em>getFilteredXCMS()</em> method on the <em>cpc</em> object
+returned by <em>filter_xcms_peaklist()</em> as both cases will give the
+same result. The latter case will be used in this tutorial as we want to
+keep the information contained in the <em>cpc</em> object.</p>
+<p>The <em>cpcProcParam</em> object holds processing parameters for both
+peak characterization as well as peak filtering.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
 <span class="va">cpc</span> <span class="op">&lt;-</span> <span class="fu">cpc</span><span class="fu">::</span><span class="fu"><a href="../reference/filter_xcms_peaklist.html">filter_xcms_peaklist</a></span><span class="op">(</span>xd <span class="op">=</span> <span class="va">xd</span>, return_type <span class="op">=</span> <span class="st">"cpc"</span>, 
@@ -260,23 +302,32 @@
                                                            min_intensity <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span><span class="op">)</span>
 <span class="co">#&gt; Processing file: /__w/_temp/Library/cpc/extdata/hilic015.mzML</span>
 <span class="co">#&gt; Found 268 peak(s).</span>
-<span class="co">#&gt; Finished in 3.573 secs.</span>
+<span class="co">#&gt; Finished in 3.481 secs.</span>
 <span class="co">#&gt; Processing file: /__w/_temp/Library/cpc/extdata/hilic017.mzML</span>
 <span class="co">#&gt; Found 296 peak(s).</span>
-<span class="co">#&gt; Finished in 3.775 secs.</span>
+<span class="co">#&gt; Finished in 3.68 secs.</span>
 <span class="co">#&gt; Processing file: /__w/_temp/Library/cpc/extdata/hilic019.mzML</span>
 <span class="co">#&gt; Found 264 peak(s).</span>
-<span class="co">#&gt; Finished in 3.421 secs.</span>
+<span class="co">#&gt; Finished in 3.332 secs.</span>
 <span class="co">#&gt; Processing file: /__w/_temp/Library/cpc/extdata/hilic021.mzML</span>
 <span class="co">#&gt; Found 282 peak(s).</span>
-<span class="co">#&gt; Finished in 3.653 secs.</span>
+<span class="co">#&gt; Finished in 3.488 secs.</span>
 <span class="co">#&gt; Keeping 923 of 1110 (83.15%) peaks.</span></code></pre></div>
-<p>Processing times will depend heavily on the computer hardware used. With this data set the processing times are very fast (&lt;10 seconds per file), but that is due to the heavy filtering that has been done. More realistic processing times, when working with full LC/MS data sets, range from a 2-10 minutes per file, scaling linearly with the number of peaks detected by XCMS.</p>
-<p>After processing we can get the original peak table from the XCMS object and the characterized peak table from the CPC object using the methods <em>cpt</em> and <em>getPeaklist</em>.</p>
+<p>Processing times will depend heavily on the computer hardware used.
+With this data set the processing times are very fast (&lt;10 seconds
+per file), but that is due to the heavy filtering that has been done.
+More realistic processing times, when working with full LC/MS data sets,
+range from a 2-10 minutes per file, scaling linearly with the number of
+peaks detected by XCMS.</p>
+<p>After processing we can get the original peak table from the XCMS
+object and the characterized peak table from the CPC object using the
+methods <em>cpt</em> and <em>getPeaklist</em>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
 <span class="va">cpcPeaktable</span> <span class="op">&lt;-</span> <span class="fu">cpc</span><span class="fu">::</span><span class="fu">cpt</span><span class="op">(</span><span class="va">cpc</span><span class="op">)</span></code></pre></div>
-<p>The peak table that you get from the CPC package has a number of determined peak characteristics as well as calculated peak characteristics.</p>
+<p>The peak table that you get from the CPC package has a number of
+determined peak characteristics as well as calculated peak
+characteristics.</p>
 <table class="table">
 <colgroup>
 <col width="38%">
@@ -289,7 +340,8 @@
 <tbody>
 <tr class="odd">
 <td>id</td>
-<td>The row number of the peak in the original peak table from XCMS.</td>
+<td>The row number of the peak in the original peak table from
+XCMS.</td>
 </tr>
 <tr class="even">
 <td>rt</td>
@@ -341,11 +393,13 @@
 </tr>
 <tr class="even">
 <td>finf</td>
-<td>The interpolated front inflection point of the peak where the second derivative crosses zero.</td>
+<td>The interpolated front inflection point of the peak where the second
+derivative crosses zero.</td>
 </tr>
 <tr class="odd">
 <td>tinf</td>
-<td>The interpolated tail inflection point of the peak where the second derivative crosses zero.</td>
+<td>The interpolated tail inflection point of the peak where the second
+derivative crosses zero.</td>
 </tr>
 <tr class="even">
 <td>fblb</td>
@@ -365,11 +419,13 @@
 </tr>
 <tr class="even">
 <td>fcode</td>
-<td>The front peak bound type (B = baseline, V = valley, S = shoulder, R = rounded peak).</td>
+<td>The front peak bound type (B = baseline, V = valley, S = shoulder, R
+= rounded peak).</td>
 </tr>
 <tr class="odd">
 <td>tcode</td>
-<td>The tail peak bound type (B = baseline, V = valley, S = shoulder, R = rounded peak).</td>
+<td>The tail peak bound type (B = baseline, V = valley, S = shoulder, R
+= rounded peak).</td>
 </tr>
 <tr class="even">
 <td>blslp</td>
@@ -377,31 +433,40 @@
 </tr>
 <tr class="odd">
 <td>emu</td>
-<td>The mu value of the fitted exponentially modified gaussian (EMG) function. This is only calculated if EMG deconvolution is turned on.</td>
+<td>The mu value of the fitted exponentially modified gaussian (EMG)
+function. This is only calculated if EMG deconvolution is turned
+on.</td>
 </tr>
 <tr class="even">
 <td>esigma</td>
-<td>The sigma value of the fitted EMG function. This is only calculated if EMG deconvolution is turned on.</td>
+<td>The sigma value of the fitted EMG function. This is only calculated
+if EMG deconvolution is turned on.</td>
 </tr>
 <tr class="odd">
 <td>elambda</td>
-<td>The lambda value of the fitted EMG function. This is only calculated if EMG deconvolution is turned on.</td>
+<td>The lambda value of the fitted EMG function. This is only calculated
+if EMG deconvolution is turned on.</td>
 </tr>
 <tr class="even">
 <td>earea</td>
-<td>The area modifier of the fitted EMG function. This is only calculated if EMG deconvolution is turned on.</td>
+<td>The area modifier of the fitted EMG function. This is only
+calculated if EMG deconvolution is turned on.</td>
 </tr>
 <tr class="odd">
 <td>econv</td>
-<td>An indicator if the Nelder-Mead minimizer converged when performing EMG deconvolution.</td>
+<td>An indicator if the Nelder-Mead minimizer converged when performing
+EMG deconvolution.</td>
 </tr>
 <tr class="even">
 <td>note</td>
-<td>A character statement describing the result of the peak processing. This can be “detected”, “not_detected”, “too_narrow”, “low_sn”, “too_small”.</td>
+<td>A character statement describing the result of the peak processing.
+This can be “detected”, “not_detected”, “too_narrow”, “low_sn”,
+“too_small”.</td>
 </tr>
 <tr class="odd">
 <td>height</td>
-<td>The peak height calculated between the apex scan point and the interpolated baseline value at that point.</td>
+<td>The peak height calculated between the apex scan point and the
+interpolated baseline value at that point.</td>
 </tr>
 <tr class="even">
 <td>fh1b</td>
@@ -433,29 +498,35 @@
 </tr>
 <tr class="odd">
 <td>fwhm</td>
-<td>Full width at half maxima of the peak calculated as th50b-fh50b.</td>
+<td>Full width at half maxima of the peak calculated as
+th50b-fh50b.</td>
 </tr>
 <tr class="even">
 <td>area</td>
-<td>The area of the peak calculated using a trapezoid integrator between fh1b and th1b.</td>
+<td>The area of the peak calculated using a trapezoid integrator between
+fh1b and th1b.</td>
 </tr>
 <tr class="odd">
 <td>a</td>
 <td>
-<em>apex</em> - <em>fpkb</em>. Used to calculate the tailing factor.</td>
+<em>apex</em> - <em>fpkb</em>. Used to calculate the tailing
+factor.</td>
 </tr>
 <tr class="even">
 <td>b</td>
 <td>
-<em>tpkb</em> - <em>apex</em>. Used to calculate the tailing factor.</td>
+<em>tpkb</em> - <em>apex</em>. Used to calculate the tailing
+factor.</td>
 </tr>
 <tr class="odd">
 <td>tf</td>
-<td>The tailing factor calculated as <em>tf</em> = <em>b</em>/<em>a</em>.</td>
+<td>The tailing factor calculated as <em>tf</em> =
+<em>b</em>/<em>a</em>.</td>
 </tr>
 <tr class="even">
 <td>sn</td>
-<td>The calculated signal-to-noise ratio calculated as <em>sn</em> = 2**height*/noise.</td>
+<td>The calculated signal-to-noise ratio calculated as <em>sn</em> =
+2**height*/noise.</td>
 </tr>
 <tr class="odd">
 <td>file</td>
@@ -471,7 +542,11 @@
 <div class="section level2">
 <h2 id="visualizing-the-results">Visualizing the results<a class="anchor" aria-label="anchor" href="#visualizing-the-results"></a>
 </h2>
-<p>First lets determine which peaks are kept and which are filtered. In the <em>cpc</em> object, there are two <em>XCMSnExp</em> objects, <em>xd</em> and <em>xdFilt</em>. <em>xdFilt</em>, as the name implies, is the filtered <em>XCMSnExp</em> object. It can be extracted using the <em>filteredObject()</em> method.</p>
+<p>First lets determine which peaks are kept and which are filtered. In
+the <em>cpc</em> object, there are two <em>XCMSnExp</em> objects,
+<em>xd</em> and <em>xdFilt</em>. <em>xdFilt</em>, as the name implies,
+is the filtered <em>XCMSnExp</em> object. It can be extracted using the
+<em>filteredObject()</em> method.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
 <span class="co"># get the original xcms object using getOriginalXCMS()</span>
@@ -485,8 +560,8 @@
 <span class="co">#&gt;  Number of spectra: 5200 </span>
 <span class="co">#&gt;  MSn retention times: 0:02 - 11:18 minutes</span>
 <span class="co">#&gt; - - - Processing information - - -</span>
-<span class="co">#&gt; Data loaded [Wed Feb 23 15:00:20 2022] </span>
-<span class="co">#&gt; Filter: select MS level(s) 1. [Wed Feb 23 15:00:20 2022] </span>
+<span class="co">#&gt; Data loaded [Sat May 14 12:50:15 2022] </span>
+<span class="co">#&gt; Filter: select MS level(s) 1. [Sat May 14 12:50:15 2022] </span>
 <span class="co">#&gt;  MSnbase version: 2.20.4 </span>
 <span class="co">#&gt; - - - Meta data  - - -</span>
 <span class="co">#&gt; phenoData</span>
@@ -522,8 +597,8 @@
 <span class="co">#&gt;  Number of spectra: 5200 </span>
 <span class="co">#&gt;  MSn retention times: 0:02 - 11:18 minutes</span>
 <span class="co">#&gt; - - - Processing information - - -</span>
-<span class="co">#&gt; Data loaded [Wed Feb 23 15:00:20 2022] </span>
-<span class="co">#&gt; Filter: select MS level(s) 1. [Wed Feb 23 15:00:20 2022] </span>
+<span class="co">#&gt; Data loaded [Sat May 14 12:50:15 2022] </span>
+<span class="co">#&gt; Filter: select MS level(s) 1. [Sat May 14 12:50:15 2022] </span>
 <span class="co">#&gt;  MSnbase version: 2.20.4 </span>
 <span class="co">#&gt; - - - Meta data  - - -</span>
 <span class="co">#&gt; phenoData</span>
@@ -550,8 +625,11 @@
 
 <span class="co"># get the filtered cpc peak table</span>
 <span class="va">cpcPeaktableFilt</span> <span class="op">&lt;-</span> <span class="va">cpcPeaktable</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/row.names.html" class="external-link">row.names</a></span><span class="op">(</span><span class="va">xcmsPeaktableFilt</span><span class="op">)</span>, <span class="op">]</span></code></pre></div>
-<p>In the original XCMS object there were 1110 peaks identified across 4 files. After filtering using our processing, 913 peaks remain.</p>
-<p>To see how many peaks were removed in a file-by-file basis you can use the table function on the chromatographic peak table from the xcms object.</p>
+<p>In the original XCMS object there were 1110 peaks identified across 4
+files. After filtering using our processing, 913 peaks remain.</p>
+<p>To see how many peaks were removed in a file-by-file basis you can
+use the table function on the chromatographic peak table from the xcms
+object.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
 <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>Original <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">xcmsPeaktableOrig</span><span class="op">[</span>, <span class="st">"sample"</span><span class="op">]</span><span class="op">)</span>,
@@ -562,7 +640,10 @@
 <span class="co">#&gt; Original    268.0 296.0 264.0 282.0</span>
 <span class="co">#&gt; Filtered    226.0 238.0 221.0 238.0</span>
 <span class="co">#&gt; PercentKept  84.3  80.4  83.7  84.4</span></code></pre></div>
-<p>The filtering outcomes can be extracted from the object using the <em>getFilterOutcomes()</em> method. This returns a data.frame indicating if a peak passed the filter criteria or not for the different filter characteristics.</p>
+<p>The filtering outcomes can be extracted from the object using the
+<em>getFilterOutcomes()</em> method. This returns a data.frame
+indicating if a peak passed the filter criteria or not for the different
+filter characteristics.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
 <span class="va">outcomes</span> <span class="op">&lt;-</span> <span class="fu">cpc</span><span class="fu">::</span><span class="fu">getFilterOutcomes</span><span class="op">(</span><span class="va">cpc</span><span class="op">)</span>
@@ -575,8 +656,15 @@
 <span class="co">#&gt; CP0004     TRUE  TRUE  TRUE TRUE TRUE      TRUE</span>
 <span class="co">#&gt; CP0005     TRUE  TRUE  TRUE TRUE TRUE      TRUE</span>
 <span class="co">#&gt; CP0006     TRUE  TRUE  TRUE TRUE TRUE      TRUE</span></code></pre></div>
-<p>In the example presented here we have the peak width, peak area, and signal-to-noise ratio filters active. For that reason the other filters just show TRUE for all peaks as they were not filtered based on this.</p>
-<p>To check which peaks are retained and which are removed, the outcomes data.frame can be used. A character vector of removed and retained peak IDs can also be obtained using the <em>getRemovedPeaks()</em> and <em>getRetainedPeaks()</em> methods, respectively. We can visualize the filtering outcomes using a Venn diagram.</p>
+<p>In the example presented here we have the peak width, peak area, and
+signal-to-noise ratio filters active. For that reason the other filters
+just show TRUE for all peaks as they were not filtered based on
+this.</p>
+<p>To check which peaks are retained and which are removed, the outcomes
+data.frame can be used. A character vector of removed and retained peak
+IDs can also be obtained using the <em>getRemovedPeaks()</em> and
+<em>getRetainedPeaks()</em> methods, respectively. We can visualize the
+filtering outcomes using a Venn diagram.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
 <span class="co"># setup a list for the Venn diagram</span>
@@ -590,7 +678,10 @@
 <span class="co">#&gt; Warning in sprintf("%d", n, 100 * n/sum(n)): one argument not used by format</span>
 <span class="co">#&gt; '%d'</span></code></pre></div>
 <p><img src="cpc_files/figure-html/venn-diagram-1.png" width="700"></p>
-<p>We can see that 8 peaks were not detected at all, ie. did not exhibit the characteristic pattern in the second derivative. Apart from those, the majority of peaks were removed due to their signal-to-noise being too low (SN&lt;10).</p>
+<p>We can see that 8 peaks were not detected at all, ie. did not exhibit
+the characteristic pattern in the second derivative. Apart from those,
+the majority of peaks were removed due to their signal-to-noise being
+too low (SN&lt;10).</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
 <span class="co"># set a seed for sample() to make it reproducible</span>
@@ -652,7 +743,13 @@
 <span class="co">#&gt; $toonarrow</span>
 <span class="co">#&gt; CP0906 CP0549 </span>
 <span class="co">#&gt;    906    549</span></code></pre></div>
-<p>And then we can plot these peaks using the <em>plotPeaks()</em> function. This function takes a <em>cpc</em> object as well as a list of peak IDs as argument. The peak IDs can be supplied as indices in the full peak list (ie. not the filtered peak list) or as a character vector with peak IDs (row names in the peak tables). In the present example they are the same and we can use either the names of randomRemoved or the values.</p>
+<p>And then we can plot these peaks using the <em>plotPeaks()</em>
+function. This function takes a <em>cpc</em> object as well as a list of
+peak IDs as argument. The peak IDs can be supplied as indices in the
+full peak list (ie. not the filtered peak list) or as a character vector
+with peak IDs (row names in the peak tables). In the present example
+they are the same and we can use either the names of randomRemoved or
+the values.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
 <span class="fu">cpc</span><span class="fu">::</span><span class="fu"><a href="../reference/plotPeaks.html">plotPeaks</a></span><span class="op">(</span><span class="va">cpc</span>, peakIdx <span class="op">=</span> <span class="va">randomRemoved</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
@@ -676,8 +773,16 @@
 <p><img src="cpc_files/figure-html/plot-selected-peaks-6.png" width="672"></p>
 <pre><code><span class="co">#&gt; Opening file: /__w/_temp/Library/cpc/extdata/hilic021.mzML</span></code></pre>
 <p><img src="cpc_files/figure-html/plot-selected-peaks-7.png" width="672"></p>
-<p>In the above plots the original XIC trace is plotted as a gray dashed line with the smoothed chromatogram overlaid on top in black. The black dots are the actual scan points. The blue circles represent the front boundary, apex location, and tail boundary, as determined by XCMS. The red fill indicates the peak boundaries determined by CPC with the red dot representing the apex point. The red dashed line is the baseline of the peak, as estimated by CPC.</p>
-<p>We can also plot some of the retained peaks in the same way. Here we will randomly select one peak from each quartile of the signal-to-noise range.</p>
+<p>In the above plots the original XIC trace is plotted as a gray dashed
+line with the smoothed chromatogram overlaid on top in black. The black
+dots are the actual scan points. The blue circles represent the front
+boundary, apex location, and tail boundary, as determined by XCMS. The
+red fill indicates the peak boundaries determined by CPC with the red
+dot representing the apex point. The red dashed line is the baseline of
+the peak, as estimated by CPC.</p>
+<p>We can also plot some of the retained peaks in the same way. Here we
+will randomly select one peak from each quartile of the signal-to-noise
+range.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
 <span class="co"># get a vector of all detected peaks</span>
@@ -726,7 +831,8 @@
 <span class="co">#&gt; </span>
 <span class="co">#&gt; [[4]]</span>
 <span class="co">#&gt; [1] "CP0253" "CP0470"</span></code></pre></div>
-<p>And then we can plot all these peaks in the same way as with the removed peaks.</p>
+<p>And then we can plot all these peaks in the same way as with the
+removed peaks.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
 <span class="fu">cpc</span><span class="fu">::</span><span class="fu"><a href="../reference/plotPeaks.html">plotPeaks</a></span><span class="op">(</span><span class="va">cpc</span>, peakIdx <span class="op">=</span> <span class="va">randomRetained</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>
@@ -810,7 +916,18 @@
 <div class="section level2">
 <h2 id="peak-cluster-boundaries">Peak cluster boundaries<a class="anchor" aria-label="anchor" href="#peak-cluster-boundaries"></a>
 </h2>
-<p>Overlapping peak clusters can be detected by the algorithm as their baseline boundaries after expansion will overlap. Consequently the boundaries between peaks in clusters need to be determined and updated. This is handled differently depending on the degree of overlap. Valley boundaries between peaks are set to the lowest point between the peak apices along the ion trace. Shoulder boundaries are set to the maxima between the peak apices along the second derivative of the ion trace. When two similarily sized peaks overlap sufficiently much, it can lead to a rounded peak shape. This is detected as two peak apices that share inflection points along the second derivative which a negative valued maxima in between the apice points. The boundary is then set to the negative maxima point between the apices.</p>
+<p>Overlapping peak clusters can be detected by the algorithm as their
+baseline boundaries after expansion will overlap. Consequently the
+boundaries between peaks in clusters need to be determined and updated.
+This is handled differently depending on the degree of overlap. Valley
+boundaries between peaks are set to the lowest point between the peak
+apices along the ion trace. Shoulder boundaries are set to the maxima
+between the peak apices along the second derivative of the ion trace.
+When two similarily sized peaks overlap sufficiently much, it can lead
+to a rounded peak shape. This is detected as two peak apices that share
+inflection points along the second derivative which a negative valued
+maxima in between the apice points. The boundary is then set to the
+negative maxima point between the apices.</p>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
 <span class="co"># Valley boundary example</span>
@@ -827,8 +944,13 @@
 <div class="section level2">
 <h2 id="example-of-emg-deconvolution">Example of EMG deconvolution<a class="anchor" aria-label="anchor" href="#example-of-emg-deconvolution"></a>
 </h2>
-<p>The processing engine used in the CPC package includes EMG deconvolution of peak clusters to achieve better estimates of the peak boundaries. This can be included in the processing by setting the argument <em>fit_emg = TRUE</em> in the <em>cpcProcParam</em> object.</p>
-<p>To illustrate this, we first need to find a few peaks to perform EMG deconvolution on.</p>
+<p>The processing engine used in the CPC package includes EMG
+deconvolution of peak clusters to achieve better estimates of the peak
+boundaries. This can be included in the processing by setting the
+argument <em>fit_emg = TRUE</em> in the <em>cpcProcParam</em>
+object.</p>
+<p>To illustrate this, we first need to find a few peaks to perform EMG
+deconvolution on.</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
 <span class="op">(</span><span class="va">selection</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">34</span>, <span class="fl">138</span>, <span class="fl">106</span>, <span class="fl">165</span>, <span class="fl">179</span>, <span class="fl">217</span><span class="op">)</span><span class="op">)</span>
@@ -850,7 +972,7 @@
 <span class="va">cpcDeconv</span> <span class="op">&lt;-</span> <span class="fu">cpc</span><span class="fu">::</span><span class="fu"><a href="../reference/characterize_xcms_peaklist.html">characterize_xcms_peaklist</a></span><span class="op">(</span>xd <span class="op">=</span> <span class="va">xd</span>, param <span class="op">=</span> <span class="va">cpcParam</span><span class="op">)</span>
 <span class="co">#&gt; Processing file: /__w/_temp/Library/cpc/extdata/hilic015.mzML</span>
 <span class="co">#&gt; Found 6 peak(s).</span>
-<span class="co">#&gt; Finished in 0.399 secs.</span></code></pre></div>
+<span class="co">#&gt; Finished in 0.412 secs.</span></code></pre></div>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
 <span class="fu">cpc</span><span class="fu">::</span><span class="fu"><a href="../reference/plotPeaks.html">plotPeaks</a></span><span class="op">(</span>cpc <span class="op">=</span> <span class="va">cpcDeconv</span>, peakIdx <span class="op">=</span> <span class="va">peakIdx</span>, plotEMG <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>
@@ -863,9 +985,9 @@
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R">
 <span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span>
-<span class="co">#&gt; R version 4.1.2 (2021-11-01)</span>
+<span class="co">#&gt; R version 4.1.3 (2022-03-10)</span>
 <span class="co">#&gt; Platform: x86_64-pc-linux-gnu (64-bit)</span>
-<span class="co">#&gt; Running under: Ubuntu 20.04.3 LTS</span>
+<span class="co">#&gt; Running under: Ubuntu 20.04.4 LTS</span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; Matrix products: default</span>
 <span class="co">#&gt; BLAS/LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.8.so</span>
@@ -883,61 +1005,61 @@
 <span class="co">#&gt; [8] methods   base     </span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; other attached packages:</span>
-<span class="co">#&gt;  [1] ggvenn_0.1.9        ggplot2_3.3.5       dplyr_1.0.8        </span>
+<span class="co">#&gt;  [1] ggvenn_0.1.9        ggplot2_3.3.6       dplyr_1.0.9        </span>
 <span class="co">#&gt;  [4] cpc_0.1.0           signal_0.7-7        xcms_3.16.1        </span>
-<span class="co">#&gt;  [7] MSnbase_2.20.4      ProtGenerics_1.26.0 S4Vectors_0.32.3   </span>
-<span class="co">#&gt; [10] mzR_2.28.0          Rcpp_1.0.8          Biobase_2.54.0     </span>
-<span class="co">#&gt; [13] BiocGenerics_0.40.0 BiocParallel_1.28.3 pander_0.6.4       </span>
+<span class="co">#&gt;  [7] MSnbase_2.20.4      ProtGenerics_1.26.0 S4Vectors_0.32.4   </span>
+<span class="co">#&gt; [10] mzR_2.28.0          Rcpp_1.0.8.3        Biobase_2.54.0     </span>
+<span class="co">#&gt; [13] BiocGenerics_0.40.0 BiocParallel_1.28.3 pander_0.6.5       </span>
 <span class="co">#&gt; </span>
 <span class="co">#&gt; loaded via a namespace (and not attached):</span>
-<span class="co">#&gt;  [1] bitops_1.0-7                matrixStats_0.61.0         </span>
+<span class="co">#&gt;  [1] bitops_1.0-7                matrixStats_0.62.0         </span>
 <span class="co">#&gt;  [3] fs_1.5.2                    progress_1.2.2             </span>
-<span class="co">#&gt;  [5] doParallel_1.0.17           RColorBrewer_1.1-2         </span>
-<span class="co">#&gt;  [7] rprojroot_2.0.2             GenomeInfoDb_1.30.1        </span>
-<span class="co">#&gt;  [9] tools_4.1.2                 bslib_0.3.1                </span>
+<span class="co">#&gt;  [5] doParallel_1.0.17           RColorBrewer_1.1-3         </span>
+<span class="co">#&gt;  [7] rprojroot_2.0.3             GenomeInfoDb_1.30.1        </span>
+<span class="co">#&gt;  [9] tools_4.1.3                 bslib_0.3.1                </span>
 <span class="co">#&gt; [11] utf8_1.2.2                  R6_2.5.1                   </span>
 <span class="co">#&gt; [13] affyio_1.64.0               colorspace_2.0-3           </span>
-<span class="co">#&gt; [15] withr_2.4.3                 prettyunits_1.1.1          </span>
-<span class="co">#&gt; [17] tidyselect_1.1.2            MassSpecWavelet_1.60.0     </span>
-<span class="co">#&gt; [19] compiler_4.1.2              preprocessCore_1.56.0      </span>
-<span class="co">#&gt; [21] textshaping_0.3.6           cli_3.2.0                  </span>
-<span class="co">#&gt; [23] DelayedArray_0.20.0         desc_1.4.0                 </span>
-<span class="co">#&gt; [25] labeling_0.4.2              sass_0.4.0                 </span>
-<span class="co">#&gt; [27] scales_1.1.1                DEoptimR_1.0-10            </span>
-<span class="co">#&gt; [29] robustbase_0.93-9           affy_1.72.0                </span>
-<span class="co">#&gt; [31] pkgdown_2.0.2.9000          systemfonts_1.0.4          </span>
+<span class="co">#&gt; [15] withr_2.5.0                 prettyunits_1.1.1          </span>
+<span class="co">#&gt; [17] tidyselect_1.1.2            MassSpecWavelet_1.60.1     </span>
+<span class="co">#&gt; [19] compiler_4.1.3              preprocessCore_1.56.0      </span>
+<span class="co">#&gt; [21] textshaping_0.3.6           cli_3.3.0                  </span>
+<span class="co">#&gt; [23] DelayedArray_0.20.0         desc_1.4.1                 </span>
+<span class="co">#&gt; [25] labeling_0.4.2              sass_0.4.1                 </span>
+<span class="co">#&gt; [27] scales_1.2.0                DEoptimR_1.0-11            </span>
+<span class="co">#&gt; [29] robustbase_0.95-0           affy_1.72.0                </span>
+<span class="co">#&gt; [31] pkgdown_2.0.3.9000          systemfonts_1.0.4          </span>
 <span class="co">#&gt; [33] stringr_1.4.0               digest_0.6.29              </span>
-<span class="co">#&gt; [35] rmarkdown_2.11              XVector_0.34.0             </span>
+<span class="co">#&gt; [35] rmarkdown_2.14              XVector_0.34.0             </span>
 <span class="co">#&gt; [37] pkgconfig_2.0.3             htmltools_0.5.2            </span>
 <span class="co">#&gt; [39] MatrixGenerics_1.6.0        highr_0.9                  </span>
-<span class="co">#&gt; [41] fastmap_1.1.0               limma_3.50.1               </span>
-<span class="co">#&gt; [43] rlang_1.0.1                 impute_1.68.0              </span>
+<span class="co">#&gt; [41] fastmap_1.1.0               limma_3.50.3               </span>
+<span class="co">#&gt; [43] rlang_1.0.2                 impute_1.68.0              </span>
 <span class="co">#&gt; [45] farver_2.1.0                jquerylib_0.1.4            </span>
-<span class="co">#&gt; [47] generics_0.1.2              jsonlite_1.7.3             </span>
+<span class="co">#&gt; [47] generics_0.1.2              jsonlite_1.8.0             </span>
 <span class="co">#&gt; [49] mzID_1.32.0                 RCurl_1.98-1.6             </span>
-<span class="co">#&gt; [51] magrittr_2.0.2              GenomeInfoDbData_1.2.7     </span>
-<span class="co">#&gt; [53] Matrix_1.4-0                MALDIquant_1.21            </span>
-<span class="co">#&gt; [55] munsell_0.5.0               fansi_1.0.2                </span>
-<span class="co">#&gt; [57] MsCoreUtils_1.6.1           lifecycle_1.0.1            </span>
+<span class="co">#&gt; [51] magrittr_2.0.3              GenomeInfoDbData_1.2.7     </span>
+<span class="co">#&gt; [53] Matrix_1.4-1                MALDIquant_1.21            </span>
+<span class="co">#&gt; [55] munsell_0.5.0               fansi_1.0.3                </span>
+<span class="co">#&gt; [57] MsCoreUtils_1.6.2           lifecycle_1.0.1            </span>
 <span class="co">#&gt; [59] vsn_3.62.0                  stringi_1.7.6              </span>
-<span class="co">#&gt; [61] yaml_2.3.5                  MASS_7.3-55                </span>
+<span class="co">#&gt; [61] yaml_2.3.5                  MASS_7.3-57                </span>
 <span class="co">#&gt; [63] SummarizedExperiment_1.24.0 zlibbioc_1.40.0            </span>
-<span class="co">#&gt; [65] plyr_1.8.6                  parallel_4.1.2             </span>
-<span class="co">#&gt; [67] crayon_1.5.0                lattice_0.20-45            </span>
+<span class="co">#&gt; [65] plyr_1.8.7                  parallel_4.1.3             </span>
+<span class="co">#&gt; [67] crayon_1.5.1                lattice_0.20-45            </span>
 <span class="co">#&gt; [69] MsFeatures_1.2.0            hms_1.1.1                  </span>
-<span class="co">#&gt; [71] knitr_1.37                  pillar_1.7.0               </span>
+<span class="co">#&gt; [71] knitr_1.39                  pillar_1.7.0               </span>
 <span class="co">#&gt; [73] GenomicRanges_1.46.1        codetools_0.2-18           </span>
-<span class="co">#&gt; [75] XML_3.99-0.8                glue_1.6.1                 </span>
+<span class="co">#&gt; [75] XML_3.99-0.9                glue_1.6.2                 </span>
 <span class="co">#&gt; [77] evaluate_0.15               pcaMethods_1.86.0          </span>
-<span class="co">#&gt; [79] BiocManager_1.30.16         vctrs_0.3.8                </span>
+<span class="co">#&gt; [79] BiocManager_1.30.17         vctrs_0.4.1                </span>
 <span class="co">#&gt; [81] foreach_1.5.2               RANN_2.6.1                 </span>
 <span class="co">#&gt; [83] gtable_0.3.0                purrr_0.3.4                </span>
 <span class="co">#&gt; [85] clue_0.3-60                 cachem_1.0.6               </span>
-<span class="co">#&gt; [87] xfun_0.29                   ragg_1.2.2                 </span>
+<span class="co">#&gt; [87] xfun_0.31                   ragg_1.2.2                 </span>
 <span class="co">#&gt; [89] ncdf4_1.19                  snow_0.4-4                 </span>
-<span class="co">#&gt; [91] tibble_3.1.6                iterators_1.0.14           </span>
+<span class="co">#&gt; [91] tibble_3.1.7                iterators_1.0.14           </span>
 <span class="co">#&gt; [93] memoise_2.0.1               IRanges_2.28.0             </span>
-<span class="co">#&gt; [95] cluster_2.1.2               ellipsis_0.3.2</span></code></pre></div>
+<span class="co">#&gt; [95] cluster_2.1.3               ellipsis_0.3.2</span></code></pre></div>
 </div>
   </div>
 
@@ -958,7 +1080,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.9000.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.9000.</p>
 </div>
 
       </footer>
