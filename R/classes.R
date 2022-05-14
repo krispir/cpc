@@ -2465,6 +2465,7 @@ setMethod("processPeaks", signature("cpc"), function(x)
         
         # (pd <- x@pt[i_idx[25509], ]) # - tryptophan 210518
         # (pd <- x@pt[i_idx[1], ])
+        # (pd <- x@pt[i_idx[13696], ])
         res <- do.call("list", apply(x@pt[i_idx, ], 1, FUN = function(pd)
         {
             # start timer
